@@ -1,0 +1,83 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'Process h5ad then dreamlet'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{Decorrelate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+rmarkdown::render("analysis_1.Rmd");
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE)
+```
+
+```{r load.packages}
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(DelayedMatrixStats)
+library(dreamlet)
+library(muscat)
+library(cowplot)
+library(zenith)
+library(scater)
+})
+```
+
+```{r load.data}
+# H5AD files from CellRanger
+files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5ad", full.names=TRUE, recursive=TRUE),
+  dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r2", pattern="h5ad", full.names=TRUE, recursive=TRUE),
+  dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r3", pattern="h5ad", full.names=TRUE, recursive=TRUE))
+
+# read each H5AD file as SingleCellExperiment
+sceList = lapply(files, function(file){
+
+  cat("\r", match(file, files), ' / ', length(files), '    ')
+
+  readH5AD(file, "counts", use_hdf5=TRUE)
+  })
+# combine into single SingleCellExperiment
+sce = do.call(cbind, sceList)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
