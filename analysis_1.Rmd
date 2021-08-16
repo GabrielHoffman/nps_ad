@@ -33,7 +33,8 @@ knitr::opts_chunk$set(
   error = FALSE,
   tidy = FALSE,
   dev = c("png", "pdf"),
-  cache = TRUE)
+  cache = TRUE,
+  cache.lazy = FALSE)
 ```
 
 ```{r load.packages}
@@ -58,13 +59,23 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
 
 # read each H5AD file as SingleCellExperiment
 sceList = mclapply(files, function(file){
-
-  cat("\r", match(file, files), ' / ', length(files), '    ')
-
   readH5AD(file, "counts", use_hdf5=TRUE)
   }, mc.cores=24)
 # combine into single SingleCellExperiment
-sce = do.call(cbind, sceList)
+sceCombine = do.call(cbind, sceList)
+```
+
+```{r preprocess}
+# computeLibraryFactors
+sceList = mclapply(sceList, function(sce){
+  computeLibraryFactors(sce)
+}, mc.cores=24)
+
+# perCellQCMetrics
+df_qc = mclapply(sceList, function(sce){
+  perCellQCMetrics(sce)
+}, mc.cores=24)
+df_qc = do.call(rbind, df_qc)
 ```
 
 
