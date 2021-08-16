@@ -62,7 +62,7 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
   dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r3", pattern="h5ad", full.names=TRUE, recursive=TRUE))
 
 # read each H5AD file as SingleCellExperiment
-sceList = lapply(files[1:10], function(file){
+sceList = lapply(files, function(file){
   readH5AD(file, "counts", use_hdf5=TRUE)
   })
 # combine into single SingleCellExperiment
@@ -87,7 +87,7 @@ df_qc = mclapply(sceList, function(sce){
 df_qc = do.call(rbind, df_qc)
 ```
 
-```{r combineData}
+```{r combineData, eval=FALSE}
 sce$id <- paste0(sce$stim, sce$ind)
 sce <- prepSCE(sce, 
     kid = "cell", # subpopulation assignments
