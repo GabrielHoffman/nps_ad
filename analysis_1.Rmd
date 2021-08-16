@@ -18,6 +18,9 @@ vignette: >
 
 <!--- 
 
+cd /hpc/users/hoffmg01/work/nps_ad
+R
+
 system("ml git; git pull")
 rmarkdown::render("analysis_1.Rmd");
 
@@ -48,6 +51,7 @@ library(muscat)
 library(cowplot)
 library(zenith)
 library(scater)
+library(HDF5Array)
 })
 ```
 
@@ -58,9 +62,9 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
   dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r3", pattern="h5ad", full.names=TRUE, recursive=TRUE))
 
 # read each H5AD file as SingleCellExperiment
-sceList = mclapply(files, function(file){
+sceList = lapply(files, function(file){
   readH5AD(file, "counts", use_hdf5=TRUE)
-  }, mc.cores=24)
+  })
 # combine into single SingleCellExperiment
 # sceCombine = do.call(cbind, sceList)
 ```
