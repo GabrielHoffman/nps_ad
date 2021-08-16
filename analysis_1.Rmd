@@ -18,6 +18,7 @@ vignette: >
 
 <!--- 
 
+system("ml git; git pull")
 rmarkdown::render("analysis_1.Rmd");
 
 --->
@@ -56,12 +57,12 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
   dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r3", pattern="h5ad", full.names=TRUE, recursive=TRUE))
 
 # read each H5AD file as SingleCellExperiment
-sceList = lapply(files, function(file){
+sceList = mclapply(files, function(file){
 
   cat("\r", match(file, files), ' / ', length(files), '    ')
 
   readH5AD(file, "counts", use_hdf5=TRUE)
-  })
+  }, mc.cores=24)
 # combine into single SingleCellExperiment
 sce = do.call(cbind, sceList)
 ```
