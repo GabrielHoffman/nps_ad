@@ -62,7 +62,7 @@ sceList = mclapply(files, function(file){
   readH5AD(file, "counts", use_hdf5=TRUE)
   }, mc.cores=24)
 # combine into single SingleCellExperiment
-sceCombine = do.call(cbind, sceList)
+# sceCombine = do.call(cbind, sceList)
 ```
 
 ```{r preprocess}
