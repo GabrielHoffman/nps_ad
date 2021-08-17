@@ -134,6 +134,7 @@ sceList_filter = mclapply(sceList, function(sce){
 
 ```{r combine}
 # combine into single SingleCellExperiment 
+# remove entries that are NULL
 keep = ! sapply(sceList_filter, is.null)  
 sceCombine = do.call(cbind, sceList_filter[keep])
 ```
