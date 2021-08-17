@@ -144,10 +144,10 @@ sceCombine = do.call(cbind, sceList_filter[keep])
 ```{r umap}
 df = cbind(reducedDim(sceCombine), colData(sceCombine))
   
-ggplot(df, aes(UMAP1, UMAP2, color=anno, shape=class)) + geom_point(size=0.04) + theme_classic() + theme(aspect.ratio=1)
+ggplot(df, aes(UMAP1, UMAP2, color=anno, shape=class)) + geom_point(size=0.1) + theme_classic() + theme(aspect.ratio=1)
 ```
 
-```{r combineData, eval=FALSE}
+```{r combineData}
 # Specify how to collapse into pseudo-bulk
 sceCombine$id <- paste0(sceCombine$Batch, '_', sceCombine$Donor)
 sceCombine_prep <- prepSCE(sceCombine, 
