@@ -94,40 +94,48 @@ file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/meta/NPS-AD_roundMerged
 df_cell = fread(file)
 colnames(df_cell)[1] = "cellID"
 
-sceList_filter = mclapply(sceList[1:200], function(sce){
+sceList_filter = mclapply(sceList, function(sce){
 
   # keep only cells in metadata
   sce = sce[,colnames(sce) %in% df_cell$cellID]
 
-  # Parse cellID
-  id = rownames(colData(sce))
-  df_key = lapply(strsplit(id, '_'), function(x) data.frame(Batch = x[1], Donor = x[2], barcode = x[3]))
-  df_key = do.call(rbind, df_key)
-  rownames(df_key) = id
-  colData(sce) = cbind(colData(sce), df_key)
+  # if at least 1 cell is retained
+  if( ncol(sce) > 0){
 
-  # merge metadata
-  df = merge(colData(sce), df_cell, by.x="row.names", by.y="cellID", all.x=TRUE)
-  rownames(df) = df$Row.names
+    # Parse cellID
+    id = rownames(colData(sce))
+    df_key = lapply(strsplit(id, '_'), function(x) data.frame(Batch = x[1], Donor = x[2], barcode = x[3]))
+    df_key = do.call(rbind, df_key)
+    rownames(df_key) = id
+    colData(sce) = cbind(colData(sce), df_key)
 
-  # set colData
-  drop = c("Row.names", "UMAP_1", "UMAP_2")
-  colData(sce) = df[, !(colnames(df) %in% drop)]
+    # merge metadata
+    df = merge(colData(sce), df_cell, by.x="row.names", by.y="cellID", all.x=TRUE)
+    rownames(df) = df$Row.names
 
-  # assign UMAP
-  df_umap = data.frame(UMAP1 = df$UMAP_1, UMAP2 = df$UMAP_2)
-  rownames(df_umap) = df$Row.names
-  reducedDims(sce) <- list(UMAP=df_umap)
+    # set colData
+    drop = c("Row.names", "UMAP_1", "UMAP_2")
+    colData(sce) = df[, !(colnames(df) %in% drop)]
 
-  # filter based on QC
-  keep = with(colData(sce), !pred_dbl & demux_type == 'singlet' & passed_qc)
-  sce[,keep]
+    # assign UMAP
+    df_umap = data.frame(UMAP1 = df$UMAP_1, UMAP2 = df$UMAP_2)
+    rownames(df_umap) = df$Row.names
+    reducedDims(sce) <- list(UMAP=df_umap)
+
+    # filter based on QC
+    keep = with(colData(sce), !pred_dbl & demux_type == 'singlet' & passed_qc)
+    sce = sce[,keep]
+  }else{
+    sce = NULL
+  }
+  sce
   }, mc.cores=48)
 ```
 
 ```{r combine}
-# combine into single SingleCellExperiment
-sceCombine = do.call(cbind, sceList_filter)
+# combine into single SingleCellExperiment 
+keep = ! sapply(sceList_filter, is.null)  
+sceCombine = do.call(cbind, sceList_filter[keep])
 ```
 
 
