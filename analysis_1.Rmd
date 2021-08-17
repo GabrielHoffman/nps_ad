@@ -143,26 +143,30 @@ sceCombine = do.call(cbind, sceList_filter[keep])
 # Joint UMAP
 ```{r umap}
 df = cbind(reducedDim(sceCombine), colData(sceCombine))
-
-ggplot(df, aes(UMAP1, UMAP2, color=anno)) + geom_point(size=0.1) + theme_classic() + theme(aspect.ratio=1)
+  
+ggplot(df, aes(UMAP1, UMAP2, color=anno, shape=class)) + geom_point(size=0.04) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r combineData, eval=FALSE}
-sce$id <- paste0(sce$stim, sce$ind)
-sce <- prepSCE(sce, 
-    kid = "cell", # subpopulation assignments
-    gid = "stim",  # group IDs (ctrl/stim)
+# Specify how to collapse into pseudo-bulk
+sceCombine$id <- paste0(sceCombine$Batch, '_', sceCombine$Donor)
+sceCombine_prep <- prepSCE(sceCombine, 
+    kid = "anno", # subpopulation assignments
+    gid = "Donor",  # group IDs (ctrl/stim)
     sid = "id",   # sample IDs (ctrl/stim.1234)
     drop = TRUE)
 
-pb <- aggregateData(sce,
-    assay = "counts", fun = "sum",
-    by = c("cluster_id", "sample_id"))
+# Create pseudo-bulk SingleCellExperiment
+pbObj <- aggregateData(sceCombine_prep,
+    assay = "counts", 
+    fun = "sum",
+    by = c("cluster_id", "sample_id"),
+    BPPARAM = SnowParam(8, progressbar=TRUE))
+```
+
 
 # one sheet per subpopulation
 assayNames(pb)
-```
-
 
 
 
