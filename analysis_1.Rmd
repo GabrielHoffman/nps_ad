@@ -61,6 +61,7 @@ library(zenith)
 library(scater)
 library(HDF5Array)
 library(data.table)
+library(S4Vectors)
 })
 ```
 
@@ -93,7 +94,7 @@ file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/meta/NPS-AD_roundMerged
 df_cell = fread(file)
 colnames(df_cell)[1] = "cellID"
 
-sceList_filter = mclapply(sceList, function(sce){
+sceList_filter = mclapply(sceList[1:200], function(sce){
 
   # keep only cells in metadata
   sce = sce[,colnames(sce) %in% df_cell$cellID]
