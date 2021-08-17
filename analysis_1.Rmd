@@ -45,6 +45,10 @@ knitr::opts_chunk$set(
 ```
 
 ```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
 library(zellkonverter)
@@ -74,24 +78,11 @@ sceList = lapply(files, function(file){
 
 ```{r preprocess}
 # computeLibraryFactors
-sceList = mclapply(sceList, function(sce){
-  # library(HDF5Array)
-
-  computeLibraryFactors(sce)
-}, mc.cores=24)
+sceList = mclapply(sceList, computeLibraryFactors, mc.cores=48)
 
 # perCellQCMetrics
-df_qc = mclapply(sceList, function(sce){
-
-  # library(HDF5Array)
-
-  perCellQCMetrics(sce)
-}, mc.cores=24)
+df_qc = mclapply(sceList, perCellQCMetrics, mc.cores=48)
 df_qc = do.call(rbind, df_qc)
-```
-
-```{r exit, cache=FALSE}
-knitr::knit_exit()
 ```
 
 # Combine with metadata
@@ -103,9 +94,6 @@ df_cell = fread(file)
 colnames(df_cell)[1] = "cellID"
 
 sceList_filter = mclapply(sceList, function(sce){
-
-  library(SingleCellExperiment)
-  library(S4Vectors)
 
   # keep only cells in metadata
   sce = sce[,colnames(sce) %in% df_cell$cellID]
@@ -133,19 +121,19 @@ sceList_filter = mclapply(sceList, function(sce){
   # filter based on QC
   keep = with(colData(sce), !pred_dbl & demux_type == 'singlet' & passed_qc)
   sce[,keep]
-  }, mc.cores=24)
+  }, mc.cores=48)
 ```
 
 ```{r combine}
 # combine into single SingleCellExperiment
-sceCombine = do.call(cbind, sceList_filter)    
+sceCombine = do.call(cbind, sceList_filter)
 ```
 
 
 # Joint UMAP
 ```{r umap}
 df = cbind(reducedDim(sceCombine), colData(sceCombine))
- 
+
 ggplot(df, aes(UMAP1, UMAP2, color=anno)) + geom_point(size=0.1) + theme_classic() + theme(aspect.ratio=1)
 ```
 
