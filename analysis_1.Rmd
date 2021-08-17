@@ -97,10 +97,17 @@ file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/meta/NPS-AD_roundMerged
 df_cell = fread(file)
 colnames(df_cell)[1] = "cellID"
 
-sceList_filter = mclapply(sceList, function(sce){
+sceList_filter = mclapply(sceList[1:10], function(sce){
 
   # keep only cells in metadata
   sce = sce[,colnames(sce) %in% df_cell$cellID]
+
+  # Parse cellID
+  id = rownames(colData(sce))
+  df_key = lapply(strsplit(id, '_'), function(x) data.frame(Batch = x[1], Donor = x[2], barcode = x[3]))
+  df_key = do.call(rbind, df_key)
+  rownames(df_key) = id
+  colData(sce) = cbind(colData(sce), df_key)
 
   # merge metadata
   df = merge(colData(sce), df_cell, by.x="row.names", by.y="cellID", all.x=TRUE)
@@ -123,13 +130,16 @@ sceList_filter = mclapply(sceList, function(sce){
 
 ```{r combine}
 # combine into single SingleCellExperiment
-sceCombine = do.call(cbind, sceList_filter)
+sceCombine = do.call(cbind, sceList_filter)   
 ```
 
-# df = cbind(reducedDim(sce), colData(sce))
 
-# ggplot(df, aes(UMAP1, UMAP2, color=anno)) + geom_point() + theme_classic() + theme(aspect.ratio=1)
+# Joint UMAP
+```{r umap}
+df = cbind(reducedDim(sceCombine), colData(sceCombine))
 
+ggplot(df, aes(UMAP1, UMAP2, color=anno)) + geom_point(size=0.1) + theme_classic() + theme(aspect.ratio=1)
+```
 
 ```{r combineData, eval=FALSE}
 sce$id <- paste0(sce$stim, sce$ind)
