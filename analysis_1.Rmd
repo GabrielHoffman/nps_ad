@@ -25,6 +25,9 @@ R
 system("ml git; git pull")
 rmarkdown::render("analysis_1.Rmd");
 
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+
 --->
 
 
@@ -95,7 +98,7 @@ file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/meta/NPS-AD_roundMerged
 df_cell = fread(file)
 colnames(df_cell)[1] = "cellID"
 
-sceList_filter = mclapply(sceList[1:10], function(sce){
+sceList_filter = mclapply(sceList, function(sce){
 
   # keep only cells in metadata
   sce = sce[,colnames(sce) %in% df_cell$cellID]
@@ -128,14 +131,14 @@ sceList_filter = mclapply(sceList[1:10], function(sce){
 
 ```{r combine}
 # combine into single SingleCellExperiment
-sceCombine = do.call(cbind, sceList_filter)   
+sceCombine = do.call(cbind, sceList_filter)    
 ```
 
 
 # Joint UMAP
 ```{r umap}
 df = cbind(reducedDim(sceCombine), colData(sceCombine))
-
+ 
 ggplot(df, aes(UMAP1, UMAP2, color=anno)) + geom_point(size=0.1) + theme_classic() + theme(aspect.ratio=1)
 ```
 
