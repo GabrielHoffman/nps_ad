@@ -44,7 +44,7 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-```{r load.packages}
+```{r load.packages, cache=FALSE}
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
 library(zellkonverter)
@@ -75,7 +75,7 @@ sceList = lapply(files, function(file){
 ```{r preprocess}
 # computeLibraryFactors
 sceList = mclapply(sceList, function(sce){
-  library(HDF5Array)
+  # library(HDF5Array)
 
   computeLibraryFactors(sce)
 }, mc.cores=24)
@@ -83,11 +83,15 @@ sceList = mclapply(sceList, function(sce){
 # perCellQCMetrics
 df_qc = mclapply(sceList, function(sce){
 
-  library(HDF5Array)
+  # library(HDF5Array)
 
   perCellQCMetrics(sce)
 }, mc.cores=24)
 df_qc = do.call(rbind, df_qc)
+```
+
+```{r exit, cache=FALSE}
+knitr::knit_exit()
 ```
 
 # Combine with metadata
