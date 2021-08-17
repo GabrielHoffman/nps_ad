@@ -98,7 +98,7 @@ file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/meta/NPS-AD_roundMerged
 df_cell = fread(file)
 colnames(df_cell)[1] = "cellID"
 
-sceList_filter = mclapply(sceList, function(sce){
+sceList_filter = lapply(sceList, function(sce){
 
   # keep only cells in metadata
   sce = sce[,colnames(sce) %in% df_cell$cellID]
@@ -126,7 +126,7 @@ sceList_filter = mclapply(sceList, function(sce){
   # filter based on QC
   keep = with(colData(sce), !pred_dbl & demux_type == 'singlet' & passed_qc)
   sce[,keep]
-  }, mc.cores=24)
+  })#, mc.cores=24)
 ```
 
 ```{r combine}
