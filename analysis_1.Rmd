@@ -67,8 +67,6 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
 sceList = lapply(files, function(file){
   readH5AD(file, "counts", use_hdf5=TRUE)
   })
-# combine into single SingleCellExperiment
-# sceCombine = do.call(cbind, sceList)
 ```
 
 ```{r preprocess}
