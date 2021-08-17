@@ -161,7 +161,7 @@ pbObj <- aggregateData(sceCombine_prep,
     assay = "counts", 
     fun = "sum",
     by = c("cluster_id", "sample_id"),
-    BPPARAM = SnowParam(8, progressbar=TRUE))
+    BPPARAM = SnowParam(36, progressbar=TRUE))
 ```
 
 
