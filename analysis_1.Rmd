@@ -121,6 +121,15 @@ sceList_filter = mclapply(sceList, function(sce){
   }, mc.cores=24)
 ```
 
+```{r combine}
+# combine into single SingleCellExperiment
+sceCombine = do.call(cbind, sceList_filter)
+```
+
+# df = cbind(reducedDim(sce), colData(sce))
+
+# ggplot(df, aes(UMAP1, UMAP2, color=anno)) + geom_point() + theme_classic() + theme(aspect.ratio=1)
+
 
 ```{r combineData, eval=FALSE}
 sce$id <- paste0(sce$stim, sce$ind)
