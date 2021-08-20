@@ -135,16 +135,28 @@ sceList_filter = mclapply(sceList, function(sce){
 ```{r combine}
 # combine into single SingleCellExperiment 
 # remove entries that are NULL
+# Note that sceCombine is a DelayedArray where are the concatenation
+#   is delayed, and data is distributed cross ~1000 files
+# When operations are run on this matrix, reading data and running
+#   extract_sparse_array() take most of the time
 keep = ! sapply(sceList_filter, is.null)  
 sceCombine = do.call(cbind, sceList_filter[keep])
-```
 
+# Instead first combine all filtered data into a single H5AD,
+#   and perform operations on that
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_filtered.h5ad"
+writeH5AD(sceCombine, file, X_name="counts")
+
+# Read back in consolidated H5AD file
+rm(sceCombine)
+sceCombine = readH5AD(file, "counts", use_hdf5=TRUE)
+```
 
 # Joint UMAP
 ```{r umap}
 df = cbind(reducedDim(sceCombine), colData(sceCombine))
   
-ggplot(df, aes(UMAP1, UMAP2, color=anno, shape=class)) + geom_point(size=1) + theme_classic() + theme(aspect.ratio=1)
+ggplot(df, aes(UMAP1, UMAP2, color=anno, shape=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
 ```
 
 ```{r combineData}
@@ -160,24 +172,52 @@ sceCombine_prep <- prepSCE(sceCombine,
 pbObj <- aggregateData(sceCombine_prep,
     assay = "counts", 
     fun = "sum",
-    by = c("cluster_id", "sample_id"),
-    BPPARAM = SnowParam(18, progressbar=TRUE))
+    by = c("cluster_id", "sample_id"))
+    # BPPARAM = SnowParam(18, progressbar=TRUE))
+```
+
+# Get per sample/per cellType summary of statistics
+# include only included cells
+```{r collapse}
+df_sub = df_cell[cellID %in% colnames(sceCombine_prep),]
+df_sub[,tmp:=strsplit(cellID, '_')]
+df_sub[,Batch:=sapply(tmp, function(x) x[1])]
+df_sub[,Donor:=sapply(tmp, function(x) x[2])]
+df_sub[,barcode:=sapply(tmp, function(x) x[3])]
+df_sub[,tmp:=NULL]
+
+df_collapse = df_sub[,data.table(ID = paste0(Batch, '_', Donor),
+                              n_genes = mean(n_genes),
+                              n_counts = mean(n_counts),
+                              percent_mito = mean(percent_mito),
+                              scale = mean(scale),
+                              UMAP_1 = mean(UMAP_1),
+                              UMAP_2 = mean(UMAP_2)),
+                              by=c('Batch', 'Donor', 'anno')]
+```
+
+## Collapsed UMAP
+```{r umap.collapse} 
+ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
 ```
 
 
 # one sheet per subpopulation
-assayNames(pb)
+assayNames(pbObj)
 
+```{r voom}
+# Normalize and apply voom
+res.proc = processAssays( pbObj, ~ UMAP_1 + UMAP_2, 
+  min.count = 5, 
+  pmetadata = df_collapse, 
+  pkeys=c('ID', 'anno'))
 
+res.proc
+```
 
-
-
-
-
-
-
-
-
+```{r voom.plot}
+plotVoom( res.proc)
+```
 
 
 
