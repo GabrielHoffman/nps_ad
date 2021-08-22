@@ -1,0 +1,151 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'Process h5ad then dreamlet'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{Decorrelate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+cd /hpc/users/hoffmg01/work/nps_ad
+R
+# rm -rf min_example_cache/
+
+system("ml git; git pull")
+rmarkdown::render("min_example.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+
+--->
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=TRUE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(DelayedMatrixStats)
+library(dreamlet)
+library(muscat)
+library(cowplot)
+library(ggplot2)
+library(zenith)
+library(scater)
+library(HDF5Array)
+library(data.table)
+library(S4Vectors)
+library(reshape2)
+})
+
+# H5AD files from CellRanger
+files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5ad", full.names=TRUE, recursive=TRUE),
+  dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r2", pattern="h5ad", full.names=TRUE, recursive=TRUE),
+  dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r3", pattern="h5ad", full.names=TRUE, recursive=TRUE))
+```
+
+
+# DelayedArray
+```{r DelayedArray}
+outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
+
+K = 5
+time_da = lapply( 3:K, function(k){
+
+	cat("\r", k, "     ")
+
+	df = system.time({
+		# read each H5AD file as SingleCellExperiment
+		sceList = lapply(files[1:k], function(file){
+		  readH5AD(file, "counts", use_hdf5=TRUE, reader="python")
+		  })
+
+		# combine samples into SingleCellExperiment
+		sceCombine = do.call(cbind, sceList)
+
+		writeH5AD(sceCombine, outfile, "counts")
+	})
+	data.frame(k = k, t(c(df)))
+})
+time_da = do.call(rbind, time_da)
+time_da$Method = "DelayedArray"
+```
+
+
+# Concatenate
+```{r concat}
+outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
+
+K = 5
+time_concat = lapply( 3:K, function(k){
+
+	cat("\r", k, "     ")
+
+	df = system.time({
+		# read each H5AD file as SingleCellExperiment
+		sceList = lapply(files[1:k], function(file){
+		  readH5AD(file, "counts", use_hdf5=TRUE, reader="python")
+		  })
+		
+		adataList = lapply(sceList, SCE2AnnData, X_name="counts")
+
+		# sum(sapply(adataList, function(x) x$n_obs))
+
+		res = adataList[[1]]
+		for(i in 2:k){
+			res = res$concatenate( adataList[[i]])
+		}
+		res$write_h5ad(outfile)
+	})
+	data.frame(k = k, t(c(df)))
+})
+time_concat = do.call(rbind, time_concat)
+time_concat$Method = "Concatenate"
+```
+
+# Plot time
+```{r}
+df = rbind(time_da, time_concat)[,c(1:4, 7)]
+
+df = melt(df, id.vars=c("Method", "k"))
+
+ggplot(df, aes(k, value, col=variable)) + geom_line() + theme_classic() + theme(aspect.ratio=1) + xlab("Number of samples") + ylab("Time") + facet_wrap(~Method)
+```
+
+
+
+
+
+
+
+
+
