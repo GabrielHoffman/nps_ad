@@ -82,7 +82,7 @@ K = 5
 time_da = lapply( 3:K, function(k){
 
 	message("\r", k, "     ")
-
+ 
 	df = system.time({
 		# read each H5AD file as SingleCellExperiment
 		sceList = lapply(files[1:k], function(file){
