@@ -37,7 +37,7 @@ rmarkdown::render("min_example.Rmd");
 knitr::opts_chunk$set(
   echo = FALSE,
   warning=FALSE,
-  message=TRUE,
+  message=FALSE,
   error = FALSE,
   tidy = FALSE,
   dev = c("png", "pdf"),
@@ -133,7 +133,7 @@ time_concat$Method = "Concatenate"
 ```
 
 # Plot time
-```{r}
+```{r plot.time}
 df = rbind(time_da, time_concat)[,c(1:4, 7)]
 
 df = melt(df, id.vars=c("Method", "k"))
