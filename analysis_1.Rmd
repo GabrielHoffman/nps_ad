@@ -19,6 +19,7 @@ vignette: >
 <!--- 
 
 cd /hpc/users/hoffmg01/work/nps_ad
+ml python
 R
 # rm -rf analysis_1_cache/
 
