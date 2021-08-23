@@ -65,6 +65,29 @@ library(S4Vectors)
 })
 ```
 
+
+```{r functions}
+# Write SCE list to H5AD file
+writeSCElist = function( sceList, X_name, outfile){
+
+  keep = ! sapply(sceList, is.null)  
+
+  adataList = lapply(sceList[keep], function(sce){
+    SCE2AnnData(sce, X_name=X_name )
+  })
+
+  # sum(sapply(adataList, function(x) x$n_obs))
+
+  res = adataList[[1]]
+
+  if( length(adataList) > 1){
+    res = do.call(res$concatenate, adataList[-1])
+  }
+  res$write_h5ad(outfile)
+}
+```
+
+
 ```{r load.data}
 # H5AD files from CellRanger
 files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5ad", full.names=TRUE, recursive=TRUE),
@@ -132,7 +155,7 @@ sceList_filter = mclapply(sceList, function(sce){
   }, mc.cores=48)
 ```
 
-```{r combine}
+```{r combine, eval=FALSE}
 # combine into single SingleCellExperiment 
 # remove entries that are NULL
 # Note that sceCombine is a DelayedArray where are the concatenation
@@ -151,6 +174,14 @@ writeH5AD(sceCombine, file, X_name="counts")
 rm(sceCombine)
 sceCombine = readH5AD(file, "counts", use_hdf5=TRUE)
 ```
+
+```{r combine2}
+keep = ! sapply(sceList_filter, is.null)  
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_filtered.h5ad"
+writeSCElist( sceList_filter[keep], "counts", file)
+```
+
+
 
 # Joint UMAP
 ```{r umap}
