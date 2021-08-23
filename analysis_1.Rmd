@@ -177,9 +177,8 @@ sceCombine = readH5AD(file, "counts", use_hdf5=TRUE)
 ```
 
 ```{r combine2}
-keep = ! sapply(sceList_filter, is.null)  
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_filtered.h5ad"
-writeSCElist( sceList_filter[keep], "counts", file)
+writeSCElist( sceList_filter[1:5], "counts", file)
 ```
 
 
