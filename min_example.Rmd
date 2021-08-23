@@ -72,7 +72,7 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
 
 
 # Concatenate
-```{r concat}
+```{r concat, eval=FALSE}
 outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
 
 K_max = 40
@@ -116,7 +116,7 @@ time_concat$Method = "Concatenate"
 
 
 # Concatenate
-```{r concat}
+```{r concat2}
 outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
 
 K_max = 200
