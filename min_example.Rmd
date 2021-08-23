@@ -55,14 +55,9 @@ library(SingleCellExperiment)
 library(zellkonverter)
 library(DelayedArray)
 library(DelayedMatrixStats)
-library(dreamlet)
-library(muscat)
-library(cowplot)
 library(ggplot2)
-library(zenith)
 library(scater)
 library(HDF5Array)
-library(data.table)
 library(S4Vectors)
 library(reshape2)
 })
@@ -80,7 +75,7 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
 ```{r concat}
 outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
 
-K = 5
+K = 100
 time_concat = lapply( 3:K, function(k){
 
 	message("\r", k, "     ")
@@ -131,7 +126,7 @@ ggplot(df, aes(k, value, col=variable)) + geom_line() + theme_classic() + theme(
 ```{r DelayedArray}
 outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
 
-K = 5
+K = 50
 time_da = lapply( 3:K, function(k){
 
 	message("\r", k, "     ")
