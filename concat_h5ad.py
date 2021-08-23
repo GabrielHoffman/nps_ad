@@ -21,25 +21,34 @@ def main(argv):
       elif opt in ("-o", "--ofile"):
          outfile = arg
 
+   if infile == None:
+      print("Must specify infile")
+      sys.exit(2)      
+
+   if outfile == '':
+      print("Must specify outfile")
+      sys.exit(2)   
+
    # Run code data
    ################
 
    # read list of h5a files
    h5adfiles = open(infile, "r").read().split('\n')
 
-   # i = [file != '' for file in h5adfiles]
-   b = (len(h5adfiles)-1)
-   h5adfiles = h5adfiles[0:b]
+   # remove blank lines
+   h5adfiles = list(filter(None, h5adfiles))
 
-   print(h5adfiles)
+   print( "Combine", len(h5adfiles), "H5AD files")
 
    # Create anndata array
    adatas = [ad.read(file) for file in h5adfiles] 
 
    # Concatenate data
+   print(" Concatenating data...")
    adata = ad.concat(adatas[:])
 
    # Write to disk
+   print(" Writing to H5AD...")
    adata.write( outfile )
 
 
