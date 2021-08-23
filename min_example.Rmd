@@ -75,7 +75,7 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
 ```{r concat}
 outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
 
-K_max = 200
+K_max = 40
 
 time_concat = lapply( seq(3, K_max, by=5), function(k){
 
@@ -109,6 +109,54 @@ time_concat = lapply( seq(3, K_max, by=5), function(k){
 time_concat = do.call(rbind, time_concat)
 time_concat$Method = "Concatenate"
 ```
+
+
+
+
+
+
+# Concatenate
+```{r concat}
+outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
+
+K_max = 200
+
+time_concat = lapply( seq(3, K_max, by=5), function(k){
+
+	message("\r", k, "     ")
+
+	df = system.time({
+		# read each H5AD file as SingleCellExperiment
+		# sceList = lapply(files[1:k], function(file){
+		#   readH5AD(file, "counts", use_hdf5=TRUE, reader="python")
+		#   })		
+		# adataList = mclapply(sceList, SCE2AnnData, X_name="counts", mc.cores=10)
+
+		# read each H5AD file as SingleCellExperiment
+		# convert to AddData
+		adataList = lapply(files[1:k], function(file){
+
+			sce = readH5AD(file, "counts", use_hdf5=TRUE, reader="python")
+			SCE2AnnData(sce, X_name="counts" )
+			})
+
+		# sum(sapply(adataList, function(x) x$n_obs))
+
+		res = adataList[[1]]
+		res = do.call(res$concatenate, adataList[-1])
+		res$write_h5ad(outfile)
+	})
+	data.frame(k = k, t(c(df)))
+})
+time_concat = do.call(rbind, time_concat)
+time_concat$Method = "Concatenate"
+```
+
+
+
+
+
+
 
 
 # Plot time 1
