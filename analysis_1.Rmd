@@ -29,6 +29,33 @@ rmarkdown::render("analysis_1.Rmd");
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
 
+
+# Concatenate H5AD files
+# Keeps counts as integers so uses less memory than 
+# concatenating in R
+ml python
+cd /hpc/users/hoffmg01/work/nps_ad
+
+# prefix
+OUTFILE=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/NPSAD_concat
+
+BATCHES=(1 2 3)
+
+for B in ${BATCHES[@]}; do
+
+  # list of H5AD files
+  ls /sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r${B}/NPSAD*.h5ad > file.txt
+
+  # concatenate
+  ./concat_h5ad.py -i file.txt -o ${OUTFILE}_${B}.h5ad
+done
+
+
+
+
+
+
+
 --->
 
 
@@ -67,122 +94,23 @@ library(S4Vectors)
 ```
 
 
-```{r functions}
-
-# # Write SCE list to H5AD file
-# # Read data into list of AnnData's and then concatenate in 1 step
-# writeSCElist = function( sceList, X_name, outfile, verbose=TRUE){
-
-#   if( verbose ) message("Converting to AnnData...")
-
-#   keep = ! sapply(sceList, is.null)  
-
-#   adataList = lapply(sceList[keep], function(sce){
-#     SCE2AnnData(sce, X_name=X_name )
-#   })
-
-#   # sum(sapply(adataList, function(x) x$n_obs))
-
-#   if( verbose ) message("Concatenating AnnData...")
-#   res = adataList[[1]]
-#   if( length(adataList) > 1){
-#     res = do.call(res$concatenate, adataList[-1])
-#   }
-
-#   if( verbose ) message("Writing AnnData to H5AD...")
-#   res$write_h5ad(outfile)
-# }
-
-# system.time({
-# writeSCElist( sceList_filter[1:200], "counts", file)
-# })
-
-
-
-#' Write list SCE's to H5AD file
-#'
-#' Write list SCE's to H5AD file
-#'
-#' @param sceList list of SingleCellExperiment's
-#' @param file file to write in H5AD format
-#' @param X_name Name of the assay to use as the primary matrix (\code{X}) of the AnnData object. If \code{NULL}, the first assay of \code{sce} will by used by default.
-#' @param verbose show progress messages
-#'
-#' @details
-#' Create AnnData one at a time and incrementally concatenate
-.writeSCElist = function( sceList, file, X_name=NULL, verbose=TRUE){
-
-  if( verbose ) message("Converting to AnnData...")
-
-  # get indeces of SCE's to keep
-  keepIdx = which(!sapply(sceList, is.null))
- 
-  # loop thru indeces to keep
-  for( i in keepIdx ){
-    if( verbose ) cat("\r", i, '      ')
-
-    # Convert SCE to AnnData
-    ad = SCE2AnnData(sceList[[i]], X_name=X_name )
-
-    # Concatante
-    if( i == keepIdx[1] ){
-      res = ad
-    }else{
-      res = res$concatenate( ad )
-    }
-  }
-
-  # write to file
-  if( verbose ) message("Writing AnnData to H5AD...")
-  res$write_h5ad(file)
-}
-
-createBatches = function(x, batchSize){
-  lapply( seq(1, length(x), by=batchSize), function(i){
-    end = min(i+batchSize-1, length(x))
-    x[seq(i, end)]
-  })
-}
-
-
-writeSCElist = function( sceList, file, X_name=NULL, batchSize = length(sceList), verbose=TRUE){
-
-  # get indeces of SCE's to keep
-  keepIdx = which(!sapply(sceList, is.null))
-
-  idxList = createBatches( keepIdx, batchSize)
-
-  for(i in 1:length(idxList) ){
-    .writeSCElist( sceList_filter[idxList[[i]]], paste0(file, "_", i), "counts")
-  }
-}
-```
-
-
-
-
-
-
-
 ```{r load.data}
 # H5AD files from CellRanger
-files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5ad", full.names=TRUE, recursive=TRUE),
-  dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r2", pattern="h5ad", full.names=TRUE, recursive=TRUE),
-  dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r3", pattern="h5ad", full.names=TRUE, recursive=TRUE))
+files = dir("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/", pattern="NPSAD_concat.*h5ad", full.names=TRUE)
 
 # read each H5AD file as SingleCellExperiment
 sceList = lapply(files, function(file){
   readH5AD(file, "counts", use_hdf5=TRUE)
   })
+sceCombine = do.call(cbind, sceList)
 ```
 
-```{r preprocess}
+```{r preprocess, eval=FALSE}
 # computeLibraryFactors
-sceList = mclapply(sceList, computeLibraryFactors, mc.cores=48)
+sceCombine = computeLibraryFactors( sceCombine )
 
 # perCellQCMetrics
-df_qc = mclapply(sceList, perCellQCMetrics, mc.cores=48)
-df_qc = do.call(rbind, df_qc)
+df_qc = perCellQCMetrics( sceCombine )
 ```
 
 # Combine with metadata
@@ -193,82 +121,45 @@ file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/meta/NPS-AD_roundMerged
 df_cell = fread(file)
 colnames(df_cell)[1] = "cellID"
 
-sceList_filter = mclapply(sceList, function(sce){
+# keep only cells in metadata
+sceCombine_filter = sceCombine[,colnames(sceCombine) %in% df_cell$cellID]
 
-  # keep only cells in metadata
-  sce = sce[,colnames(sce) %in% df_cell$cellID]
+# Parse cellID
+id = rownames(colData(sceCombine_filter))
+df_key = lapply(strsplit(id, '_'), function(x) data.frame(Batch = x[1], Donor = x[2], barcode = x[3]))
+df_key = do.call(rbind, df_key)
+rownames(df_key) = id
+colData(sceCombine_filter) = cbind(colData(sceCombine_filter), df_key)
 
-  # if at least 1 cell is retained
-  if( ncol(sce) > 0){
+# merge metadata
+df = merge(colData(sceCombine_filter), df_cell, by.x="row.names", by.y="cellID", all.x=TRUE)
+rownames(df) = df$Row.names
 
-    # Parse cellID
-    id = rownames(colData(sce))
-    df_key = lapply(strsplit(id, '_'), function(x) data.frame(Batch = x[1], Donor = x[2], barcode = x[3]))
-    df_key = do.call(rbind, df_key)
-    rownames(df_key) = id
-    colData(sce) = cbind(colData(sce), df_key)
+# set colData
+drop = c("Row.names", "UMAP_1", "UMAP_2")
+colData(sceCombine_filter) = df[, !(colnames(df) %in% drop)]
 
-    # merge metadata
-    df = merge(colData(sce), df_cell, by.x="row.names", by.y="cellID", all.x=TRUE)
-    rownames(df) = df$Row.names
+# assign UMAP
+df_umap = data.frame(UMAP1 = df$UMAP_1, UMAP2 = df$UMAP_2)
+rownames(df_umap) = df$Row.names
+reducedDims(sceCombine_filter) <- list(UMAP=df_umap)
 
-    # set colData
-    drop = c("Row.names", "UMAP_1", "UMAP_2")
-    colData(sce) = df[, !(colnames(df) %in% drop)]
-
-    # assign UMAP
-    df_umap = data.frame(UMAP1 = df$UMAP_1, UMAP2 = df$UMAP_2)
-    rownames(df_umap) = df$Row.names
-    reducedDims(sce) <- list(UMAP=df_umap)
-
-    # filter based on QC
-    keep = with(colData(sce), !pred_dbl & demux_type == 'singlet' & passed_qc)
-    sce = sce[,keep]
-  }else{
-    sce = NULL
-  }
-  sce
-  }, mc.cores=48)
+# filter based on QC
+keep = with(colData(sceCombine_filter), !pred_dbl & demux_type == 'singlet' & passed_qc)
+sceCombine_filter = sceCombine_filter[,keep]
 ```
-
-```{r combine, eval=FALSE}
-# combine into single SingleCellExperiment 
-# remove entries that are NULL
-# Note that sceCombine is a DelayedArray where are the concatenation
-#   is delayed, and data is distributed cross ~1000 files
-# When operations are run on this matrix, reading data and running
-#   extract_sparse_array() take most of the time
-keep = ! sapply(sceList_filter, is.null)  
-sceCombine = do.call(cbind, sceList_filter[keep])
-
-# Instead first combine all filtered data into a single H5AD,
-#   and perform operations on that
-file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_filtered.h5ad"
-writeH5AD(sceCombine, file, X_name="counts")
-
-# Read back in consolidated H5AD file
-rm(sceCombine)
-sceCombine = readH5AD(file, "counts", use_hdf5=TRUE)
-```
-
-```{r combine2}
-file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_filtered.h5ad"
-writeSCElist( sceList_filter, file, "counts", batchSize=100 )
-```
-
-
 
 # Joint UMAP
 ```{r umap}
-df = cbind(reducedDim(sceCombine), colData(sceCombine))
+df = cbind(reducedDim(sceCombine_filter), colData(sceCombine_filter))
   
 ggplot(df, aes(UMAP1, UMAP2, color=anno, shape=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
 ```
 
 ```{r combineData}
 # Specify how to collapse into pseudo-bulk
-sceCombine$id <- paste0(sceCombine$Batch, '_', sceCombine$Donor)
-sceCombine_prep <- prepSCE(sceCombine, 
+sceCombine_filter$id <- paste0(sceCombine_filter$Batch, '_', sceCombine_filter$Donor)
+sceCombine_prep <- prepSCE(sceCombine_filter, 
     kid = "anno", # subpopulation assignments
     gid = "Donor",  # group IDs (ctrl/stim)
     sid = "id",   # sample IDs (ctrl/stim.1234)
@@ -278,8 +169,8 @@ sceCombine_prep <- prepSCE(sceCombine,
 pbObj <- aggregateData(sceCombine_prep,
     assay = "counts", 
     fun = "sum",
-    by = c("cluster_id", "sample_id"))
-    # BPPARAM = SnowParam(18, progressbar=TRUE))
+    by = c("cluster_id", "sample_id"),
+    BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
 # Get per sample/per cellType summary of statistics
@@ -307,9 +198,6 @@ df_collapse = df_sub[,data.table(ID = paste0(Batch, '_', Donor),
 ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
 ```
 
-
-# one sheet per subpopulation
-assayNames(pbObj)
 
 ```{r voom}
 # Normalize and apply voom
