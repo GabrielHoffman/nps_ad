@@ -68,25 +68,100 @@ library(S4Vectors)
 
 
 ```{r functions}
-# Write SCE list to H5AD file
-writeSCElist = function( sceList, X_name, outfile){
 
-  keep = ! sapply(sceList, is.null)  
+# # Write SCE list to H5AD file
+# # Read data into list of AnnData's and then concatenate in 1 step
+# writeSCElist = function( sceList, X_name, outfile, verbose=TRUE){
 
-  adataList = lapply(sceList[keep], function(sce){
-    SCE2AnnData(sce, X_name=X_name )
-  })
+#   if( verbose ) message("Converting to AnnData...")
 
-  # sum(sapply(adataList, function(x) x$n_obs))
+#   keep = ! sapply(sceList, is.null)  
 
-  res = adataList[[1]]
+#   adataList = lapply(sceList[keep], function(sce){
+#     SCE2AnnData(sce, X_name=X_name )
+#   })
 
-  if( length(adataList) > 1){
-    res = do.call(res$concatenate, adataList[-1])
+#   # sum(sapply(adataList, function(x) x$n_obs))
+
+#   if( verbose ) message("Concatenating AnnData...")
+#   res = adataList[[1]]
+#   if( length(adataList) > 1){
+#     res = do.call(res$concatenate, adataList[-1])
+#   }
+
+#   if( verbose ) message("Writing AnnData to H5AD...")
+#   res$write_h5ad(outfile)
+# }
+
+# system.time({
+# writeSCElist( sceList_filter[1:200], "counts", file)
+# })
+
+
+
+#' Write list SCE's to H5AD file
+#'
+#' Write list SCE's to H5AD file
+#'
+#' @param sceList list of SingleCellExperiment's
+#' @param file file to write in H5AD format
+#' @param X_name Name of the assay to use as the primary matrix (\code{X}) of the AnnData object. If \code{NULL}, the first assay of \code{sce} will by used by default.
+#' @param verbose show progress messages
+#'
+#' @details
+#' Create AnnData one at a time and incrementally concatenate
+.writeSCElist = function( sceList, file, X_name=NULL, verbose=TRUE){
+
+  if( verbose ) message("Converting to AnnData...")
+
+  # get indeces of SCE's to keep
+  keepIdx = which(!sapply(sceList, is.null))
+ 
+  # loop thru indeces to keep
+  for( i in keepIdx ){
+    if( verbose ) cat("\r", i, '      ')
+
+    # Convert SCE to AnnData
+    ad = SCE2AnnData(sceList[[i]], X_name=X_name )
+
+    # Concatante
+    if( i == keepIdx[1] ){
+      res = ad
+    }else{
+      res = res$concatenate( ad )
+    }
   }
-  res$write_h5ad(outfile)
+
+  # write to file
+  if( verbose ) message("Writing AnnData to H5AD...")
+  res$write_h5ad(file)
+}
+
+createBatches = function(x, batchSize){
+  lapply( seq(1, length(x), by=batchSize), function(i){
+    end = min(i+batchSize-1, length(x))
+    x[seq(i, end)]
+  })
+}
+
+
+writeSCElist = function( sceList, file, X_name=NULL, batchSize = length(sceList), verbose=TRUE){
+
+  # get indeces of SCE's to keep
+  keepIdx = which(!sapply(sceList, is.null))
+
+  idxList = createBatches( keepIdx, batchSize)
+
+  for(i in 1:length(idxList) ){
+    .writeSCElist( sceList_filter[idxList[[i]]], paste0(file, "_", i), "counts")
+  }
 }
 ```
+
+
+
+
+
 
 
 ```{r load.data}
@@ -178,7 +253,7 @@ sceCombine = readH5AD(file, "counts", use_hdf5=TRUE)
 
 ```{r combine2}
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_filtered.h5ad"
-writeSCElist( sceList_filter[1:5], "counts", file)
+writeSCElist( sceList_filter, file, "counts", batchSize=100 )
 ```
 
 
