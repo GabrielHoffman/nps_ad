@@ -75,8 +75,9 @@ files = c(dir("/sc/arion/projects/CommonMind/leed62/NPS-AD/h5ad/r1", pattern="h5
 ```{r concat}
 outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
 
-K = 100
-time_concat = lapply( 3:K, function(k){
+K_max = 200
+
+time_concat = lapply( seq(3, K_max, by=5), function(k){
 
 	message("\r", k, "     ")
 
@@ -126,8 +127,9 @@ ggplot(df, aes(k, value, col=variable)) + geom_line() + theme_classic() + theme(
 ```{r DelayedArray}
 outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
 
-K = 50
-time_da = lapply( 3:K, function(k){
+K_max = 50
+
+time_da = lapply( seq(3, K_max, by=5), function(k){
 
 	message("\r", k, "     ")
  
