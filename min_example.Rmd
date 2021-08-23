@@ -127,12 +127,6 @@ time_concat = lapply( seq(3, K_max, by=5), function(k){
 
 	df = system.time({
 		# read each H5AD file as SingleCellExperiment
-		# sceList = lapply(files[1:k], function(file){
-		#   readH5AD(file, "counts", use_hdf5=TRUE, reader="python")
-		#   })		
-		# adataList = mclapply(sceList, SCE2AnnData, X_name="counts", mc.cores=10)
-
-		# read each H5AD file as SingleCellExperiment
 		# convert to AddData
 		adataList = lapply(files[1:k], function(file){
 
