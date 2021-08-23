@@ -165,8 +165,7 @@ sceCombine_prep <- prepSCE(sceCombine_filter,
 pbObj <- aggregateData(sceCombine_prep,
     assay = "counts", 
     fun = "sum",
-    by = c("cluster_id", "sample_id"),
-    BPPARAM = SnowParam(18, progressbar=TRUE))
+    by = c("cluster_id", "sample_id"))
 ```
 
 # Get per sample/per cellType summary of statistics
