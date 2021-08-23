@@ -41,6 +41,7 @@ def main(argv):
    print( "Combine", len(h5adfiles), "H5AD files")
 
    # Create anndata array
+   print(" Reading files...")
    adatas = [ad.read(file) for file in h5adfiles] 
 
    # Concatenate data
