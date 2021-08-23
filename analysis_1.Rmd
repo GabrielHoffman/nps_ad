@@ -161,8 +161,10 @@ sceCombine_prep <- prepSCE(sceCombine_filter,
     sid = "id",   # sample IDs (ctrl/stim.1234)
     drop = TRUE)
 
+saveRDS(sceCombine_prep, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_prep.RDS" )
+
 # Create pseudo-bulk SingleCellExperiment
-pbObj <- aggregateData(sceCombine_prep,
+pbObj <- aggregateData(sceCombine_prep[1:1000, 1:3000],
     assay = "counts", 
     fun = "sum",
     by = c("cluster_id", "sample_id"))
