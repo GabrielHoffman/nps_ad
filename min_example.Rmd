@@ -112,14 +112,11 @@ time_concat$Method = "Concatenate"
 
 
 # Plot time 1
-```{r plot.time1}
+```{r plot.time1, cache=FALSE}
 df = melt(time_concat[,1:4], id.vars=c("k"))
 
 ggplot(df, aes(k, value, col=variable)) + geom_line() + theme_classic() + theme(aspect.ratio=1) + xlab("Number of samples") + ylab("Time (sec)") + ylim(0, NA)
 ```
-
-
-
 
 
 
@@ -151,7 +148,7 @@ time_da$Method = "DelayedArray"
 ```
 
 # Plot time
-```{r plot.time2}
+```{r plot.time2, cache=FALSE}
 df = rbind(time_da, time_concat)[,c(1:4, 7)]
 
 df = melt(df, id.vars=c("Method", "k"))
