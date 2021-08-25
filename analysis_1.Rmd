@@ -210,7 +210,7 @@ ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + th
 
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ UMAP_1 + UMAP_2, 
+res.proc = processAssays( pbObj, ~ Donor + Batch, 
   min.count = 5, 
   pmetadata = df_collapse, 
   pkeys=c('ID', 'anno'))
@@ -218,10 +218,35 @@ res.proc = processAssays( pbObj, ~ UMAP_1 + UMAP_2,
 res.proc
 ```
 
+
+<!---
+Fix so that subsetting pbObj doesnt fail
+
+res.proc = processAssays( pbObj, ~ Donor + Batch, 
+  min.count = 5, 
+  pmetadata = df_collapse, 
+  pkeys=c('ID', 'anno'))
+--->
+
+
+
 ```{r voom.plot, fig.height=10, fig.width=10}
 plotVoom( res.proc)
 ```
 
+
+
+
+
+
+```{r varPart}
+res.vp = fitVarPart(res.proc, ~ Donor + Batch)
+```
+
+
+```{r vp.plot, fig.height=10, fig.width=10}
+plotVarPart res.vp)
+```
 
 
 
