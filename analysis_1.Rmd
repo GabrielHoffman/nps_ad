@@ -213,7 +213,8 @@ ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + th
 res.proc = processAssays( pbObj, ~ Donor + Batch, 
   min.count = 5, 
   pmetadata = df_collapse, 
-  pkeys=c('ID', 'anno'))
+  pkeys=c('ID', 'anno'),
+  BPPARAM = SnowParam(16, progressbar=TRUE))
 
 res.proc
 ```
@@ -226,12 +227,15 @@ res.proc = processAssays( pbObj, ~ Donor + Batch,
   min.count = 5, 
   pmetadata = df_collapse, 
   pkeys=c('ID', 'anno'))
+
+
+
 --->
 
 
 
-```{r voom.plot, fig.height=10, fig.width=10}
-plotVoom( res.proc)
+```{r voom.plot, fig.height=10, fig.width=10, cache=FALSE}
+plotVoom( res.proc )
 ```
 
 
@@ -240,12 +244,12 @@ plotVoom( res.proc)
 
 
 ```{r varPart}
-res.vp = fitVarPart(res.proc, ~ Donor + Batch)
+res.vp = fitVarPart(res.proc, ~ Donor + Batch, BPPARAM = SnowParam(1, progressbar=TRUE))
 ```
 
 
-```{r vp.plot, fig.height=10, fig.width=10}
-plotVarPart res.vp)
+```{r vp.plot, fig.height=10, fig.width=10, cache=FALSE}
+plotVarPart( res.vp )
 ```
 
 
