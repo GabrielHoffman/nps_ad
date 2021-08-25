@@ -164,11 +164,23 @@ sceCombine_prep <- prepSCE(sceCombine_filter,
 saveRDS(sceCombine_prep, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_prep.RDS" )
 
 # Create pseudo-bulk SingleCellExperiment
-pbObj <- aggregateData(sceCombine_prep[1:1000, 1:3000],
+pbObj <- aggregateToPseudoBulk(sceCombine_prep,
     assay = "counts", 
     fun = "sum",
-    by = c("cluster_id", "sample_id"))
+    by = c("cluster_id", "sample_id"),
+    BPPARAM = SnowParam(8, progressbar=TRUE))
+
+saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj.RDS" )
 ```
+
+
+
+<!--- 
+# sceCombine_prep = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_prep.RDS" )
+
+pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj.RDS")
+--->
+
 
 # Get per sample/per cellType summary of statistics
 # include only included cells
