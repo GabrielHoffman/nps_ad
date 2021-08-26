@@ -113,15 +113,13 @@ time_concat$Method = "Concatenate"
 
 
 
-
-
-# Concatenate
+# Concatenate (faster?)
 ```{r concat2}
 outfile = "/sc/arion/scratch/hoffmg01/combine.h5ad"
 
 K_max = 200
 
-time_concat = lapply( seq(3, K_max, by=5), function(k){
+time_concat2 = lapply( seq(3, K_max, by=5), function(k){
 
 	message("\r", k, "     ")
 
@@ -132,33 +130,21 @@ time_concat = lapply( seq(3, K_max, by=5), function(k){
 
 			sce = readH5AD(file, "counts", use_hdf5=TRUE, reader="python")
 			SCE2AnnData(sce, X_name="counts" )
-			})
+		})
 
 		# sum(sapply(adataList, function(x) x$n_obs))
 
 		res = adataList[[1]]
 		res = do.call(res$concatenate, adataList[-1])
 		res$write_h5ad(outfile)
+
 	})
 	data.frame(k = k, t(c(df)))
 })
-time_concat = do.call(rbind, time_concat)
-time_concat$Method = "Concatenate"
+time_concat2 = do.call(rbind, time_concat2)
+time_concat2$Method = "Concatenate (fast)"
 ```
 
-
-
-
-
-
-
-
-# Plot time 1
-```{r plot.time1, cache=FALSE}
-df = melt(time_concat[,1:4], id.vars=c("k"))
-
-ggplot(df, aes(k, value, col=variable)) + geom_line() + theme_classic() + theme(aspect.ratio=1) + xlab("Number of samples") + ylab("Time (sec)") + ylim(0, NA)
-```
 
 
 
@@ -191,7 +177,7 @@ time_da$Method = "DelayedArray"
 
 # Plot time
 ```{r plot.time2, cache=FALSE}
-df = rbind(time_da, time_concat)[,c(1:4, 7)]
+df = rbind(time_da, time_concat, time_concat2)[,c(1:4, 7)]
 
 df = melt(df, id.vars=c("Method", "k"))
 
