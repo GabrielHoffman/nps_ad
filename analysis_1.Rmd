@@ -31,7 +31,7 @@ rmarkdown::render("analysis_1.Rmd");
 
 
 ml git
-cd build2/dreamlet
+cd ~/build2/dreamlet
 git pull
 R CMD INSTALL .
 
@@ -218,28 +218,15 @@ ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + th
 
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ Donor + Batch, 
+res.proc = processAssays( pbObj, ~ (1|Donor) + (1|Batch), 
   min.cells = 5,
   min.count = 5, 
-  pmetadata = df_collapse, 
+  pmetadata = df_collapse,  
   pkeys=c('ID', 'anno'),
   BPPARAM = SnowParam(16, progressbar=TRUE))
 
 res.proc
 ```
-
-
-<!---
-Fix so that subsetting pbObj doesnt fail
-
-res.proc = processAssays( pbObj, ~ Donor + Batch, 
-  min.count = 5, 
-  pmetadata = df_collapse, 
-  pkeys=c('ID', 'anno'))
-
-
-
---->
 
 
 
