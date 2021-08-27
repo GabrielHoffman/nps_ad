@@ -38,7 +38,6 @@ R CMD INSTALL .
 
 
 
-
 # Refin batch info
 # need to add super- and sub-batch variable
 # NPSAD-20210128-A2-HTO
@@ -255,11 +254,6 @@ res.proc
 plotVoom( res.proc )
 ```
 
-```{r exit, cache=FALSE}
-knitr::knit_exit()
-```
-
-
 
 
 ```{r varPart}
@@ -269,6 +263,13 @@ res.vp = fitVarPart(res.proc, ~ (1|Donor) + (1|Batch), BPPARAM = SnowParam(18, p
 
 ```{r vp.plot, fig.height=10, fig.width=10, cache=FALSE}
 plotVarPart( res.vp )
+```
+
+
+
+
+```{r exit, cache=FALSE, eval=FALSE}
+knitr::knit_exit()
 ```
 
 
