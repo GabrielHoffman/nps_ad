@@ -245,7 +245,7 @@ res.proc = processAssays( pbObj, ~ (1|Donor) + (1|Batch),
   pmetadata = df_collapse,  
   pkeys=c('ID', 'anno'),
   BPPARAM = SnowParam(16, progressbar=TRUE))
-
+  
 res.proc
 ```
 
