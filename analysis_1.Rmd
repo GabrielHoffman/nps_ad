@@ -100,7 +100,7 @@ library(S4Vectors)
 
 ```{r load.data}
 # H5AD files from CellRanger
-files = dir("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/", pattern="NPSAD_concat.*h5ad", full.names=TRUE)[1:2]
+files = dir("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/", pattern="NPSAD_concat.*h5ad", full.names=TRUE)
 
 # read each H5AD file as SingleCellExperiment
 sceList = lapply(files, function(file){
