@@ -36,6 +36,27 @@ git pull
 R CMD INSTALL .
 
 
+
+
+
+# Refin batch info
+# need to add super- and sub-batch variable
+# NPSAD-20210128-A2-HTO
+# NPSAD-20210127-A4-HTO
+
+
+table(df_sub$Batch)
+
+xtabs(~Batch + Donor, df_sub[Batch=="NPSAD-20201013-A2-HTO",])
+
+xtabs(~Batch + Donor, df_sub[Donor %in% c('127575', '129185', '1873', '194566',  '949', '95666591'),])
+
+
+
+
+
+
+
 devtools::reload("/hpc/users/hoffmg01/build2/dreamlet")
 
 # Concatenate H5AD files
@@ -220,7 +241,7 @@ ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + th
 # Normalize and apply voom
 res.proc = processAssays( pbObj, ~ (1|Donor) + (1|Batch), 
   min.cells = 5,
-  min.count = 5, 
+  min.count = 10, 
   pmetadata = df_collapse,  
   pkeys=c('ID', 'anno'),
   BPPARAM = SnowParam(16, progressbar=TRUE))
@@ -252,7 +273,8 @@ plotVarPart( res.vp )
 
 
 
-# need to add super batch variable
+
+
 
 
 
