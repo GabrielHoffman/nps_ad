@@ -60,7 +60,7 @@ eval_within_across_donor = function( pbObj ){
 	ggplot( df, aes(type, value)) + geom_violin(scale = "width", aes(fill=type)) + 
 	    ylab("Variance explained (%)") + xlab("") + geom_boxplot(width = 0.07, 
 	        fill = "grey", outlier.color = "black") + theme_bw(15) + 
-	        scale_fill_manual(values = col) + theme(legend.position = "none", aspect.ratio=1) + 
+	        scale_fill_manual(values = col) + theme(legend.position = "none", aspect.ratio=1, axis.text.x = element_text(angle = 45)) + 
 	        ylab("Correlation between samples") + scale_fill_manual(values=c("grey", "steelblue1")) + facet_wrap(~assay)
 }
 
