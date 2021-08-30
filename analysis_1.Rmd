@@ -265,6 +265,12 @@ res.vp = fitVarPart(res.proc, ~ (1|Donor) + (1|Batch), BPPARAM = SnowParam(18, p
 plotVarPart( sortCols(res.vp) )
 ```
 
+```{r within_btw, fig.height=10, fig.width=10}
+source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
+
+eval_within_across_donor( res.proc[1:3])
+```
+
 
 
 
