@@ -297,7 +297,7 @@ plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
 
 Examples
 
-```{r vp.examine2, fig.height=6, fig.width=8, cache=FALSE}      
+```{r vp.examine2, fig.height=6, fig.width=8, cache=TRUE}      
 figList = lapply( df$gene[i], function(geneName){
   df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
 
