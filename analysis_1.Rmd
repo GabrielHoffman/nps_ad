@@ -238,13 +238,13 @@ df_collapse = df_sub[,data.table(ID = paste0(Batch, '_', Donor),
 After filtering there are `r length(table(df_sub$Batch))` batches, `r length(table(df_sub$Donor))` donors, and `r format(ncol(sceCombine_prep), big.mark=',')` cells.
 
 
-
+```{r xtabs}
 tab = xtabs(~Batch + Donor, df_sub[Donor %in% names(table(df_sub$Donor))[1:12],])
 
 ord = apply(as.matrix(tab), 2, function(x) min(which(x!=0)))
 idx = names(ord)[order(ord, decreasing=TRUE)]
 heatmap(tab[,idx], Rowv = NA, Colv=NA)
-
+```
 
 
 ## Collapsed UMAP
