@@ -270,7 +270,7 @@ plotVarPart( sortCols(res.vp) )
 ```
 
 ### Examine variancePartition results
-```{r vp.examine, fig.height=2, fig.width=7}
+```{r vp.examine, fig.height=2, fig.width=7, cache=FALSE}
 CT = "Astrocyte"
 
 i = 1:3
@@ -282,7 +282,7 @@ plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
 ```
 
 Examples
-```{r vp.examine2, fig.height=2, fig.width=10}      
+```{r vp.examine2, fig.height=2, fig.width=10, cache=FALSE}      
 figList = lapply( df$gene[i], function(geneName){
   df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
 
