@@ -285,7 +285,7 @@ plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
 figList = lapply( df$gene[i], function(geneName){
   df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
 
-  plotStratifyBy(df[1:100,], 'group_id', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
+  plotStratifyBy(df, 'group_id', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
 })
 
 fig_pct + theme(aspect.ratio=.2)
