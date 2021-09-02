@@ -181,7 +181,7 @@ ggplot(df, aes(UMAP1, UMAP2, color=class)) + geom_point(size=.05) + theme_classi
 ```{r umap3}
 df = cbind(reducedDim(sceCombine_filter), colData(sceCombine_filter))
   
-ggplot(df, aes(UMAP1, UMAP2, color=leiden)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
+ggplot(df, aes(UMAP1, UMAP2, color=leiden_labels)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
 ```
 
 
