@@ -38,19 +38,6 @@ R CMD INSTALL .
 
 
 
-# Refin batch info
-# need to add super- and sub-batch variable
-# NPSAD-20210128-A2-HTO
-# NPSAD-20210127-A4-HTO
-
-
-table(df_sub$Batch)
-
-xtabs(~Batch + Donor, df_sub[Batch=="NPSAD-20201013-A2-HTO",])
-
-xtabs(~Batch + Donor, df_sub[Donor %in% c('127575', '129185', '1873', '194566',  '949', '95666591'),])
-
-
 
 
 
@@ -283,7 +270,7 @@ plotVarPart( sortCols(res.vp) )
 ```
 
 ### Examine variancePartition results
-```{r vp.examine, fig.height=2, fig.width=7, cache=FALSE}
+```{r vp.examine, fig.height=2, fig.width=7}
 CT = "Astrocyte"
 
 i = 1:3
@@ -295,7 +282,8 @@ plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
 ```
 
 Examples
-```{r vp.examine2, fig.height=3, fig.width=8, cache=FALSE}      
+
+```{r vp.examine2, fig.height=6, fig.width=8, cache=FALSE}      
 figList = lapply( df$gene[i], function(geneName){
   df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
 
@@ -312,7 +300,13 @@ source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
 eval_within_across_donor( res.proc )
 ```
 
+TODO
 
+ - add 'mega-batches' 1,2,3
+ - add UMAP coordinates
+ - cell composition fractions
+ - how does cell number, read count influence within donor correlation
+   - What happens when I remove batch effect?
 
 
 
