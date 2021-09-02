@@ -234,6 +234,19 @@ df_collapse = df_sub[,data.table(ID = paste0(Batch, '_', Donor),
                               by=c('Batch', 'Donor', 'anno')]
 ```
 
+
+After filtering there are `r length(table(df_sub$Batch))` batches, `r length(table(df_sub$Donor))` donors, and `r format(ncol(sceCombine_prep), big.mark=',')` cells.
+
+
+
+tab = xtabs(~Batch + Donor, df_sub[Donor %in% names(table(df_sub$Donor))[1:12],])
+
+ord = apply(as.matrix(tab), 2, function(x) min(which(x!=0)))
+idx = names(ord)[order(ord, decreasing=TRUE)]
+heatmap(tab[,idx], Rowv = NA, Colv=NA)
+
+
+
 ## Collapsed UMAP
 ```{r umap.collapse} 
 ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
@@ -282,15 +295,13 @@ plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
 ```
 
 Examples
-```{r vp.examine2, fig.height=2, fig.width=10, cache=FALSE}      
+```{r vp.examine2, fig.height=3, fig.width=8, cache=FALSE}      
 figList = lapply( df$gene[i], function(geneName){
   df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
 
   plotStratifyBy(df, 'group_id', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
 })
-
-fig_pct + theme(aspect.ratio=.2)
-plot_grid( plotlist=figList, nrow=1 )
+plot_grid( plotlist=figList, nrow=2 )
 ```
 
 
@@ -300,7 +311,6 @@ source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
 
 eval_within_across_donor( res.proc )
 ```
-
 
 
 
