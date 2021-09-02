@@ -168,8 +168,22 @@ sceCombine_filter = sceCombine_filter[,keep]
 ```{r umap}
 df = cbind(reducedDim(sceCombine_filter), colData(sceCombine_filter))
   
-ggplot(df, aes(UMAP1, UMAP2, color=anno, shape=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
+ggplot(df, aes(UMAP1, UMAP2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
 ```
+
+```{r umap2}
+df = cbind(reducedDim(sceCombine_filter), colData(sceCombine_filter))
+  
+ggplot(df, aes(UMAP1, UMAP2, color=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
+```
+
+
+```{r umap3}
+df = cbind(reducedDim(sceCombine_filter), colData(sceCombine_filter))
+  
+ggplot(df, aes(UMAP1, UMAP2, color=leiden)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
+```
+
 
 ```{r combineData}
 # Specify how to collapse into pseudo-bulk
