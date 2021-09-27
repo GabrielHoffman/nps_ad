@@ -57,18 +57,14 @@ knitr::opts_chunk$set(
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
 library(dreamlet)
+library(variancePartition)
 })
-
-# packageVersion("zellkonverter") >= 1.3.1
-# https://github.com/theislab/zellkonverter
-
 ```
 
 
 
 
-```{r load.data, fig.height=10, fig.width=10, cache=FALSE}
-
+```{r load.data}
 # read pseudobulk
 pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj.RDS")
 
@@ -86,6 +82,7 @@ residList = lapply(fit.dl, function(fit){
   md = metadata(pbObj)[[1]]
   ids = intersect(colnames(res), md$sample_id)
   df = md[match(ids, md$sample_id),]
+  df$group_id = droplevels(df$group_id)
 
   # Compute mean for each donor
   resAgg = lapply( levels(df$group_id), function(gid){
@@ -100,7 +97,6 @@ residList = lapply(fit.dl, function(fit){
   resAgg
   })
 names(residList) = names(fit.dl)
-
 ```
 
 
@@ -169,12 +165,17 @@ dfToMatrix = function(df, V1, V2, value){
 }
 ```
 
+```{r cca.analysis}
 
 
+df_cca = pairwise_cca( residList[1:6])
+
+C = dfToMatrix(df_cca, "CT1", "CT2", "rho.emp")
+
+plotCorrMatrix(C)
 
 
-
-
+```
 
 
 
