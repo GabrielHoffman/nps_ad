@@ -274,7 +274,7 @@ plotVoom( res.proc )
 
 
 ```{r voom.save, fig.height=10, fig.width=10, cache=FALSE}
-saveRDS( res.proc "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/res.proc.RDS")
+saveRDS( res.proc, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/res.proc.RDS")
 ```
 
 ```{r dreamlet.fit}
