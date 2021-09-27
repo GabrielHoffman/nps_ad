@@ -278,7 +278,7 @@ saveRDS( res.proc "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/res.proc.RD
 ```
 
 ```{r dreamlet.fit}
-fit.dl = dreamlet( res.proc, ~ (1|Batch))
+fit.dl = dreamlet( res.proc, ~ (1|Batch), BPPARAM=SnowParam(36))
 
 saveRDS( fit.dl "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl")
 ```
