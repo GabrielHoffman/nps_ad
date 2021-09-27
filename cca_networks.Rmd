@@ -166,17 +166,16 @@ dfToMatrix = function(df, V1, V2, value){
 ```
 
 ```{r cca.analysis}
+df_cca = pairwise_cca( residList )
 
+```
 
-df_cca = pairwise_cca( residList[1:6])
+```{r plots}
 
 C = dfToMatrix(df_cca, "CT1", "CT2", "rho.emp")
 
 plotCorrMatrix(C)
-
-
 ```
-
 
 
 
