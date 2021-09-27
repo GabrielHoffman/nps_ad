@@ -273,6 +273,18 @@ plotVoom( res.proc )
 ```
 
 
+```{r voom.save, fig.height=10, fig.width=10, cache=FALSE}
+saveRDS( res.proc "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/res.proc.RDS")
+```
+
+```{r dreamlet.fit}
+fit.dl = dreamlet( res.proc, ~ (1|Batch))
+
+saveRDS( fit.dl "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl")
+```
+
+
+
 
 ```{r varPart}
 res.vp = fitVarPart(res.proc, ~ (1|Donor) + (1|Batch), BPPARAM = SnowParam(18, progressbar=TRUE))
@@ -314,15 +326,25 @@ source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
 eval_within_across_donor( res.proc )
 ```
 
+<!---
+plotCellComposition()
+
+cellTypeCompositionTest()
+--->
+
 TODO
 
  - add 'mega-batches' 1,2,3
  - add UMAP coordinates
  - cell composition fractions
+   - variancePartition in composition
  - how does cell number, read count influence within donor correlation
    - What happens when I remove batch effect?
 
 
+
+show correlation within/between batch
+Get collapsed experssion per donor
 
 
 
