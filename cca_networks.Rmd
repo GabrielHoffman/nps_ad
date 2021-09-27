@@ -170,11 +170,15 @@ df_cca = pairwise_cca( residList )
 
 ```
 
+```{r}
+with(df_cca, plot(rho, rho.emp))
+```
+
 ```{r plots}
 
 C = dfToMatrix(df_cca, "CT1", "CT2", "rho.emp")
 
-plotCorrMatrix(C)
+plotCorrMatrix(C^2)
 ```
 
 
