@@ -200,7 +200,7 @@ idx = which(len >=10 & len <1000)
 gsGO = gsGO[idx]
 length(gsGO)
 
-res = lapply(gsGO[1:20], function(gs){
+res = lapply(gsGO, function(gs){
 
   i = match(setName(gs), names(gsGO))
   message("\r", i, '   ', appendLF=FALSE)
