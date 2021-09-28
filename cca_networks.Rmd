@@ -143,7 +143,10 @@ pairwise_cca = function(exprList){
     data.frame(CT1 = CT1, CT2 = CT2, N = nrow(X_sub), lambda.x = fit.cca$lambdas[1],
       lambda.y = fit.cca$lambdas[2], rho = fit.cca$cramer.V, rho.emp = res.cor$estimate, se = se) 
   })
-  df = do.call(rbind, df)
+
+  if( !is.null(df) ){
+    df = do.call(rbind, df)
+  }
 
   df
 }
@@ -180,6 +183,89 @@ C = dfToMatrix(df_cca, "CT1", "CT2", "rho.emp")
 
 plotCorrMatrix(C^2)
 ```
+
+```{r zenith}
+library(zenith)
+library(GSEABase)
+
+gsGO = get_GeneOntology("BP", "SYMBOL")
+
+len = sapply(gsGO, function(x) length(geneIds(x)))
+idx = which(len >=10 & len <1000)
+gsGO = gsGO[idx]
+length(gsGO)
+
+res = lapply(gsGO, function(gs){
+
+  res = lapply(residList, function(x){
+    idx = intersect(rownames(x), geneIds(gs))
+
+    if( length(idx) < 10){
+      x = NULL
+    }else{
+      x = x[idx,,drop=FALSE]
+    }
+    x
+  })
+  names(res) = names(residList)
+
+  df_cca = pairwise_cca( res )
+
+  if( ! is.null(df_cca) ){
+    df = data.frame(Geneset = setName(gs), df_cca )
+  }else{
+    df = NULL
+  }
+  df
+})
+res = do.call(rbind, res)
+
+saveRDS(res, "./res_cca.RDS")
+
+# scp sklar1:/sc/arion/work/hoffmg01/nps_ad/res_cca.RDS ~/Downloads
+
+# res = readRDS("~/Downloads/res_cca.RDS")
+
+
+```
+
+```{r test,eval=FALSE}
+
+gsn = res$Geneset[1]
+
+
+C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "rho.emp")
+
+plotCorrMatrix(C^2)
+
+df = lapply( unique(res$Geneset), function(gsn){
+
+  C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "rho.emp")
+  dcmp = eigen(C)
+
+  data.frame(n = nrow(C), ev2 = dcmp$values[2] / sum(dcmp$values))
+})
+df = do.call(rbind, df)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
