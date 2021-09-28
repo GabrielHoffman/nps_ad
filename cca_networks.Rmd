@@ -57,6 +57,7 @@ knitr::opts_chunk$set(
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
 library(dreamlet)
+library(decorrelate)
 library(variancePartition)
 })
 ```
@@ -103,7 +104,6 @@ names(residList) = names(fit.dl)
 
 ```{r cca.analysis.functions}
 
-library(decorrelate)
 library(RNOmni)
 library(Rfast)
 
@@ -132,16 +132,22 @@ pairwise_cca = function(exprList){
     X_sub = scale(t(X[,ids,drop=FALSE]))
     Y_sub = scale(t(Y[,ids,drop=FALSE]))
 
-    incl = seq(1, 0.8*nrow(X_sub))   
-
-    fit.cca = fastcca(X_sub[incl,],Y_sub[incl,])
-    X.pred = X_sub[-incl,] %*% fit.cca$x.coef
-    Y.pred = Y_sub[-incl,] %*% fit.cca$y.coef
-    res.cor = cor.test(X.pred[,1], Y.pred[,1])
-    se = sqrt((1-res.cor$estimate^2)/(nrow(X.pred)-2))
+    # fit.cca = fastcca(X_sub,Y_sub)
+    fit.cca = cca(X_sub,Y_sub)
 
     data.frame(CT1 = CT1, CT2 = CT2, N = nrow(X_sub), lambda.x = fit.cca$lambdas[1],
-      lambda.y = fit.cca$lambdas[2], rho = fit.cca$cramer.V, rho.emp = res.cor$estimate, se = se) 
+      lambda.y = fit.cca$lambdas[2], cramer.V = fit.cca$cramer.V, cor1 = fit.cca$cor[1], rho1 = fit.cca$rho.mod[1]) 
+
+    # incl = seq(1, 0.8*nrow(X_sub))   
+
+    # fit.cca = fastcca(X_sub[incl,],Y_sub[incl,])
+    # X.pred = X_sub[-incl,] %*% fit.cca$x.coef
+    # Y.pred = Y_sub[-incl,] %*% fit.cca$y.coef
+    # res.cor = cor.test(X.pred[,1], Y.pred[,1])
+    # se = sqrt((1-res.cor$estimate^2)/(nrow(X.pred)-2))
+
+    # data.frame(CT1 = CT1, CT2 = CT2, N = nrow(X_sub), lambda.x = fit.cca$lambdas[1],
+      # lambda.y = fit.cca$lambdas[2], rho = fit.cca$cramer.V, rho.emp = res.cor$estimate, se = se) 
   })
 
   if( !is.null(df) ){
@@ -222,11 +228,15 @@ res = lapply(gsGO, function(gs){
 res = do.call(rbind, res)
 
 saveRDS(res, "./res_cca.RDS")
+saveRDS(residList, "./residList.RDS")
 
 # scp sklar1:/sc/arion/work/hoffmg01/nps_ad/res_cca.RDS ~/Downloads
+# scp sklar1:/sc/arion/work/hoffmg01/nps_ad/residList.RDS ~/Downloads
 
 # res = readRDS("~/Downloads/res_cca.RDS")
 # res = res[res$CT1 != "Unknown"& res$CT2 != "Unknown",]
+
+# residList = readRDS("~/Downloads/residList.RDS")
 ```
 
 ```{r test,eval=FALSE}
@@ -246,7 +256,7 @@ with(res, plot(rho, rho.emp))
 
 df = lapply( unique(res$Geneset), function(gsn){
 
-  C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "rho.emp")
+  C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "rho")
   dcmp = eigen(C)
 
   data.frame(Geneset = gsn, n = nrow(C), ev2 = dcmp$values[2] / sum(dcmp$values))
@@ -278,12 +288,19 @@ residSet = lapply(residList, function(X){
   X[ids,]
 })
 
-X = t(residSet[["Astrocyte"]])
-Y = t(residSet[["Microglia"]])
+CT1 = "Astrocyte"
+CT2 = "Microglia"
+
+CT1 = "Glutamatergic"
+CT2 = "GABAergic"
+
+X = t(residSet[[CT1]])
+Y = t(residSet[[CT2]])
 ids = intersect(rownames(X), rownames(Y))
 fit = fastcca( X[ids,], Y[ids,] )
 
 with(fit, plot(x.vars[,1], y.vars[,1]))
+with(fit, cor(x.vars[,1], y.vars[,1]))
 
 
 
