@@ -212,9 +212,9 @@ res = lapply(gsGO[1:20], function(gs){
       x = NULL
     }else{
       x = x[idx,,drop=FALSE]
+      # quantile normalize
+      t(apply(x, 1, RankNorm))
     }
-    # quantile normalize
-    apply(x, 1, RankNorm)
   })
   names(res) = names(residList)
 
