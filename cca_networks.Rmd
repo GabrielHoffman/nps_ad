@@ -59,6 +59,8 @@ library(SingleCellExperiment)
 library(dreamlet)
 library(decorrelate)
 library(variancePartition)
+library(RNOmni)
+library(Rfast)
 })
 ```
 
@@ -103,11 +105,7 @@ names(residList) = names(fit.dl)
 
 
 ```{r cca.analysis.functions}
-
-library(RNOmni)
-library(Rfast)
-
-pairwise_cca = function(exprList){
+pairwise_cca = function(exprList, verbose=TRUE){
 
   lvls = names(exprList)
 
@@ -115,7 +113,7 @@ pairwise_cca = function(exprList){
 
   df = apply(idx_combn, 2, function(x){
 
-    cat("\r", x, '   ')
+    if(verbose) cat("\r", x, '   ')
 
     CT1 = names(exprList)[x[1]]
     CT2 = names(exprList)[x[2]]
@@ -190,7 +188,7 @@ C = dfToMatrix(df_cca, "CT1", "CT2", "rho.emp")
 plotCorrMatrix(C^2)
 ```
 
-```{r zenith}
+```{r zenith, message=FALSE}
 library(zenith)
 library(GSEABase)
 library(ggplot2)
@@ -202,7 +200,10 @@ idx = which(len >=10 & len <1000)
 gsGO = gsGO[idx]
 length(gsGO)
 
-res = lapply(gsGO, function(gs){
+res = lapply(gsGO[1:20], function(gs){
+
+  i = match(setName(gs), names(gsGO))
+  message("\r", i, '   ', appendLF=FALSE)
 
   res = lapply(residList, function(x){
     idx = intersect(rownames(x), geneIds(gs))
@@ -212,11 +213,12 @@ res = lapply(gsGO, function(gs){
     }else{
       x = x[idx,,drop=FALSE]
     }
-    x
+    # quantile normalize
+    apply(x, 1, RankNorm)
   })
   names(res) = names(residList)
 
-  df_cca = pairwise_cca( res )
+  df_cca = pairwise_cca( res, FALSE )
 
   if( ! is.null(df_cca) ){
     df = data.frame(Geneset = setName(gs), df_cca )
