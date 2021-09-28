@@ -187,8 +187,9 @@ plotCorrMatrix(C^2)
 ```{r zenith}
 library(zenith)
 library(GSEABase)
+library(ggplot2)
 
-gsGO = get_GeneOntology("BP", "SYMBOL")
+gsGO = get_GeneOntology(c("BP", "MF"), "SYMBOL")
 
 len = sapply(gsGO, function(x) length(geneIds(x)))
 idx = which(len >=10 & len <1000)
@@ -225,11 +226,12 @@ saveRDS(res, "./res_cca.RDS")
 # scp sklar1:/sc/arion/work/hoffmg01/nps_ad/res_cca.RDS ~/Downloads
 
 # res = readRDS("~/Downloads/res_cca.RDS")
-
-
+# res = res[res$CT1 != "Unknown"& res$CT2 != "Unknown",]
 ```
 
 ```{r test,eval=FALSE}
+
+library(mgcv)
 
 gsn = res$Geneset[1]
 
@@ -238,20 +240,57 @@ C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "rho.emp")
 
 plotCorrMatrix(C^2)
 
+
+with(res, plot(rho, rho.emp))
+
+
 df = lapply( unique(res$Geneset), function(gsn){
 
   C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "rho.emp")
   dcmp = eigen(C)
 
-  data.frame(n = nrow(C), ev2 = dcmp$values[2] / sum(dcmp$values))
+  data.frame(Geneset = gsn, n = nrow(C), ev2 = dcmp$values[2] / sum(dcmp$values))
 })
 df = do.call(rbind, df)
+
+ggplot(df, aes(n, ev2)) + geom_point() + geom_smooth(method="gam") + theme_classic()
+
+df2 = df[df$n>7,]
+
+fit = gam(ev2 ~ s(n,k=2), data=df2)
+
+z = scale(residuals(fit))
+
+head(df2[order(z, decreasing=TRUE),])
+
+
+
 
 ```
 
 
 
+# vizualize results
+gs = gsGO[[gsn]]
 
+residSet = lapply(residList, function(X){
+  ids = intersect(geneIds(gs), rownames(X))
+  X[ids,]
+})
+
+X = t(residSet[["Astrocyte"]])
+Y = t(residSet[["Microglia"]])
+ids = intersect(rownames(X), rownames(Y))
+fit = fastcca( X[ids,], Y[ids,] )
+
+with(fit, plot(x.vars[,1], y.vars[,1]))
+
+
+
+rs = lapply(fit.dl, function(fit){
+  ids = intersect(geneIds(gs), rownames(fit))
+  fit$Amean[ids]
+})
 
 
 
