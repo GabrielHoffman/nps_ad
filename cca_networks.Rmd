@@ -130,11 +130,10 @@ pairwise_cca = function(exprList, verbose=TRUE){
     X_sub = scale(t(X[,ids,drop=FALSE]))
     Y_sub = scale(t(Y[,ids,drop=FALSE]))
 
-    # fit.cca = fastcca(X_sub,Y_sub)
     fit.cca = cca(X_sub,Y_sub)
 
     data.frame(CT1 = CT1, CT2 = CT2, N = nrow(X_sub), lambda.x = fit.cca$lambdas[1],
-      lambda.y = fit.cca$lambdas[2], cramer.V = fit.cca$cramer.V, cor1 = fit.cca$cor[1], rho1 = fit.cca$rho.mod[1]) 
+      lambda.y = fit.cca$lambdas[2], cramer.V = fit.cca$cramer.V, cor1 = fit.cca$cor[1], rho1 = fit.cca$rho.mod[1], ri.x=sum(fit.cca$x.ri), ri.y=sum(fit.cca$y.ri)) 
 
     # incl = seq(1, 0.8*nrow(X_sub))   
 
@@ -190,7 +189,7 @@ plotCorrMatrix(C^2)
 
 ```{r zenith, message=FALSE}
 library(zenith)
-library(GSEABase)
+library(GSEABase) 
 library(ggplot2)
 
 gsGO = get_GeneOntology(c("BP", "MF"), "SYMBOL")
@@ -217,7 +216,7 @@ res = lapply(gsGO, function(gs){
     }
   })
   names(res) = names(residList)
-
+ 
   df_cca = pairwise_cca( res, FALSE )
 
   if( ! is.null(df_cca) ){
