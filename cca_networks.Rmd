@@ -16,18 +16,10 @@ vignette: >
 ---
 
 
-/usr/bin/ld: cannot find -lodbc
-/usr/bin/ld: cannot find -lodbcinst
-/usr/bin/ld: cannot find -ljasper
-/usr/bin/ld: cannot find -lgif
-/usr/bin/ld: cannot find -ltiff
-
-devtools::install_version("rgdal")
-
 <!--- 
 
 cd /hpc/users/hoffmg01/work/nps_ad
-ml python udunits proj gdal/2.4.1 geos unixODBC giflib tiff
+ml python #udunits proj gdal/2.4.1 geos unixODBC giflib tiff
 R
 # rm -rf analysis_1_cache/
 
@@ -122,7 +114,7 @@ saveRDS(scoreList, file="scoreList.RDS")
 
 # scp sklar1:/sc/arion/work/hoffmg01/nps_ad/scoreList.RDS ~/Downloads
 ```
-```{r eval.outliers}
+```{r eval.outliers, eval=FALSE}
 library(gtools)
 library(Rfast)
 library(org.Hs.eg.db)
