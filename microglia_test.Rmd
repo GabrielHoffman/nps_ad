@@ -79,9 +79,9 @@ res.dl = dreamlet(res.proc, ~ Source + age + sex + dx)
 go.gs = get_GeneOntology(to="SYMBOL")
 
 resGS = zenith_gsa(res.dl, coef="dxAD", go.gs, inter.gene.cor=0.01)
-
-head(resGS)
 ```
+
+
 
 # [Mashr](https://www.nature.com/articles/s41588-018-0268-8) models high dimensional testing under many conditions.
 Here we test genes in each cell type.  Standard analysis considers each cell type separately, but we can consider a joint modelling across cell types and genes to borrow information using a Bayesian framework:
@@ -166,7 +166,7 @@ get_pm(m.Vem)["APOE",]
 
 
 
-[Source](https://github.com/GabrielHoffman/nps_ad/blob/master/microglia_test.Rmd)
+[Source on GitHub](https://github.com/GabrielHoffman/nps_ad/blob/master/microglia_test.Rmd)
 
 
 
