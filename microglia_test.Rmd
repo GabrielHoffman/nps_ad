@@ -1,0 +1,116 @@
+---
+title: "Testing/development for dreamlet/microglia"
+subtitle: ''
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{dreamlet/microglia}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+cd /hpc/users/hoffmg01/work/nps_ad
+ml python
+R
+
+system("ml git; git pull")
+rmarkdown::render("microglia_test.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+
+
+
+
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+suppressPackageStartupMessages({
+library(dreamlet)
+library(zenith)
+library(mashr)
+})
+
+# Must install mashr from GitHub (not CRAN!)
+# remotes::install_github("stephenslab/mashr")
+```
+
+```{r basic.processing}
+
+# set path
+setwd("/sc/arion/projects/Microglia/scRNAseq_proc/analysis_dreamlet")
+
+# read pseudobulk
+pbObj = readRDS("210927_fresh-mg_pass2.export.pbObj.RDS")
+
+# I only used fixed effects here for speed in development new ideas
+# voom
+res.proc = processAssays(pbObj, ~ Source + age + sex + dx, min.count=5)
+
+# differential expression
+res.dl = dreamlet(res.proc, ~ Source + age + sex + dx)
+```
+
+# Gene set enrichment using zenith
+`zenith` defaults are *super* conservative.  Here I used `inter.gene.cor=0.01` which is the default in `limma::camera`.  This more liberal setting now find more differential gene sets, than the default settings. (Note, genesets are sorted by cell type then p-value)
+```{r zenith}
+go.gs = get_GeneOntology(to="SYMBOL")
+
+resGS = zenith_gsa(res.dl, coef="dxAD", go.gs, inter.gene.cor=0.01)
+
+head(resGS)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
