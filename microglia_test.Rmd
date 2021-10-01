@@ -78,7 +78,7 @@ resGS = zenith_gsa(res.dl, coef="dxAD", go.gs, inter.gene.cor=0.01)
 
 
 ## All gene sets with FDR < 5%
-```{r zenith_summary, fig.width=12, fig.height=40}
+```{r zenith_summary, fig.width=9, fig.height=40}
 # get genesets with FDR < 5%
 gs = unique(resGS$Geneset[resGS$FDR < 0.05])
 
