@@ -104,6 +104,77 @@ names(residList) = names(fit.dl)
 
 
 
+```{r outliers, eval=FALSE}
+scoreList = lapply(residList, function(res){
+
+  zScores = t(scale(t(res)))
+})
+saveRDS(scoreList, file="scoreList.RDS")
+
+# scp sklar1:/sc/arion/work/hoffmg01/nps_ad/scoreList.RDS ~/Downloads
+```
+```{r eval.outliers}
+library(gtools)
+library(Rfast)
+library(org.Hs.eg.db)
+
+scoreList = readRDS("~/Downloads/scoreList.RDS")
+
+# res = scoreList[[1]]
+
+exclude = c('Endothelial', 'Unknown', 'OPC', 'Mural', "GABAergic","GABAergic PVALB+", "GABAergic SST+", "GABAergic VIP+")
+keep = ! names(scoreList) %in% exclude
+
+geneExpr = lapply( names(scoreList)[keep], function(CT){
+  cat(CT)
+
+  geneExpr = scoreList[[CT]]
+
+  df = select(org.Hs.eg.db, keys = rownames(geneExpr), columns="CHR", keytype="SYMBOL")
+  keepGenes = unique(df$SYMBOL[df$CHR %in% 1:22])
+  geneExpr = geneExpr[keepGenes,]
+
+  rownames(geneExpr) = paste0(CT, '_', rownames(geneExpr))
+  data.frame(Symbol = rownames(geneExpr), geneExpr)
+  })
+geneExpr = do.call(smartbind, geneExpr)
+rownames(geneExpr) = geneExpr$Symbol
+geneExpr = as.matrix(geneExpr[,-1])
+
+
+# se per sample
+apply(geneExpr, 2, sd, na.rm=TRUE)
+
+# count outliers per sample
+count = apply(geneExpr, 2, function(x) sum(x>0, na.rm=TRUE))
+mean(count)
+var(count)
+
+
+
+g = which.max(rowMaxs(geneExpr, value=TRUE))
+id = which.max(geneExpr[g,])
+geneExpr[g,id]
+
+rownames(geneExpr)[g]
+hist(geneExpr[g,])
+
+
+C = cor( t(geneExpr[g,,drop=FALSE]), t(geneExpr), use="pair")
+
+hist(C[,-g], xlim=c(-1,1))
+
+median(C[,-g]^2)
+
+max(C[,-g]^2)
+C[,order(C)[1:5]]
+
+```
+
+
+
+
+
 ```{r cca.analysis.functions}
 pairwise_cca = function(exprList, verbose=TRUE){
 
@@ -243,21 +314,52 @@ saveRDS(residList, "./residList.RDS")
 ```{r test,eval=FALSE}
 
 library(mgcv)
+library(data.table)
 
 gsn = res$Geneset[1]
 
 
-C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "rho.emp")
+C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "cramer.V")
 
 plotCorrMatrix(C^2)
 
 
-with(res, plot(rho, rho.emp))
+with(res, plot(cramer.V, abs(cor1)))
+
+with(res, plot(ri.x, ri.y))
+
+ggplot(res, aes(ri.x, ri.y, color=log(n.x)-log(n.y))) + geom_point() + theme_classic()
+
+i = with(res, which.max(abs(ri.x - ri.y)))
+
+
+fit = gam(log(ri.x - ri.y+1e-4) ~ log(n.x)*log(n.y), data=res)
+
+summary(fit)
+
+
+res$chisq = scale(residuals(fit))^2
+
+head(res[order(res$chisq, decreasing=TRUE),])
+
+df2 = res[order(res$chisq, decreasing=TRUE),]
+
+remove = c("Endothelial", "Oligodendrocyte", "Mural")
+
+df3 = df2[!(df2$CT1 %in% remove) & !(df2$CT2 %in% remove),c(1,2,3,7, 10, 11, 14)]
+df3 = data.table(df3)
+df3[,id:=ifelse(CT1< CT2, paste(CT1, CT2), paste(CT2, CT1))]
+
+# which cell pairs show hightest difference in redundancy
+df3[,median(chisq), by="id"][order(V1),]
+
+
+
 
 
 df = lapply( unique(res$Geneset), function(gsn){
 
-  C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "rho")
+  C = dfToMatrix(res[res$Geneset==gsn,], "CT1", "CT2", "cramer.V")
   dcmp = eigen(C)
 
   data.frame(Geneset = gsn, n = nrow(C), ev2 = dcmp$values[2] / sum(dcmp$values))
@@ -320,19 +422,9 @@ rs = lapply(fit.dl, function(fit){
 
 
 
-
-
-
-
-
-
 ```{r exit, cache=FALSE, eval=FALSE}
 knitr::knit_exit()
 ```
-
-
-
-
 
 
 
