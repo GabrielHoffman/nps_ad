@@ -42,10 +42,6 @@ knitr::opts_chunk$set(
 ```
 
 ```{r load.packages, cache=FALSE}
-# Use cache=FALSE so that package are fully loaded each time
-# This ensures that forks within mclapply() have these loaded
-# Othewise, mclapply() not have access to these libraries and will fail 
-#   unless the libraries are manually loaded within each fork
 suppressPackageStartupMessages({
 library(dreamlet)
 library(zenith)
@@ -82,7 +78,7 @@ resGS = zenith_gsa(res.dl, coef="dxAD", go.gs, inter.gene.cor=0.01)
 
 
 ## All gene sets with FDR < 5%
-```{r zenith_summary}
+```{r zenith_summary, fig.width=12, fig.height=20}
 # get genesets with FDR < 5%
 gs = unique(resGS$Geneset[resGS$FDR < 0.05])
 
