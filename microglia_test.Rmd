@@ -50,6 +50,7 @@ suppressPackageStartupMessages({
 library(dreamlet)
 library(zenith)
 library(mashr)
+library(Matrix)
 })
 
 # Must install mashr from GitHub (not CRAN!)
@@ -59,10 +60,10 @@ library(mashr)
 ```{r basic.processing}
 
 # set path
-setwd("/sc/arion/projects/Microglia/scRNAseq_proc/analysis_dreamlet")
+file = "/sc/arion/projects/Microglia/scRNAseq_proc/analysis_dreamlet/210927_fresh-mg_pass2.export.pbObj.RDS"
 
 # read pseudobulk
-pbObj = readRDS("210927_fresh-mg_pass2.export.pbObj.RDS")
+pbObj = readRDS(file)
 
 # I only used fixed effects here for speed in development new ideas
 # voom
