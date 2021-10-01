@@ -16,10 +16,18 @@ vignette: >
 ---
 
 
+/usr/bin/ld: cannot find -lodbc
+/usr/bin/ld: cannot find -lodbcinst
+/usr/bin/ld: cannot find -ljasper
+/usr/bin/ld: cannot find -lgif
+/usr/bin/ld: cannot find -ltiff
+
+devtools::install_version("rgdal")
+
 <!--- 
 
 cd /hpc/users/hoffmg01/work/nps_ad
-ml python
+ml python udunits proj gdal/2.4.1 geos unixODBC giflib tiff
 R
 # rm -rf analysis_1_cache/
 
@@ -61,6 +69,7 @@ library(decorrelate)
 library(variancePartition)
 library(RNOmni)
 library(Rfast)
+library(decorate)
 })
 ```
 
@@ -201,21 +210,16 @@ pairwise_cca = function(exprList, verbose=TRUE){
     X_sub = scale(t(X[,ids,drop=FALSE]))
     Y_sub = scale(t(Y[,ids,drop=FALSE]))
 
+    group = c(rep(0, nrow(X_sub)), rep(1, nrow(Y_sub)))
+    keep = intersect(colnames(X_sub), colnames(Y_sub))
+    Z = rbind(X_sub[,keep], Y_sub[,keep]) 
+
+    fit = boxM_fast(Z, group)
+
     fit.cca = cca(X_sub,Y_sub)
 
     data.frame(CT1 = CT1, CT2 = CT2, N = nrow(X_sub), lambda.x = fit.cca$lambdas[1],
-      lambda.y = fit.cca$lambdas[2], cramer.V = fit.cca$cramer.V, cor1 = fit.cca$cor[1], rho1 = fit.cca$rho.mod[1], ri.x=sum(fit.cca$x.ri), ri.y=sum(fit.cca$y.ri), n.x=ncol(X_sub), n.y=ncol(Y_sub)) 
-
-    # incl = seq(1, 0.8*nrow(X_sub))   
-
-    # fit.cca = fastcca(X_sub[incl,],Y_sub[incl,])
-    # X.pred = X_sub[-incl,] %*% fit.cca$x.coef
-    # Y.pred = Y_sub[-incl,] %*% fit.cca$y.coef
-    # res.cor = cor.test(X.pred[,1], Y.pred[,1])
-    # se = sqrt((1-res.cor$estimate^2)/(nrow(X.pred)-2))
-
-    # data.frame(CT1 = CT1, CT2 = CT2, N = nrow(X_sub), lambda.x = fit.cca$lambdas[1],
-      # lambda.y = fit.cca$lambdas[2], rho = fit.cca$cramer.V, rho.emp = res.cor$estimate, se = se) 
+      lambda.y = fit.cca$lambdas[2], cramer.V = fit.cca$cramer.V, cor1 = fit.cca$cor[1], rho1 = fit.cca$rho.mod[1], ri.x=sum(fit.cca$x.ri), ri.y=sum(fit.cca$y.ri), n.x=ncol(X_sub), n.y=ncol(Y_sub), BoxM.p = fit$pval, BoxM.ld1 = fit$logdet[1], BoxM.ld2 = fit$logdet[2], n.z=ncol(Z)) 
   })
 
   if( !is.null(df) ){
@@ -270,12 +274,15 @@ idx = which(len >=10 & len <1000)
 gsGO = gsGO[idx]
 length(gsGO)
 
+exclude = c('Endothelial', 'Unknown', 'OPC', 'Mural',"GABAergic PVALB+", "GABAergic SST+", "GABAergic VIP+")
+keep = ! names(residList) %in% exclude
+
 res = lapply(gsGO, function(gs){
 
   i = match(setName(gs), names(gsGO))
   message("\r", i, '   ', appendLF=FALSE)
 
-  res = lapply(residList, function(x){
+  res = lapply(residList[keep], function(x){
     idx = intersect(rownames(x), geneIds(gs))
 
     if( length(idx) < 10){
@@ -286,7 +293,7 @@ res = lapply(gsGO, function(gs){
       t(apply(x, 1, RankNorm))
     }
   })
-  names(res) = names(residList)
+  names(res) = names(residList[keep])
  
   df_cca = pairwise_cca( res, FALSE )
 
