@@ -133,6 +133,37 @@ V.em = mash_estimate_corr_em(data, U.c, details = TRUE)
 m.Vem = V.em$mash.model
 ```
 
+```{r mashr_summary}
+# see posterior mean for logFC
+head(get_pm(m.Vem))
+
+# how many gene-by-celltype are significant
+# i.e.  if a gene is significant in 2 celltypes, it is counted twice
+table(get_lfsr(m.Vem) < 0.05)
+
+# how many genes are significant in at least one cell type
+table( apply(get_lfsr(m.Vem), 1, min) < 0.05)
+
+# how many genes are significant in each cell type
+apply(get_lfsr(m.Vem), 2, function(x) sum(x < 0.05))
+```
+
+# examine top set of genes
+```{r mashr_summary2}
+# which genes are significant in at least 1 cell type
+sort(names(get_significant_results(m.Vem)))
+
+# Lets examine APOE.
+# There is a lot of variation in the raw logFC
+B["APOE",]
+
+# posterior mean after borrowing across cell type and genes
+# There might be too much borrowing!
+get_pm(m.Vem)["APOE",]
+```
+
+
+
 
 
 [Source](https://github.com/GabrielHoffman/nps_ad/blob/master/microglia_test.Rmd)
