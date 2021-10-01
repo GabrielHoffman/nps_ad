@@ -78,6 +78,7 @@ resGS = zenith_gsa(res.dl, coef="dxAD", go.gs, inter.gene.cor=0.01)
 
 
 ## All gene sets with FDR < 5%
+Since controls are baseline, a positive `logFC` means upregulated in AD compared to controls.  
 ```{r zenith_summary, fig.width=9, fig.height=40}
 # get genesets with FDR < 5%
 gs = unique(resGS$Geneset[resGS$FDR < 0.05])
