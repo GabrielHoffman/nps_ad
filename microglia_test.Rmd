@@ -58,7 +58,6 @@ library(Matrix)
 ```
 
 ```{r basic.processing}
-
 # set path
 file = "/sc/arion/projects/Microglia/scRNAseq_proc/analysis_dreamlet/210927_fresh-mg_pass2.export.pbObj.RDS"
 
@@ -79,6 +78,19 @@ res.dl = dreamlet(res.proc, ~ Source + age + sex + dx)
 go.gs = get_GeneOntology(to="SYMBOL")
 
 resGS = zenith_gsa(res.dl, coef="dxAD", go.gs, inter.gene.cor=0.01)
+```
+
+
+## All gene sets with FDR < 5%
+```{r zenith_summary}
+# get genesets with FDR < 5%
+gs = unique(resGS$Geneset[resGS$FDR < 0.05])
+
+# keep only results of these genesets
+df = resGS[resGS$Geneset %in% gs,]
+
+# plot results, but with no limit based on the highest/lowest t-statistic
+plotZenithResults(df, Inf, Inf)
 ```
 
 
