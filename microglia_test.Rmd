@@ -17,7 +17,6 @@ vignette: >
 
 
 <!--- 
-
 cd /hpc/users/hoffmg01/work/nps_ad
 ml python
 R
@@ -25,14 +24,7 @@ R
 system("ml git; git pull")
 rmarkdown::render("microglia_test.Rmd");
 
-
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
-
-
-
-
-
-
 --->
 
 
@@ -90,9 +82,59 @@ resGS = zenith_gsa(res.dl, coef="dxAD", go.gs, inter.gene.cor=0.01)
 head(resGS)
 ```
 
+# [Mashr](https://www.nature.com/articles/s41588-018-0268-8) models high dimensional testing under many conditions.
+Here we test genes in each cell type.  Standard analysis considers each cell type separately, but we can consider a joint modelling across cell types and genes to borrow information using a Bayesian framework:
+
+```{r mashr}
+# convert results table to matrix
+toMatrix = function(tab, col){
+  
+  # row and column names
+  rn = unique(tab$ID)
+  cn = unique(tab$assay)
+
+  i = match(tab$ID, rn)
+  j = match(tab$assay, cn)
+
+  M = sparseMatrix(i,j, x=tab[[col]], 
+    dims=c(length(rn), length(cn)),
+    dimnames = list(rn, cn))
+
+  data = as.matrix(M)
+  data[data == 0] = NA 
+  data
+}
+
+# get results for each gene and cell type
+tab = topTable(res.dl, coef="dxAD", Inf)
+
+# compute standard error from t-stat and logFC
+tab$se = tab$logFC / tab$t
+
+# convert to matricies
+B = toMatrix(tab, "logFC")
+S = toMatrix(tab, "se")
+
+# run mashr on these matricies
+#-----------------------------
+
+# set up
+# NA's are replaced with beta = 0 with se = 1e6 
+data = mash_set_data(B, S)
+
+# estimate some parameters
+U.c = cov_canonical(data)
+
+# Estimate correlation structure 
+V.em = mash_estimate_corr_em(data, U.c, details = TRUE)
+
+# get model fit
+m.Vem = V.em$mash.model
+```
 
 
 
+[Source](https://github.com/GabrielHoffman/nps_ad/blob/master/microglia_test.Rmd)
 
 
 
