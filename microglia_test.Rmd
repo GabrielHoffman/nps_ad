@@ -1,6 +1,6 @@
 ---
 title: "Testing/development for dreamlet/microglia"
-subtitle: ''
+subtitle: '[Source on GitHub](https://github.com/GabrielHoffman/nps_ad/blob/master/microglia_test.Rmd)'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r Sys.time()`"
 documentclass: article
@@ -175,7 +175,7 @@ get_pm(m.Vem)["APOE",]
 
 
 
-[Source on GitHub](https://github.com/GabrielHoffman/nps_ad/blob/master/microglia_test.Rmd)
+
 
 
 
