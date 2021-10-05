@@ -86,7 +86,7 @@ sceCombine = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
 meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
 df_meta = fread(meta_file)
 
-colData(sceCombine) = merge(colData(sce), df_meta, by="SubID", all.x=TRUE, sort=FALSE)
+colData(sceCombine) = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE, sort=FALSE)
 ```
 
 ```{r preprocess, eval=FALSE}
