@@ -60,17 +60,13 @@ knitr::opts_chunk$set(
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
 library(zellkonverter)
-library(DelayedArray)
-library(DelayedMatrixStats)
 library(dreamlet)
 library(muscat)
 library(cowplot)
 library(zenith)
 library(scater)
-library(HDF5Array)
 library(data.table)
 library(S4Vectors)
-library(data.table)
 })
 
 # packageVersion("zellkonverter") >= 1.3.1
