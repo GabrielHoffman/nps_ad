@@ -80,27 +80,33 @@ library(data.table)
 
 
 ```{r load.data}
+
+# read snRNA-seq data with annotations build in
 h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
 sceCombine = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
 
+# read metadata
 meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
 df_meta = fread(meta_file)
 
-colData(sceCombine) = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE, sort=FALSE)
+# save original order of cells
+colData(sceCombine)$row.order = 1:nrow(colData(sceCombine))
+
+# merge colData with additional metadata
+df_merge = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE)
+
+# save merged data as colData while retaining original cell order
+colData(sceCombine) = df_merge[order(df_merge$row.order),]
 ```
 
-```{r preprocess, eval=FALSE}
-# computeLibraryFactors
-sceCombine = computeLibraryFactors( sceCombine )
-
-# perCellQCMetrics
-df_qc = perCellQCMetrics( sceCombine )
-```
+Data freeze includes `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells.
 
 # Joint UMAP
 ```{r umap, dev="png"}
+# extract UMAP coordinates and annotations
 df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "celltype", "class", "subtype", "leiden_labels")])
 df = data.frame(df)
+
 ggplot(df, aes(V1, V2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
@@ -155,21 +161,6 @@ knitr::knit_exit()
 
 
 
-
-
-
-
-
-
-
-
-<!--- 
-# sceCombine_prep = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_prep.RDS" )
-
-pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj.RDS")
---->
-
-
 # Get per sample/per cellType summary of statistics
 # include only included cells
 ```{r collapse}
@@ -191,27 +182,9 @@ df_collapse = df_sub[,data.table(ID = paste0(Batch, '_', Donor),
 ```
 
 
-After filtering there are `r length(table(df_sub$Batch))` batches, `r length(table(df_sub$Donor))` donors, and `r format(ncol(sceCombine_prep), big.mark=',')` cells.
-
-
-```{r xtabs}
-tab = xtabs(~Batch + Donor, df_sub[Donor %in% names(table(df_sub$Donor))[1:12],])
-
-ord = apply(as.matrix(tab), 2, function(x) min(which(x!=0)))
-idx = names(ord)[order(ord, decreasing=TRUE)]
-heatmap(tab[,idx], Rowv = NA, Colv=NA)
-```
-
-
-## Collapsed UMAP
-```{r umap.collapse} 
-ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
-```
-
-
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ (1|Donor) + (1|Batch), 
+res.proc = processAssays( pbObj, ~ 1,#(1|Donor) + (1|Batch), 
   min.cells = 5,
   min.count = 10, 
   pmetadata = df_collapse,  
