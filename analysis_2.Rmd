@@ -80,7 +80,6 @@ library(data.table)
 
 
 ```{r load.data}
-
 # read snRNA-seq data with annotations build in
 h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
 sceCombine = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
