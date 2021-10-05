@@ -83,24 +83,30 @@ library(data.table)
 datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS"
 
 if( file.exists(datafile) ){
+  # reading data from RDS is much faster:
+  #   especially good for pipeline development
   sceCombine = readRDS( datafile )
 }else{
   # read snRNA-seq data with annotations build in
   h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
   sceCombine = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
 
+  # set metadata to empty to reduce size and speep up development time
+  metadata(sceCombine) = list()
+
   # read metadata
-  meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
-  df_meta = fread(meta_file)
+  # meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
+  # df_meta = fread(meta_file)
 
-  # save original order of cells
-  colData(sceCombine)$row.order = 1:nrow(colData(sceCombine))
+  # # save original order of cells
+  # colData(sceCombine)$row.order = 1:nrow(colData(sceCombine))
 
-  # merge colData with additional metadata
-  df_merge = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE)
+  # # merge colData with additional metadata
+  # df_merge = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE)
 
-  # save merged data as colData while retaining original cell order
-  colData(sceCombine) = df_merge[order(df_merge$row.order),]
+  # # save merged data as colData while retaining original cell order
+  # colData(sceCombine) = df_merge[order(df_merge$row.order),]
+  # colData(sceCombine)$row.order = c()# remove row.order
 
   saveRDS(sceCombine, file=datafile)
 }
@@ -138,21 +144,37 @@ ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_clas
 # Specify how to collapse into pseudo-bulk
 sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
 sceCombine_prep <- prepSCE(sceCombine, 
-    kid = "anno", # subpopulation assignments
+    kid = "celltype", # subpopulation assignments
     gid = "SubID",  # group IDs (i.e. Donor)
     sid = "id",   # sample IDs (i.e. Batch_Donor)
     drop = TRUE)
 
-saveRDS(sceCombine_prep, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_prep_v2.RDS" )
-
 # Create pseudo-bulk SingleCellExperiment
-pbObj <- aggregateToPseudoBulk(sceCombine_prep,
+pbObj <- aggregateToPseudoBulk(sceCombine_prep[1:10,1:1000],
     assay = "counts", 
     fun = "sum",
     by = c("cluster_id", "sample_id"),
-    BPPARAM = SnowParam(8, progressbar=TRUE))
+    BPPARAM = SnowParam(12, progressbar=TRUE))
+
+# Combine with phenotype data at the Donor level
+# read metadata
+meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
+df_meta = fread(meta_file)
+df_meta = df_meta[,-1]
+
+# # save original order of cells
+colData(pbObj)$row.order = 1:nrow(colData(pbObj))
+
+# # merge colData with additional metadata
+df_merge = merge(colData(pbObj), df_meta, by.x= "group_id", by.y="SubID", all.x=TRUE)
+
+# # save merged data as colData while retaining original cell order
+colData(pbObj) = df_merge[order(df_merge$row.order),]
+colData(pbObj)$row.order = c()# remove row.order
 
 saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS" )
+
+pbObj
 ```
 
 
@@ -162,7 +184,7 @@ res.proc = processAssays( pbObj, ~ 1,#(1|Donor) + (1|Batch),
   min.cells = 5,
   min.count = 10, 
   # pmetadata = df_collapse,  
-  pkeys=c('ID', 'anno'),
+  # pkeys=c('ID', 'anno'),
   BPPARAM = SnowParam(16, progressbar=TRUE))
   
 res.proc
