@@ -98,7 +98,7 @@ df_merge = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE)
 colData(sceCombine) = df_merge[order(df_merge$row.order),]
 ```
 
-Data freeze includes `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells.
+Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
 # Joint UMAP
 ```{r umap, dev="png"}
@@ -129,10 +129,10 @@ ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_clas
 ```{r combineData}
 # Specify how to collapse into pseudo-bulk
 sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
-sceCombine_prep <- prepSCE(sceCombine_filter, 
+sceCombine_prep <- prepSCE(sceCombine, 
     kid = "anno", # subpopulation assignments
-    gid = "SubID",  # group IDs (ctrl/stim)
-    sid = "id",   # sample IDs (ctrl/stim.1234)
+    gid = "SubID",  # group IDs (i.e. Donor)
+    sid = "id",   # sample IDs (i.e. Batch_Donor)
     drop = TRUE)
 
 saveRDS(sceCombine_prep, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_prep_v2.RDS" )
