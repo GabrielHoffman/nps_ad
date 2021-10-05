@@ -144,7 +144,7 @@ saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.
 
 
 
-```{r exit, cache=FALSE, eval=FALSE}
+```{r exit1, cache=FALSE, eval=FALSE}
 knitr::knit_exit()
 ```
 
