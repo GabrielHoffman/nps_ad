@@ -94,20 +94,6 @@ if( file.exists(datafile) ){
   # set metadata to empty to reduce size and speep up development time
   metadata(sceCombine) = list()
 
-  # read metadata
-  # meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
-  # df_meta = fread(meta_file)
-
-  # # save original order of cells
-  # colData(sceCombine)$row.order = 1:nrow(colData(sceCombine))
-
-  # # merge colData with additional metadata
-  # df_merge = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE)
-
-  # # save merged data as colData while retaining original cell order
-  # colData(sceCombine) = df_merge[order(df_merge$row.order),]
-  # colData(sceCombine)$row.order = c()# remove row.order
-
   saveRDS(sceCombine, file=datafile)
 }
 ```
@@ -150,7 +136,7 @@ sceCombine_prep <- prepSCE(sceCombine,
     drop = TRUE)
 
 # Create pseudo-bulk SingleCellExperiment
-pbObj <- aggregateToPseudoBulk(sceCombine_prep[1:10,1:1000],
+pbObj <- aggregateToPseudoBulk(sceCombine_prep,
     assay = "counts", 
     fun = "sum",
     by = c("cluster_id", "sample_id"),
@@ -162,13 +148,13 @@ meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical
 df_meta = fread(meta_file)
 df_meta = df_meta[,-1]
 
-# # save original order of cells
+# save original order of samples
 colData(pbObj)$row.order = 1:nrow(colData(pbObj))
 
-# # merge colData with additional metadata
+# merge colData with additional metadata
 df_merge = merge(colData(pbObj), df_meta, by.x= "group_id", by.y="SubID", all.x=TRUE)
 
-# # save merged data as colData while retaining original cell order
+# save merged data as colData while retaining original cell order
 colData(pbObj) = df_merge[order(df_merge$row.order),]
 colData(pbObj)$row.order = c()# remove row.order
 
