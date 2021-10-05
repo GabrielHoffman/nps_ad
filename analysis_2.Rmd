@@ -79,23 +79,31 @@ library(data.table)
 ```
 
 
-```{r load.data}
-# read snRNA-seq data with annotations build in
-h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
-sceCombine = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
+```{r load.data, cache=FALSE}
+datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS"
 
-# read metadata
-meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
-df_meta = fread(meta_file)
+if( file.exists(datafile) ){
+  sceCombine = readRDS( datafile )
+}else{
+  # read snRNA-seq data with annotations build in
+  h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
+  sceCombine = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
 
-# save original order of cells
-colData(sceCombine)$row.order = 1:nrow(colData(sceCombine))
+  # read metadata
+  meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
+  df_meta = fread(meta_file)
 
-# merge colData with additional metadata
-df_merge = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE)
+  # save original order of cells
+  colData(sceCombine)$row.order = 1:nrow(colData(sceCombine))
 
-# save merged data as colData while retaining original cell order
-colData(sceCombine) = df_merge[order(df_merge$row.order),]
+  # merge colData with additional metadata
+  df_merge = merge(colData(sceCombine), df_meta, by="SubID", all.x=TRUE)
+
+  # save merged data as colData while retaining original cell order
+  colData(sceCombine) = df_merge[order(df_merge$row.order),]
+
+  saveRDS(sceCombine, file=datafile)
+}
 ```
 
 Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
@@ -148,8 +156,46 @@ saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.
 ```
 
 
+```{r voom}
+# Normalize and apply voom
+res.proc = processAssays( pbObj, ~ 1,#(1|Donor) + (1|Batch), 
+  min.cells = 5,
+  min.count = 10, 
+  # pmetadata = df_collapse,  
+  pkeys=c('ID', 'anno'),
+  BPPARAM = SnowParam(16, progressbar=TRUE))
+  
+res.proc
+```
 
-```{r exit1, cache=FALSE, eval=FALSE}
+
+
+```{r dreamlet.fit}
+fit.dl = dreamlet( res.proc, ~ (1|Batch), BPPARAM=SnowParam(36))
+
+saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
+```
+
+
+
+
+```{r varPart}
+res.vp = fitVarPart(res.proc, ~ (1|Donor) + (1|Batch), BPPARAM = SnowParam(18, progressbar=TRUE))
+```
+
+```{r vp.plot, fig.height=10, fig.width=10, cache=FALSE}
+plotVarPart( sortCols(res.vp) )
+```
+
+
+
+
+
+
+
+
+
+```{r exit1, cache=FALSE, eval=TRUE}
 knitr::knit_exit()
 ```
 
@@ -181,17 +227,6 @@ df_collapse = df_sub[,data.table(ID = paste0(Batch, '_', Donor),
 ```
 
 
-```{r voom}
-# Normalize and apply voom
-res.proc = processAssays( pbObj, ~ 1,#(1|Donor) + (1|Batch), 
-  min.cells = 5,
-  min.count = 10, 
-  pmetadata = df_collapse,  
-  pkeys=c('ID', 'anno'),
-  BPPARAM = SnowParam(16, progressbar=TRUE))
-  
-res.proc
-```
 
 
 
