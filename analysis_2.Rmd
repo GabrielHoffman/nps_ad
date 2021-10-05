@@ -1,0 +1,418 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'STAR-solo R1-4 merged h5ad'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{Decorrelate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+cd /hpc/users/hoffmg01/work/nps_ad
+ml python
+R
+# rm -rf analysis_1_cache/
+
+system("ml git; git pull")
+rmarkdown::render("analysis_1.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+
+
+ml git
+cd ~/build2/dreamlet
+git pull
+R CMD INSTALL .
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(DelayedMatrixStats)
+library(dreamlet)
+library(muscat)
+library(cowplot)
+library(zenith)
+library(scater)
+library(HDF5Array)
+library(data.table)
+library(S4Vectors)
+library(data.table)
+})
+
+# packageVersion("zellkonverter") >= 1.3.1
+# https://github.com/theislab/zellkonverter
+
+```
+
+
+```{r load.data}
+h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
+sceCombine = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
+
+meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
+df_meta = fread(meta_file)
+
+colData(sceCombine) = merge(colData(sce), df_meta, by="SubID", all.x=TRUE, sort=FALSE)
+```
+
+```{r preprocess, eval=FALSE}
+# computeLibraryFactors
+sceCombine = computeLibraryFactors( sceCombine )
+
+# perCellQCMetrics
+df_qc = perCellQCMetrics( sceCombine )
+```
+
+# Joint UMAP
+```{r umap, dev="png"}
+df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "celltype", "class", "subtype", "leiden_labels")])
+df = data.frame(df)
+ggplot(df, aes(V1, V2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+```{r umap, dev="png"}
+ggplot(df, aes(V1, V2, color=celltype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+```{r umap, dev="png"}
+ggplot(df, aes(V1, V2, color=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+```{r umap, dev="png"}
+ggplot(df, aes(V1, V2, color=subtype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+```{r umap, dev="png"}
+ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+
+```{r combineData}
+# Specify how to collapse into pseudo-bulk
+sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
+sceCombine_prep <- prepSCE(sceCombine_filter, 
+    kid = "anno", # subpopulation assignments
+    gid = "SubID",  # group IDs (ctrl/stim)
+    sid = "id",   # sample IDs (ctrl/stim.1234)
+    drop = TRUE)
+
+saveRDS(sceCombine_prep, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_prep_v2.RDS" )
+
+# Create pseudo-bulk SingleCellExperiment
+pbObj <- aggregateToPseudoBulk(sceCombine_prep,
+    assay = "counts", 
+    fun = "sum",
+    by = c("cluster_id", "sample_id"),
+    BPPARAM = SnowParam(8, progressbar=TRUE))
+
+saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS" )
+```
+
+
+
+```{r exit, cache=FALSE, eval=FALSE}
+knitr::knit_exit()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--- 
+# sceCombine_prep = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_prep.RDS" )
+
+pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj.RDS")
+--->
+
+
+# Get per sample/per cellType summary of statistics
+# include only included cells
+```{r collapse}
+df_sub = df_cell[cellID %in% colnames(sceCombine_prep),]
+df_sub[,tmp:=strsplit(cellID, '_')]
+df_sub[,Batch:=sapply(tmp, function(x) x[1])]
+df_sub[,Donor:=sapply(tmp, function(x) x[2])]
+df_sub[,barcode:=sapply(tmp, function(x) x[3])]
+df_sub[,tmp:=NULL]
+
+df_collapse = df_sub[,data.table(ID = paste0(Batch, '_', Donor),
+                              n_genes = mean(n_genes),
+                              n_counts = mean(n_counts),
+                              percent_mito = mean(percent_mito),
+                              scale = mean(scale),
+                              UMAP_1 = mean(UMAP_1),
+                              UMAP_2 = mean(UMAP_2)),
+                              by=c('Batch', 'Donor', 'anno')]
+```
+
+
+After filtering there are `r length(table(df_sub$Batch))` batches, `r length(table(df_sub$Donor))` donors, and `r format(ncol(sceCombine_prep), big.mark=',')` cells.
+
+
+```{r xtabs}
+tab = xtabs(~Batch + Donor, df_sub[Donor %in% names(table(df_sub$Donor))[1:12],])
+
+ord = apply(as.matrix(tab), 2, function(x) min(which(x!=0)))
+idx = names(ord)[order(ord, decreasing=TRUE)]
+heatmap(tab[,idx], Rowv = NA, Colv=NA)
+```
+
+
+## Collapsed UMAP
+```{r umap.collapse} 
+ggplot(df_collapse, aes(UMAP_1, UMAP_2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5)))
+```
+
+
+```{r voom}
+# Normalize and apply voom
+res.proc = processAssays( pbObj, ~ (1|Donor) + (1|Batch), 
+  min.cells = 5,
+  min.count = 10, 
+  pmetadata = df_collapse,  
+  pkeys=c('ID', 'anno'),
+  BPPARAM = SnowParam(16, progressbar=TRUE))
+  
+res.proc
+```
+
+
+
+```{r voom.plot, fig.height=10, fig.width=10, cache=FALSE}
+plotVoom( res.proc )
+```
+
+
+```{r voom.save, fig.height=10, fig.width=10, cache=FALSE}
+saveRDS( res.proc, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/res.proc.RDS")
+```
+
+
+```{r show.chrXY, eval=FALSE}
+
+df_sex = lapply( names(res.proc), function(CT){
+  geneExpr = res.proc[[CT]]
+  df = NULL
+  if( sum(c("XIST", "UTY") %in% rownames(geneExpr)) == 2){  
+    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), XIST = geneExpr$E["XIST",], UTY = geneExpr$E["UTY",])
+  }
+  df
+})
+df_sex = do.call(rbind, df_sex)
+df_sex = data.table(df_sex)
+
+fig = ggplot(df_sex, aes(XIST, UTY)) + geom_point() + theme_classic() + facet_wrap(~cellType)
+ggsave(file="test.pdf", fig)
+
+df2 = df_sex[,data.table(Xmax = max(XIST), Ymax = max(UTY)), by="IDS"]
+df2[,isMale:=(Ymax > 7.5) & (Xmax < 10.5)]
+df2[,Sex:=ifelse(isMale, "M", "F")]
+
+saveRDS(df2, file="df_sex.RDS")
+
+
+fig = ggplot(df2, aes(Xmax, Ymax, color=Sex)) + geom_point() + theme_classic() + geom_abline(slope=.8)
+ggsave(file="test.pdf", fig, height=6, width=6)
+
+
+colData(res.proc) = merge(colData(res.proc), df2[,c("IDS", "Sex")], by.x="row.names", by.y="IDS", all.x=TRUE)
+
+
+df_link = fread("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/NPS-AD_roundMerged_meta.csv")
+
+df_link2 = fread("/sc/arion/projects/psychAD/upload2synpase/final_NPSAD_snRNAseq_metrics_combo.csv")
+
+
+df_link[1:3,]
+df_link2[1:3, 1:10]
+colData(sceCombine_filter)$id2 = sapply(strsplit( colData(sceCombine_filter)$id,"_"), function(x) x[1])
+
+
+head(colData(sceCombine_filter))$id[1:4]
+
+df_merge = merge(colData(sceCombine_filter)[1:10000,], df_link2, by.x="id2", by.y="HTO_ID", all.x=TRUE)
+dim(df_merge)
+
+
+h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
+
+sce = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
+
+
+df_meta = fread("/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv")
+
+df_merge = merge(colData(sce), df_meta, by="SubID", all.x=TRUE, sort=FALSE)
+dim(df_merge)
+
+
+
+
+
+
+```
+
+
+
+
+
+```{r dreamlet.fit}
+fit.dl = dreamlet( res.proc, ~ (1|Batch), BPPARAM=SnowParam(36))
+
+saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
+```
+
+
+
+
+```{r varPart}
+res.vp = fitVarPart(res.proc, ~ (1|Donor) + (1|Batch), BPPARAM = SnowParam(18, progressbar=TRUE))
+```
+
+```{r vp.plot, fig.height=10, fig.width=10, cache=FALSE}
+plotVarPart( sortCols(res.vp) )
+```
+
+
+
+
+### Examine variancePartition results
+```{r vp.examine, fig.height=2, fig.width=7}
+CT = "Astrocyte"
+
+i = 1:3
+df = sortCols(res.vp)[res.vp$assay == CT,]
+rownames(df) = df$gene
+i = c(i, which.max(df$Donor), which.max(df$Batch), which.max(df$Residuals))
+
+plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
+```
+
+Examples
+
+```{r vp.examine2, fig.height=6, fig.width=8, cache=TRUE}      
+figList = lapply( df$gene[i], function(geneName){
+  df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
+
+  plotStratifyBy(df, 'group_id', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
+})
+plot_grid( plotlist=figList, nrow=2 )
+```
+
+
+# Correlation with and between donors
+```{r within_btw, fig.height=10, fig.width=10}
+source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
+
+eval_within_across_donor( res.proc )
+```
+
+
+```{r varPart2}
+res.vp2 = fitVarPart(res.proc, ~ (1|Donor) + (1|Batch) + n_genes + n_counts + percent_mito    scale + UMAP_1 + UMAP_2, BPPARAM = SnowParam(18, progressbar=TRUE))
+```
+
+```{r vp.plot2, fig.height=10, fig.width=10, cache=FALSE}
+plotVarPart( sortCols(res.vp2) )
+```
+
+
+
+
+
+# Outliers
+```{r outrider}
+
+lapply(fit.dl, function(fit){
+  resid = residuals(fit)
+
+
+
+
+  })
+
+
+
+
+```
+
+<!---
+plotCellComposition()
+
+cellTypeCompositionTest()
+--->
+
+TODO
+
+ - add 'mega-batches' 1,2,3
+ - add UMAP coordinates
+ - cell composition fractions
+   - variancePartition in composition
+ - how does cell number, read count influence within donor correlation
+   - What happens when I remove batch effect?
+
+
+
+show correlation within/between batch
+Get collapsed experssion per donor
+
+
+
+```{r exit, cache=FALSE, eval=FALSE}
+knitr::knit_exit()
+```
+
+
+
+
+
+
+
+
+
+
+
