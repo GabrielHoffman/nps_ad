@@ -134,7 +134,7 @@ sceCombine_prep <- prepSCE(sceCombine,
     drop = TRUE)
 
 # Create pseudo-bulk SingleCellExperiment
-pbObj <- aggregateToPseudoBulk(sceCombine_prep,
+pbObj <- aggregateToPseudoBulk(sceCombine_prep[1:10, 1:1000],
     assay = "counts", 
     fun = "sum",
     by = c("cluster_id", "sample_id"),
@@ -152,14 +152,16 @@ colData(pbObj)$row.order = 1:nrow(colData(pbObj))
 # merge colData with additional metadata
 df_merge = merge(colData(pbObj), df_meta, by.x= "group_id", by.y="SubID", all.x=TRUE)
 
-# extract batch info per sample
-df_batching = with( colData(sceCombine), unique(data.frame(id, round_num, batch, prep, HTO)))
-df_merge = merge(df_merge, df_batching, by.x= "row.names", by.y="id", all.x=TRUE)
-df_merge$Row.names = c()
-
 # set rownames to be same as original, based on row.order
 # These rownames determine colnames(pbObj), which is used downstream
 rownames(df_merge) = rownames(colData(pbObj))[df_merge$row.order]
+
+# extract batch info per sample
+df_batching = with( colData(sceCombine), unique(data.frame(id, round_num, batch, prep, HTO)))
+df_merge = merge(df_merge, df_batching, by.x= "row.names", by.y="id", all.x=TRUE)
+
+rownames(df_merge) = df_merge$Row.names
+df_merge = df_merge[,-1]
 
 # save merged data as colData while retaining original cell order
 colData(pbObj) = df_merge[order(df_merge$row.order),]
