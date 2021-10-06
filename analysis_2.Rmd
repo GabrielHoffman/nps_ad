@@ -152,6 +152,11 @@ colData(pbObj)$row.order = 1:nrow(colData(pbObj))
 # merge colData with additional metadata
 df_merge = merge(colData(pbObj), df_meta, by.x= "group_id", by.y="SubID", all.x=TRUE)
 
+# extract batch info per sample
+df_batching = with( colData(sceCombine), unique(data.frame(id, round_num, batch, prep, HTO)))
+df_merge = merge(df_merge, df_batching, by.x= "row.names", by.y="id", all.x=TRUE)
+df_merge$Row.names = c()
+
 # set rownames to be same as original, based on row.order
 # These rownames determine colnames(pbObj), which is used downstream
 rownames(df_merge) = rownames(colData(pbObj))[df_merge$row.order]
@@ -168,7 +173,7 @@ pbObj
 
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ 1,#(1|Donor) + (1|Batch), 
+res.proc = processAssays( pbObj, ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO), 
   min.cells = 5,
   min.count = 10, 
   # pmetadata = df_collapse,  
@@ -181,7 +186,9 @@ res.proc
 
 
 ```{r dreamlet.fit}
-fit.dl = dreamlet( res.proc, ~ (1|Batch), BPPARAM=SnowParam(36))
+form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + Age + PMI + pH
+
+fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 
 saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
@@ -190,7 +197,9 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 
 
 ```{r varPart}
-res.vp = fitVarPart(res.proc, ~ (1|Donor) + (1|Batch), BPPARAM = SnowParam(18, progressbar=TRUE))
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + Age + (1|Sex) + PMI + pH
+
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
 ```{r vp.plot, fig.height=10, fig.width=10, cache=FALSE}
