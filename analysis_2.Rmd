@@ -192,29 +192,36 @@ plotVoom( res.proc )
 
 ```{r plot.sex, eval=FALSE}
  
+library(org.Hs.eg.db)
+
+# find genes on chrX
+df_gene = select(org.Hs.eg.db, keys=rowData(sceCombine)$gene_id, keytype="ENSEMBL", columns=c("SYMBOL", "CHR"))
+df_gene_chrx = df_gene[with(df_gene, CHR=="X" & !is.na(CHR)),]
+
+
+res = DelayedArray::rowSums(assay(sceCombine, "counts")[df_gene_chrx$ENSEMBL,1:10000])
+
+
+df_gene = select(org.Hs.eg.db, keys=c("IL1RAPL1", "UTY"), keytype="SYMBOL", columns="ENSEMBL")
+
 df_sex = lapply( names(res.proc), function(CT){
   geneExpr = res.proc[[CT]]
   df = NULL
-  if( sum(c("XIST", "UTY") %in% rownames(geneExpr)) == 2){  
-    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), XIST = geneExpr$E["XIST",], UTY = geneExpr$E["UTY",])
+  if( sum(df_gene$ENSEMBL %in% rownames(geneExpr)) == 2){  
+    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), IL1RAPL1 = geneExpr$E[df_gene$ENSEMBL[1],], UTY = geneExpr$E[df_gene$ENSEMBL[2],])
   }
   df
 })
 df_sex = do.call(rbind, df_sex)
-df_sex = data.table(df_sex)
 
-fig = ggplot(df_sex, aes(XIST, UTY)) + geom_point() + theme_classic() + facet_wrap(~cellType)
+df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.names")
 
-ggsave(file="test.pdf", fig)
-
-
-
-
+ggplot(as.data.frame(df_sex), aes(IL1RAPL1, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType)
 ```
 
 
 ```{r dreamlet.fit}
-form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + Age + PMI + pH
+form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + scale(Age) + sacle(PMI)
 
 fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 
@@ -225,7 +232,7 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 
 
 ```{r varPart}
-form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + Age + (1|Sex) + PMI + pH
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + scale(Age) + sacle(PMI)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
@@ -236,7 +243,7 @@ plotVarPart( sortCols(res.vp) )
 
 
 ### Examine variancePartition results
-```{r vp.examine, fig.height=2, fig.width=7}
+```{r vp.examine, fig.height=3, fig.width=7}
 CT = "Astrocyte"
 
 i = 1:3
@@ -267,18 +274,63 @@ source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
 eval_within_across_donor( res.proc )
 ```
 
+# Cell type composition
+
+Plot cell type composition
+```{r plotCellComposition, fig.height=5, fig.width=5}
+# TODO sort by Dx2
+plotCellComposition(pbObj)     
+```
+
+
+Partition variation in cell type composition
+```{r cellTypeCompositionVarPart, fig.height=2, fig.width=6}
+# Add dream here
+# deal with NA's here 
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO)  + (1|Sex) + (1|Dx2) + scale(Age) + scale(PMI)
+df_vp = cellTypeCompositionVarPart( pbObj, form, method="lm")
+
+rownames(df_vp) = df_vp$assay
+plotPercentBars(df_vp[,-1])
+```
+
+
+# TODO get pH info?
+# Missing Sex
+# XIST genes and mito-rate
+# cellTypeCompositionTest is failing
 
 
 
 
 
-
-
-
-```{r exit1, cache=FALSE, eval=TRUE}
+```{r exit, cache=FALSE, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
 ```
 
+
+
+
+
+Perform statistical tests
+```{r testCellComposition, eval=FALSE}
+formula = ~ group_id
+coef = 'group_idstim'
+
+# default is negative binomial model
+# poisson model gives similar effect sizes, but *much* smaller standard errors
+cellTypeCompositionTest( pb, formula, coef)
+```
+
+```{r testCellComposition.eval, results="html", echo=FALSE}
+formula = ~ group_id
+coef = 'group_idstim'
+
+tab1 = cellTypeCompositionTest( pb, formula, coef)
+tab1$pValue = format(tab1$pValue, scientific = TRUE, digits=2)
+
+knitr::kable(tab1, row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
 
 
 
