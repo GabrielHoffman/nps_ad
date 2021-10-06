@@ -221,7 +221,7 @@ ggplot(as.data.frame(df_sex), aes(IL1RAPL1, UTY, color=Sex)) + geom_point() + th
 
 
 ```{r dreamlet.fit}
-form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + scale(Age) + sacle(PMI)
+form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + scale(Age) + scale(PMI)
 
 fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 
@@ -232,7 +232,7 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 
 
 ```{r varPart}
-form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + scale(Age) + sacle(PMI)
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + scale(Age) + scale(PMI)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
@@ -299,6 +299,7 @@ plotPercentBars(df_vp[,-1])
 # Missing Sex
 # XIST genes and mito-rate
 # cellTypeCompositionTest is failing
+# create contrasts
 
 
 
