@@ -190,8 +190,8 @@ plotVoom( res.proc )
 ```
 
 
-```{r plot.sex}
-
+```{r plot.sex, eval=FALSE}
+ 
 df_sex = lapply( names(res.proc), function(CT){
   geneExpr = res.proc[[CT]]
   df = NULL
