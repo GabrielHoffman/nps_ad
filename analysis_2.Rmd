@@ -60,6 +60,8 @@ knitr::opts_chunk$set(
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
 library(zellkonverter)
+library(DelayedArray)
+library(HDF5Array)
 library(dreamlet)
 library(muscat)
 library(cowplot)
@@ -149,6 +151,10 @@ colData(pbObj)$row.order = 1:nrow(colData(pbObj))
 
 # merge colData with additional metadata
 df_merge = merge(colData(pbObj), df_meta, by.x= "group_id", by.y="SubID", all.x=TRUE)
+
+# set rownames to be same as original, based on row.order
+# These rownames determine colnames(pbObj), which is used downstream
+rownames(df_merge) = rownames(colData(pbObj))[df_merge$row.order]
 
 # save merged data as colData while retaining original cell order
 colData(pbObj) = df_merge[order(df_merge$row.order),]
