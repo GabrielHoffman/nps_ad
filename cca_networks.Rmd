@@ -70,13 +70,12 @@ library(decorate)
 
 ```{r load.data}
 # read pseudobulk
-pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj.RDS")
+pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
 
 # read dreamlet fit
 fit.dl = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 
 # compute residuals and average replicates
-
 residList = lapply(fit.dl, function(fit){
 
   # get residuals
@@ -122,18 +121,17 @@ library(org.Hs.eg.db)
 scoreList = readRDS("~/Downloads/scoreList.RDS")
 
 # res = scoreList[[1]]
+library(org.Hs.eg.db)
+library(gtools)
 
-exclude = c('Endothelial', 'Unknown', 'OPC', 'Mural', "GABAergic","GABAergic PVALB+", "GABAergic SST+", "GABAergic VIP+")
-keep = ! names(scoreList) %in% exclude
-
-geneExpr = lapply( names(scoreList)[keep], function(CT){
+geneExpr = lapply( names(scoreList), function(CT){
   cat(CT)
 
   geneExpr = scoreList[[CT]]
 
-  df = select(org.Hs.eg.db, keys = rownames(geneExpr), columns="CHR", keytype="SYMBOL")
-  keepGenes = unique(df$SYMBOL[df$CHR %in% 1:22])
-  geneExpr = geneExpr[keepGenes,]
+  # df = select(org.Hs.eg.db, keys = rownames(geneExpr), columns="CHR", keytype="ENSEMBL")
+  # keepGenes = unique(df$SYMBOL[df$CHR %in% 1:22])
+  # geneExpr = geneExpr[keepGenes,]
 
   rownames(geneExpr) = paste0(CT, '_', rownames(geneExpr))
   data.frame(Symbol = rownames(geneExpr), geneExpr)

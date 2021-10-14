@@ -87,7 +87,7 @@ if( file.exists(datafile) ){
 }else{
   # read snRNA-seq data with annotations build in
   h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
-  sceCombine = readH5AD(h5ad_file, "counts", use_hdf5=TRUE)
+  sceCombine = readH5AD(h5ad_file, "raw/X", use_hdf5=TRUE)
 
   # set metadata to empty to reduce size and speep up development time
   metadata(sceCombine) = list()
@@ -124,7 +124,7 @@ ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_clas
 ```
 
 
-```{r combineData}
+```{r combineData, message=TRUE}
 # Specify how to collapse into pseudo-bulk
 sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
 sceCombine_prep <- prepSCE(sceCombine, 
@@ -167,6 +167,11 @@ df_merge = df_merge[,-1]
 colData(pbObj) = df_merge[order(df_merge$row.order),]
 colData(pbObj)$row.order = c()# remove row.order
 
+# Set levels for Dx2
+lvls = sort(unique(as.character(colData(pbObj)$Dx2)))
+lvls = lvls[-which(lvls=="Control")]
+colData(pbObj)$Dx2 = factor(colData(pbObj)$Dx2, c("Control", lvls))
+
 saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS" )
 
 pbObj
@@ -195,11 +200,10 @@ plotVoom( res.proc )
 library(org.Hs.eg.db)
 
 # find genes on chrX
-df_gene = select(org.Hs.eg.db, keys=rowData(sceCombine)$gene_id, keytype="ENSEMBL", columns=c("SYMBOL", "CHR"))
-df_gene_chrx = df_gene[with(df_gene, CHR=="X" & !is.na(CHR)),]
+# df_gene = select(org.Hs.eg.db, keys=rowData(sceCombine)$gene_id, keytype="ENSEMBL", columns=c("SYMBOL", "CHR"))
+# df_gene_chrx = df_gene[with(df_gene, CHR=="X" & !is.na(CHR)),]
 
-
-res = DelayedArray::rowSums(assay(sceCombine, "counts")[df_gene_chrx$ENSEMBL,1:10000])
+# res = DelayedArray::rowSums(assay(sceCombine, "counts")[df_gene_chrx$ENSEMBL,1:10000])
 
 
 df_gene = select(org.Hs.eg.db, keys=c("IL1RAPL1", "UTY"), keytype="SYMBOL", columns="ENSEMBL")
@@ -230,6 +234,16 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 
 
 
+
+```{r varPart.plain}
+form = ~ (1|group_id)
+
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
+```
+
+```{r vp.plot.plain, fig.height=15, fig.width=10, cache=FALSE}
+plotVarPart( sortCols(res.vp) )
+```
 
 ```{r varPart}
 form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + scale(Age) + scale(PMI)
@@ -277,9 +291,25 @@ eval_within_across_donor( res.proc )
 # Cell type composition
 
 Plot cell type composition
-```{r plotCellComposition, fig.height=5, fig.width=5}
-# TODO sort by Dx2
-plotCellComposition(pbObj)     
+```{r plotCellComposition, fig.height=20, fig.width=5}
+
+tab = sort(table(pbObj$Dx2))
+tab = tab[tab<40][1:4]
+
+figLst = lapply(names(tab), function(lvl){
+
+  idx = which(pbObj$Dx2 == lvl)
+  idx = idx[!is.na(idx)]
+
+  fig = plotCellComposition(pbObj[,idx]) + ggtitle(lvl) 
+
+  if( lvl != names(tab)[which.max(tab)] ){
+    fig = fig + theme(legend.position="none")
+  }
+  fig
+})
+
+plot_grid(plotlist=figLst, rel_heights= tab[ids], ncol=1, align="hv", axis="tblr")
 ```
 
 
@@ -287,14 +317,22 @@ Partition variation in cell type composition
 ```{r cellTypeCompositionVarPart, fig.height=2, fig.width=6}
 # Add dream here
 # deal with NA's here 
-form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO)  + (1|Sex) + (1|Dx2) + scale(Age) + scale(PMI)
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + scale(Age) + scale(PMI)
 df_vp = cellTypeCompositionVarPart( pbObj, form, method="lm")
 
 rownames(df_vp) = df_vp$assay
 plotPercentBars(df_vp[,-1])
 ```
 
+Perform statistical tests
+```{r}
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + Dx2 + scale(Age) + scale(PMI)
 
+res_ctc = cellTypeCompositionTest( pbObj, form, "Dx2BP", "dream")
+
+```
+# are too many genes being excluded?
+# what does voom look like from **complete** pseudobulk??
 # TODO get pH info?
 # Missing Sex
 # XIST genes and mito-rate
