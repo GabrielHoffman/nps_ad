@@ -225,6 +225,10 @@ ggplot(as.data.frame(df_sex), aes(IL1RAPL1, UTY, color=Sex)) + geom_point() + th
 
 
 ```{r dreamlet.fit}
+
+library(RhpcBLASctl)
+blas_set_num_threads(1)
+
 form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + Dx2 + scale(Age) + scale(PMI)
 
 fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
