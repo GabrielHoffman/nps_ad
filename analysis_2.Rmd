@@ -87,7 +87,7 @@ if( file.exists(datafile) ){
 }else{
   # read snRNA-seq data with annotations build in
   h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
-  sceCombine = readH5AD(h5ad_file, "raw/X", use_hdf5=TRUE)
+  sceCombine = readH5AD(h5ad_file, X_name = "counts", target="raw/X", use_hdf5=TRUE)
 
   # set metadata to empty to reduce size and speep up development time
   metadata(sceCombine) = list()
