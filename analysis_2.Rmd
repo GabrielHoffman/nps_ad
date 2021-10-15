@@ -21,7 +21,7 @@ vignette: >
 cd /hpc/users/hoffmg01/work/nps_ad
 ml python
 R
-# rm -rf analysis_2_cache/
+# rm -rf analysis_2_cache/ /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS
 
 system("ml git; git pull")
 rmarkdown::render("analysis_2.Rmd");
@@ -135,7 +135,7 @@ sceCombine_prep <- prepSCE(sceCombine,
 
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine_prep,
-    assay = "raw/X", 
+    assay = "counts", 
     fun = "sum",
     by = c("cluster_id", "sample_id"),
     BPPARAM = SnowParam(12, progressbar=TRUE))
