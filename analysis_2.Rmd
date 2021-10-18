@@ -379,7 +379,8 @@ fig = plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
 
 # Cell type composition
 
-Plot cell type composition
+
+## Plot cell type composition
 ```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
 tab = sort(table(pbObj$Dx2))
 tab = tab[tab<40][1:4]
@@ -401,8 +402,8 @@ plot_grid(plotlist=figLst, rel_heights= tab[ids], ncol=1, align="hv", axis="tblr
 ```
 
 
-Partition variation in cell type composition
-```{r cellTypeCompositionVarPart, fig.height=2, fig.width=6}
+## Partition variation in cell type composition
+```{r cellTypeCompositionVarPart, fig.height=5, fig.width=6}
 # Add dream here
 # deal with NA's here 
 form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + scale(Age) + scale(PMI)
@@ -412,18 +413,22 @@ rownames(df_vp) = df_vp$assay
 plotPercentBars(df_vp[,-1])
 ```
 
-Perform statistical tests
-```{r}
+
+## Perform statistical tests
+```{r cellTypeCompositionTest}
 form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + Dx2 + scale(Age) + scale(PMI)
 
 cellTypeCompositionTest( pbObj, form, coefs[1], "dream") %>% 
-  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  kable_classic(full_width = FALSE, html_font = "Cambria")
+  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
 
 cellTypeCompositionTest( pbObj, form, coefs[2], "dream") %>% 
-  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  kable_classic(full_width = FALSE, html_font = "Cambria")
+  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  
+  kable_classic(full_width = FALSE, html_font = "Cambria")
 
   cellTypeCompositionTest( pbObj, form, coefs[3], "dream") %>% 
-  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  kable_classic(full_width = FALSE, html_font = "Cambria")
+  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  
+  kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
 
 # are too many genes being excluded?
