@@ -310,11 +310,12 @@ fig = plotZenithResults(res.gsa[[1]], 5, 2) + ggtitle(names(res.gsa)[1])
 ```
 
 ```{r zenith.heatmap.2, fig.width=7, fig.height=12}
-fig = plotZenithResults(res.gsa[[2]], 5, 2) + ggtitle(names(res.gsa)[3])
+fig = plotZenithResults(res.gsa[[2]], 5, 2) + ggtitle(names(res.gsa)[2])
 ```
 
 ```{r zenith.heatmap.3, fig.width=7, fig.height=12}
-fig = plotZenithResu
+fig = plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
+```
 
 
 
