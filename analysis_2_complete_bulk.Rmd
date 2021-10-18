@@ -118,7 +118,7 @@ sceCombine_prep <- prepSCE(sceCombine,
 pbObj <- aggregateToPseudoBulk(sceCombine_prep,
     assay = "counts", 
     fun = "sum",
-    by = c("CompleteBulk", "sample_id"),
+    by = c("cluster_id", "sample_id"),
     BPPARAM = SnowParam(12, progressbar=TRUE))
 
 # Combine with phenotype data at the Donor level
