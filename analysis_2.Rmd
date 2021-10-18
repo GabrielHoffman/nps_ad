@@ -313,6 +313,21 @@ tab = do.call(rbind, tabLst)
 as.data.frame(tab)
 ```
 
+# Volcanos
+```{r volcanos.1, fig.width=7, fig.height=12}
+plotVolcano( res.dl, coef = coefs[1] ) + ggtitle(coefs[1])
+```
+
+```{r volcanos.2, fig.width=7, fig.height=12}
+plotVolcano( res.dl, coef = coefs[2] ) + ggtitle(coefs[2])
+```
+
+```{r volcanos.3, fig.width=7, fig.height=12}
+plotVolcano( res.dl, coef = coefs[3] ) + ggtitle(coefs[3])
+```
+
+
+
 # zenith for gene set analysis
 ```{r zenith}
 library(GSEABase)
