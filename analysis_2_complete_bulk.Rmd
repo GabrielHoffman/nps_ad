@@ -24,7 +24,7 @@ R
 # rm -rf analysis_2_cache/ /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS
 
 system("ml git; git pull")
-rmarkdown::render("analysis_2.Rmd");
+rmarkdown::render("analysis_2_complete_bulk.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
@@ -101,11 +101,6 @@ if( file.exists(datafile) ){
 ```
 
 Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
-
-```{r Dx.summary}
-sort(table(pbObj$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
-```
-
 
 # Joint UMAP
 ```{r umap, dev="png"}
