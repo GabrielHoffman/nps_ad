@@ -70,6 +70,7 @@ library(scater)
 library(data.table)
 library(S4Vectors)
 library(tidyverse)
+library(kableExtra)
 library(qvalue)
 library(GSEABase)
 })
@@ -100,6 +101,11 @@ if( file.exists(datafile) ){
 ```
 
 Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
+
+```{r Dx.summary}
+sort(table(pbObj$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
+```
+
 
 # Joint UMAP
 ```{r umap, dev="png"}
@@ -313,6 +319,14 @@ tab = do.call(rbind, tabLst)
 as.data.frame(tab)
 ```
 
+```{r de.plots}
+ggplot(tab, aes(assay, nGenes, fill=assay)) + geom_bar(stat="identity") + facet_wrap(~coef) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
+
+ggplot(tab, aes(assay, nDE, fill=assay)) + geom_bar(stat="identity") + facet_wrap(~coef) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
+
+ggplot(tab, aes(assay, pi1, fill=assay)) + geom_bar(stat="identity") + facet_wrap(~coef) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
+```
+
 # Volcanos
 ```{r volcanos.1, fig.width=7, fig.height=12}
 plotVolcano( fit.dl, coef = coefs[1] ) + ggtitle(coefs[1])
@@ -348,15 +362,15 @@ res.gsa_cat = do.call(rbind, res.gsa)
 ```
 
 ```{r zenith.heatmap.1, fig.width=7, fig.height=12}
-plotZenithResults(res.gsa[[1]], 5, 2) + ggtitle(names(res.gsa)[1])
+fig = plotZenithResults(res.gsa[[1]], 5, 2) + ggtitle(names(res.gsa)[1])
 ```
 
 ```{r zenith.heatmap.2, fig.width=7, fig.height=12}
-plotZenithResults(res.gsa[[2]], 5, 2) + ggtitle(names(res.gsa)[3])
+fig = plotZenithResults(res.gsa[[2]], 5, 2) + ggtitle(names(res.gsa)[3])
 ```
 
 ```{r zenith.heatmap.3, fig.width=7, fig.height=12}
-plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
+fig = plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
 ```
 
 
