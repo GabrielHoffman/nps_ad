@@ -224,16 +224,6 @@ ggplot(as.data.frame(df_sex), aes(IL1RAPL1, UTY, color=Sex)) + geom_point() + th
 ```
 
 
-```{r dreamlet.fit}
-form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + Dx2 + scale(Age) + scale(PMI)
-
-fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
-
-saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
-```
-
-
-
 
 ```{r varPart.plain}
 form = ~ (1|group_id)
@@ -287,6 +277,80 @@ source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
 
 eval_within_across_donor( res.proc )
 ```
+
+
+```{r dreamlet.fit}
+form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + Dx2 + scale(Age) + scale(PMI)
+
+fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
+
+saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
+```
+
+```{r de.summary}
+# library(dreamlet)
+# fit.dl = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
+# pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
+
+library(tidyverse)
+library(qvalue)
+
+coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
+
+tabLst = lapply( coefs, function(key){
+  tab = topTable(fit.dl, coef=key, number=Inf)
+
+  tab %>% 
+    as_tibble %>% 
+    group_by(assay) %>% 
+    summarise( coef = key, 
+      nGenes = length(adj.P.Val), 
+      nDE = sum(adj.P.Val < 0.05),
+      pi1 = 1 - qvalue(P.Value)$pi0)
+  })
+tab = do.call(rbind, tabLst)
+
+as.data.frame(tab)
+```
+
+# zenith for gene set analysis
+```{r zenith}
+library(GSEABase)
+
+# Load Gene Ontology database 
+go.gs = get_GeneOntology()
+
+ngenes = sapply(go.gs, function(gs) length(geneIds(gs)))
+go.gs = go.gs[(ngenes > 20) & (ngenes < 2000)]
+
+coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
+
+res.gsa = lapply( coefs, function(key){
+
+  # check inter.gene.cor=NA
+  zenith_gsa(fit.dl, coefs=key, go.gs, inter.gene.cor=.01)
+})
+names(res.gsa) = coefs
+res.gsa_cat = do.call(rbind, res.gsa)
+```
+
+```{r zenith.heatmap.1, fig.width=7, fig.height=12}
+plotZenithResults(res.gsa[[1]], 5, 2) + ggtitle(names(res.gsa)[1])
+```
+
+```{r zenith.heatmap.2, fig.width=7, fig.height=12}
+plotZenithResults(res.gsa[[2]], 5, 2) + ggtitle(names(res.gsa)[3])
+```
+
+```{r zenith.heatmap.3, fig.width=7, fig.height=12}
+plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
+```
+
+
+
+
+
+
 
 # Cell type composition
 
