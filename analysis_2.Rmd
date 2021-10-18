@@ -244,7 +244,7 @@ form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
-```{r vp.plot, fig.height=15, fig.width=10, cache=FALSE}
+```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
 plotVarPart( sortCols(res.vp) )
 ```
 
@@ -361,6 +361,11 @@ plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
 
 
 
+
+
+```{r exit, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
+```
 
 
 
