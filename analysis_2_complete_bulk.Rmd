@@ -174,7 +174,7 @@ res.proc = processAssays( pbObj, ~ (1|group_id) + (1|batch) + (1|round_num) + (1
 res.proc
 ```
 
-```{r voom.plot, fig.height=10, fig.width=10, cache=TRUE}
+```{r voom.plot, fig.height=6, fig.width=6, cache=TRUE}
 plotVoom( res.proc )
 ```
 
@@ -215,7 +215,7 @@ form = ~ (1|group_id)
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
-```{r vp.plot.plain, fig.height=15, fig.width=10, cache=FALSE}
+```{r vp.plot.plain, fig.height=6, fig.width=6, cache=FALSE}
 plotVarPart( sortCols(res.vp) )
 ```
 
@@ -225,13 +225,13 @@ form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
-```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
+```{r vp.plot, fig.height=6, fig.width=6, cache=TRUE}
 plotVarPart( sortCols(res.vp) )
 ```
 
 
 # Correlation with and between donors
-```{r within_btw, fig.height=10, fig.width=10}
+```{r within_btw, fig.height=6, fig.width=6}
 source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
 
 eval_within_across_donor( res.proc )
@@ -272,15 +272,15 @@ ggplot(tab, aes(assay, pi1, fill=assay)) + geom_bar(stat="identity") + facet_wra
 ```
 
 # Volcanos
-```{r volcanos.1, fig.width=7, fig.height=12}
+```{r volcanos.1, fig.width=6, fig.height=6}
 plotVolcano( fit.dl, coef = coefs[1] ) + ggtitle(coefs[1])
 ```
 
-```{r volcanos.2, fig.width=7, fig.height=12}
+```{r volcanos.2, fig.width=6, fig.height=6}
 plotVolcano( fit.dl, coef = coefs[2] ) + ggtitle(coefs[2])
 ```
 
-```{r volcanos.3, fig.width=7, fig.height=12}
+```{r volcanos.3, fig.width=6, fig.height=6}
 plotVolcano( fit.dl, coef = coefs[3] ) + ggtitle(coefs[3])
 ```
 
@@ -305,15 +305,15 @@ names(res.gsa) = coefs
 res.gsa_cat = do.call(rbind, res.gsa)
 ```
 
-```{r zenith.heatmap.1, fig.width=7, fig.height=12}
+```{r zenith.heatmap.1, fig.width=6, fig.height=6}
 fig = plotZenithResults(res.gsa[[1]], 5, 2) + ggtitle(names(res.gsa)[1])
 ```
 
-```{r zenith.heatmap.2, fig.width=7, fig.height=12}
+```{r zenith.heatmap.2, fig.width=6, fig.height=6}
 fig = plotZenithResults(res.gsa[[2]], 5, 2) + ggtitle(names(res.gsa)[2])
 ```
 
-```{r zenith.heatmap.3, fig.width=7, fig.height=12}
+```{r zenith.heatmap.3, fig.width=6, fig.height=6}
 fig = plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
 ```
 
