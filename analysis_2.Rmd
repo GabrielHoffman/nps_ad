@@ -69,6 +69,9 @@ library(zenith)
 library(scater)
 library(data.table)
 library(S4Vectors)
+library(tidyverse)
+library(qvalue)
+library(GSEABase)
 })
 
 # packageVersion("zellkonverter") >= 1.3.1
@@ -292,9 +295,6 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 # fit.dl = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 # pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
 
-library(tidyverse)
-library(qvalue)
-
 coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
 
 tabLst = lapply( coefs, function(key){
@@ -315,23 +315,21 @@ as.data.frame(tab)
 
 # Volcanos
 ```{r volcanos.1, fig.width=7, fig.height=12}
-plotVolcano( res.dl, coef = coefs[1] ) + ggtitle(coefs[1])
+plotVolcano( fit.dl, coef = coefs[1] ) + ggtitle(coefs[1])
 ```
 
 ```{r volcanos.2, fig.width=7, fig.height=12}
-plotVolcano( res.dl, coef = coefs[2] ) + ggtitle(coefs[2])
+plotVolcano( fit.dl, coef = coefs[2] ) + ggtitle(coefs[2])
 ```
 
 ```{r volcanos.3, fig.width=7, fig.height=12}
-plotVolcano( res.dl, coef = coefs[3] ) + ggtitle(coefs[3])
+plotVolcano( fit.dl, coef = coefs[3] ) + ggtitle(coefs[3])
 ```
 
 
 
 # zenith for gene set analysis
 ```{r zenith}
-library(GSEABase)
-
 # Load Gene Ontology database 
 go.gs = get_GeneOntology()
 
