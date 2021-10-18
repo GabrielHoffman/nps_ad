@@ -161,11 +161,6 @@ pbObj
 
 
 
-```{r exit3, cache=FALSE, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
-
-
 
 ```{r voom}
 # Normalize and apply voom
