@@ -319,6 +319,38 @@ fig = plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
 
 
 
+# MDS from pseudobulk
+```{r pseudobulk.MDS}
+library(edgeR)
+
+pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
+pb2 = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2_complete_bulk.RDS")
+
+pb.flat = pbFlatten(pb)
+geneExpr = assay(pb.flat, "counts")
+
+geneExpr2 = assay(pb2, "One")
+colnames(geneExpr2) = paste0(colnames(geneExpr2), ".Bulk")
+
+geneExpr_merge = merge(geneExpr, geneExpr2, by="row.names")
+rownames(geneExpr_merge) = geneExpr_merge$Row.names
+geneCounts = geneExpr_merge[,-1]
+
+dge = DGEList( geneCounts )
+dge = calcNormFactors( dge )
+geneExpr = cpm(dge, log=TRUE)
+
+C = 1 - cora(t(scale(t(geneExpr))))
+
+df_cmd = cmdscale( C )
+df_cmd = as.data.frame(df_cmd)
+df_cmd$CellType = sapply(strsplit(colnames(geneExpr), "\\."), function(x) x[2])
+
+ggplot(df_cmd, aes(V1, V2, color=CellType)) + geom_point() + theme_classic() + theme(aspect.ratio=1) + xlab("Coordinate 1") + ylab("Coordinate 2") + ggtitle("MDS of pseudobulk")
+```
+
+
+
 ```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
 ```
