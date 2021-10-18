@@ -230,31 +230,6 @@ plotVarPart( sortCols(res.vp) )
 ```
 
 
-### Examine variancePartition results
-```{r vp.examine, fig.height=3, fig.width=7}
-CT = "Astrocyte"
-
-i = 1:3
-df = sortCols(res.vp)[res.vp$assay == CT,]
-rownames(df) = df$gene
-i = c(i, which.max(df$Donor), which.max(df$Batch), which.max(df$Residuals))
-
-plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
-```
-
-Examples
-
-```{r vp.examine2, fig.height=6, fig.width=8, cache=TRUE}      
-figList = lapply( df$gene[i], function(geneName){
-  df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
-
-  plotStratifyBy(df, 'group_id', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
-})
-plot_grid( plotlist=figList, nrow=2 )
-```
-
-
-
 # Correlation with and between donors
 ```{r within_btw, fig.height=10, fig.width=10}
 source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
