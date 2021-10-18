@@ -425,7 +425,7 @@ res_ctc = cellTypeCompositionTest( pbObj, form, "Dx2BP", "dream")
 
 
 
-```{r exit, cache=FALSE, eval=TRUE, echo=FALSE}
+```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
 ```
 
