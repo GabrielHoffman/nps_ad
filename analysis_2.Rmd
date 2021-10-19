@@ -380,7 +380,7 @@ fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
 
 
 ## Plot cell type composition
-```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
+```{r plotCellComposition, fig.height=12, fig.width=5, eval=FALSE}
 tab = sort(table(pbObj$Dx2))
 tab = tab[tab<40][1:4]
 
