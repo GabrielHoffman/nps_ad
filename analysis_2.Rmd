@@ -102,10 +102,6 @@ if( file.exists(datafile) ){
 
 Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
-```{r Dx.summary}
-sort(table(pbObj$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
-```
-
 
 # Joint UMAP
 ```{r umap, dev="png"}
@@ -186,6 +182,9 @@ saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.
 pbObj
 ```
 
+```{r Dx.summary}
+sort(table(pbObj$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
+```
 
 ```{r voom}
 # Normalize and apply voom
@@ -362,15 +361,15 @@ res.gsa_cat = do.call(rbind, res.gsa)
 ```
 
 ```{r zenith.heatmap.1, fig.width=7, fig.height=12}
-fig = plotZenithResults(res.gsa[[1]], 5, 2) + ggtitle(names(res.gsa)[1])
+fig = plotZenithResults(res.gsa[[1]], 3, 1) + ggtitle(names(res.gsa)[1])
 ```
 
 ```{r zenith.heatmap.2, fig.width=7, fig.height=12}
-fig = plotZenithResults(res.gsa[[2]], 5, 2) + ggtitle(names(res.gsa)[3])
+fig = plotZenithResults(res.gsa[[2]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
 
 ```{r zenith.heatmap.3, fig.width=7, fig.height=12}
-fig = plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
+fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
 
 
@@ -438,7 +437,9 @@ cellTypeCompositionTest( pbObj, form, coefs[2], "dream") %>%
 # XIST genes and mito-rate
 # cellTypeCompositionTest is failing
 # create contrasts
-
+# df_meta$Age[1500:1800] ages are fractions
+# + PMI
+# mvIC
 
 
 
