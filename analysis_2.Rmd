@@ -350,17 +350,16 @@ ggplot(tab, aes(assay, pi1, fill=assay)) + geom_bar(stat="identity") + facet_wra
 
 # Volcanos
 ```{r volcanos.1, fig.width=7, fig.height=12}
-plotVolcano( fit.dl, coef = coefs[1] ) + ggtitle(coefs[1])
+plotVolcano( fit.dl, coef = coefs[1], nGenes=0 ) + ggtitle(coefs[1])
 ```
 
 ```{r volcanos.2, fig.width=7, fig.height=12}
-plotVolcano( fit.dl, coef = coefs[2] ) + ggtitle(coefs[2])
+plotVolcano( fit.dl, coef = coefs[2], nGenes=0 ) + ggtitle(coefs[2])
 ```
 
 ```{r volcanos.3, fig.width=7, fig.height=12}
-plotVolcano( fit.dl, coef = coefs[3] ) + ggtitle(coefs[3])
+plotVolcano( fit.dl, coef = coefs[3], nGenes=0 ) + ggtitle(coefs[3])
 ```
-
 
 
 # zenith for gene set analysis
