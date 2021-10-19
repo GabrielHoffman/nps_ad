@@ -380,7 +380,7 @@ fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
 
 
 ## Plot cell type composition
-```{r plotCellComposition, fig.height=12, fig.width=5, eval=FALSE}
+```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
 tab = sort(table(pbObj$Dx2))
 tab = tab[tab<40][1:4]
 
@@ -402,13 +402,17 @@ plot_grid(plotlist=figLst, rel_heights= tab[ids], ncol=1, align="hv", axis="tblr
 
 
 ## Partition variation in cell type composition
-```{r cellTypeCompositionVarPart, fig.height=5, fig.width=6}
+```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
 # Add dream here
 # deal with NA's here 
 form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + scale(Age) + scale(PMI)
 df_vp = cellTypeCompositionVarPart( pbObj, form, method="lm")
 
 rownames(df_vp) = df_vp$assay
+colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
+colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
+colnames(df_vp) = gsub("group_id", "Donor", colnames(df_vp))
+
 plotPercentBars(df_vp[,-1])
 ```
 
