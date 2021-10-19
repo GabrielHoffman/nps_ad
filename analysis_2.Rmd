@@ -423,7 +423,7 @@ plot_grid(plotlist=figLst, rel_heights= tab[ids], ncol=1, align="hv", axis="tblr
 ```
 
 
-```{r plotCellComposition.summary, fig.height=5, fig.width=6
+```{r plotCellComposition.summary, fig.height=5, fig.width=6}
 df_cellCount = do.call(rbind, int_colData(pbObj)$n_cells)
 
 plotCellComposition( t(colSums(df_cellCount)))
