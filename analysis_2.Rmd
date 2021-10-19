@@ -102,7 +102,6 @@ if( file.exists(datafile) ){
 
 Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
-
 # Joint UMAP
 ```{r umap, dev="png"}
 # extract UMAP coordinates and annotations
@@ -183,7 +182,10 @@ pbObj
 ```
 
 ```{r Dx.summary}
-sort(table(pbObj$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
+
+df = unique(data.frame(Dx2 = pbObj$Dx2, Donor = pbObj$group_id))
+
+sort(table(df$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
 ```
 
 ```{r voom}
@@ -419,6 +421,15 @@ figLst = lapply(names(tab), function(lvl){
 
 plot_grid(plotlist=figLst, rel_heights= tab[ids], ncol=1, align="hv", axis="tblr")
 ```
+
+
+```{r plotCellComposition.summary, fig.height=5, fig.width=6
+df_cellCount = do.call(rbind, int_colData(pbObj)$n_cells)
+
+plotCellComposition( t(colSums(df_cellCount)))
+```
+
+
 
 
 ## Partition variation in cell type composition
