@@ -255,12 +255,17 @@ res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
 ```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
-plotVarPart( sortCols(res.vp) )
+
+colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
+colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
+colnames(res.vp) = gsub("group_id", "Donor", colnames(res.vp))
+
+plotVarPart( sortCols(res.vp), label.angle=45 )
 ```
 
 ```{r vp.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
 idx = res.vp$assay %in% c('GABAergic neuron', 'Glutamatergic neuron', 'Microglia')
-plotVarPart( sortCols(res.vp[idx,]) )
+plotVarPart( sortCols(res.vp[idx,]), label.angle=45 )
 ```
 
 
