@@ -322,6 +322,7 @@ fig = plotZenithResults(res.gsa[[3]], 5, 2) + ggtitle(names(res.gsa)[3])
 # MDS from pseudobulk
 ```{r pseudobulk.MDS}
 library(edgeR)
+library(Rfast)
 
 pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
 pb2 = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2_complete_bulk.RDS")
