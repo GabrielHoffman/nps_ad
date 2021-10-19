@@ -203,6 +203,11 @@ plotVoom( res.proc )
 ```
 
 
+```{r voom.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
+plotVoom( res.proc[7:9] )
+```
+
+
 ```{r plot.sex, eval=FALSE}
  
 library(org.Hs.eg.db)
@@ -252,6 +257,12 @@ res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
 plotVarPart( sortCols(res.vp) )
 ```
+
+```{r vp.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
+idx = res.vp$assay %in% c('GABAergic neuron', 'Glutamatergic neuron', 'Microglia')
+plotVarPart( sortCols(res.vp[idx,]) )
+```
+
 
 
 ### Examine variancePartition results
