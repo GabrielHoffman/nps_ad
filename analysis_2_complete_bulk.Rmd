@@ -73,6 +73,7 @@ library(tidyverse)
 library(kableExtra)
 library(qvalue)
 library(GSEABase)
+library(compositions)
 })
 
 # packageVersion("zellkonverter") >= 1.3.1
@@ -159,8 +160,6 @@ pbObj
 ```
 
 ```{r cell.type.comp}
-library(compositions)
-
 # compute cell type composition using ilr
 
 # read standard pseudobulk
@@ -184,8 +183,6 @@ res.proc = processAssays( pbObj, ~ (1|group_id) + (1|batch) + (1|round_num) + (1
   # pmetadata = df_collapse,  
   # pkeys=c('ID', 'anno'),
   BPPARAM = SnowParam(16, progressbar=TRUE))
-  
-res.proc
 ```
 
 ```{r voom.plot, fig.height=6, fig.width=6, cache=TRUE}
