@@ -158,8 +158,22 @@ saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2_
 pbObj
 ```
 
+```{r cell.type.comp}
+library(compositions)
 
+# compute cell type composition using ilr
 
+# read standard pseudobulk
+pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
+countMatrix = do.call(rbind, int_colData(pb)$n_cells)
+df_ctc = ilr(countMatrix)
+colnames(df_ctc) = paste0("ctc_", 1:ncol(df_ctc))
+
+df = merge(colData(pbObj), df_ctc, by="row.names")
+rownames(df) = df$Row.names
+df = df[,-1]
+colData(pbObj) = df[rownames(colData(pbObj)),]
+```
 
 
 ```{r voom}
@@ -216,6 +230,9 @@ res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
 ```{r vp.plot.plain, fig.height=6, fig.width=6, cache=FALSE}
+colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
+colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
+colnames(res.vp) = gsub("group_id", "Donor", colnames(res.vp))
 plotVarPart( sortCols(res.vp) )
 ```
 
@@ -226,8 +243,33 @@ res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
 ```{r vp.plot, fig.height=6, fig.width=6, cache=TRUE}
+colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
+colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
+colnames(res.vp) = gsub("group_id", "Donor", colnames(res.vp))
 plotVarPart( sortCols(res.vp) )
 ```
+
+
+```{r varPart.ctc}
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + scale(Age) + scale(PMI)
+form = paste0('~', as.character(form)[2], ' + ', paste(colnames(df_ctc), collapse=" + "))
+form = as.formula(form)
+
+res.vp.ctc = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
+
+# aggregate cell type composition
+res.vp.ctc2 = as.data.frame(res.vp.ctc[,-c(1,2)])
+res.vp.ctc2$CTC = rowSums(res.vp.ctc2[,colnames(df_ctc)])
+res.vp.ctc2 = res.vp.ctc2[,! colnames(res.vp.ctc2) %in% colnames(df_ctc)]
+```
+
+```{r vp.plot.ctc, fig.height=6, fig.width=6, cache=TRUE}
+colnames(res.vp.ctc2) = gsub("scale\\.", "", colnames(res.vp.ctc2))
+colnames(res.vp.ctc2) = gsub("\\.", "", colnames(res.vp.ctc2))
+colnames(res.vp.ctc2) = gsub("group_id", "Donor", colnames(res.vp.ctc2))
+plotVarPart( sortCols(res.vp.ctc2) )
+```
+
 
 
 # Correlation with and between donors
