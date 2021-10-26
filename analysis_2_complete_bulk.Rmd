@@ -90,14 +90,7 @@ if( file.exists(datafile) ){
   #   especially good for pipeline development
   sceCombine = readRDS( datafile )
 }else{
-  # read snRNA-seq data with annotations build in
-  h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
-  sceCombine = readH5AD(h5ad_file, X_name = "counts", target="raw/X", use_hdf5=TRUE)
-
-  # set metadata to empty to reduce size and speep up development time
-  metadata(sceCombine) = list()
-
-  saveRDS(sceCombine, file=datafile)
+  stop("File not found")
 }
 ```
 
@@ -117,7 +110,7 @@ sceCombine_prep <- prepSCE(sceCombine,
 
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine_prep,
-    assay = "counts", 
+    assay = "X", 
     fun = "sum",
     by = c("cluster_id", "sample_id"),
     BPPARAM = SnowParam(12, progressbar=TRUE))
@@ -177,7 +170,7 @@ colData(pbObj) = df[rownames(colData(pbObj)),]
 
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO), 
+res.proc = processAssays( pbObj, ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution), 
   min.cells = 5,
   min.count = 10, 
   # pmetadata = df_collapse,  
@@ -234,7 +227,7 @@ plotVarPart( sortCols(res.vp) )
 ```
 
 ```{r varPart}
-form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + scale(Age) + scale(PMI)
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|Institution) + scale(Age) + scale(PMI)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
@@ -248,7 +241,7 @@ plotVarPart( sortCols(res.vp) )
 
 
 ```{r varPart.ctc}
-form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + scale(Age) + scale(PMI)
+form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|Institution) + scale(Age) + scale(PMI)
 form = paste0('~', as.character(form)[2], ' + ', paste(colnames(df_ctc), collapse=" + "))
 form = as.formula(form)
 
