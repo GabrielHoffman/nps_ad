@@ -99,6 +99,9 @@ if( file.exists(datafile) ){
   # extract raw counts
   sceCombine = altExp( sce_in, "raw", withDimnames=TRUE, withColData=TRUE)
 
+  sceCombine = as(sceCombine, "SingleCellExperiment")
+  reducedDims(sceCombine) <- reducedDims(sce_in)
+
   # set metadata to empty to reduce size and speep up development time
   metadata(sceCombine) = list()
 
