@@ -148,7 +148,7 @@ sceCombine_prep <- prepSCE(sceCombine,
 
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine_prep,
-    assay = "counts", 
+    assay = "X", 
     fun = "sum",
     by = c("cluster_id", "sample_id"),
     BPPARAM = SnowParam(12, progressbar=TRUE))
