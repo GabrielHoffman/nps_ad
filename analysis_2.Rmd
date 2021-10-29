@@ -326,6 +326,44 @@ fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
 
+```{r write.residuals}
+form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+
+fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
+
+# extract residuals for each assay
+resMatList = lapply( assayNames(fit.for.resid), function(CT){
+
+  # get residuals for assay CT
+  resMat = residuals(assay(fit.for.resid, CT))
+
+  # extra colData for there samples
+  idx = match(colnames(resMat), rownames(colData(res.proc)))
+  info = droplevels(colData(res.proc)[idx,])
+  # identical(colnames(resMat), rownames(info))
+
+  # for each Donor, report mean expression
+  resMatCollapse = lapply( unique(info$group_id), function(grpid){
+    idx = which(info$group_id == grpid)
+
+    rowMeans(resMat[,idx,drop=FALSE])
+    })
+  resMatCollapse = do.call(cbind, resMatCollapse)
+  colnames(resMatCollapse) = unique(info$group_id)
+
+  resMatCollapse
+})
+names(resMatList) = assayNames(fit.for.resid)
+
+outPath = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/residuals"
+for( CT in names(resMatList) ){
+  file = paste0(outPath, "/", gsub(' ', '_',CT), '.tsv')
+  write.table( resMatList[[CT]], file=file, quote=FALSE, sep="\t")
+}
+```
+
+
+
 ```{r de.summary}
 # library(dreamlet)
 # fit.dl = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
