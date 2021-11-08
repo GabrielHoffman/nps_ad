@@ -140,17 +140,18 @@ ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_clas
 ```{r combineData, message=TRUE}
 # Specify how to collapse into pseudo-bulk
 sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
-sceCombine_prep <- prepSCE(sceCombine, 
-    kid = "celltype", # subpopulation assignments
-    gid = "SubID",  # group IDs (i.e. Donor)
-    sid = "id",   # sample IDs (i.e. Batch_Donor)
-    drop = TRUE)
+# sceCombine_prep <- prepSCE(sceCombine, 
+#     kid = "celltype", # subpopulation assignments
+#     gid = "SubID",  # group IDs (i.e. Donor)
+#     sid = "id",   # sample IDs (i.e. Batch_Donor)
+#     drop = TRUE)
 
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine_prep,
     assay = "X", 
     fun = "sum",
-    by = c("cluster_id", "sample_id"),
+    cluster_id = "celltype",
+    sample_id  = "id",
     BPPARAM = SnowParam(12, progressbar=TRUE))
 
 # Combine with phenotype data at the Donor level
