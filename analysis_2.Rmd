@@ -147,7 +147,7 @@ sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
 #     drop = TRUE)
 
 # Create pseudo-bulk SingleCellExperiment
-pbObj <- aggregateToPseudoBulk(sceCombine_prep,
+pbObj <- aggregateToPseudoBulk(sceCombine,
     assay = "X", 
     fun = "sum",
     cluster_id = "celltype",
