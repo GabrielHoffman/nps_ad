@@ -210,7 +210,8 @@ ggplot(df_melt, aes(Var2, value, fill=Var2)) +
   geom_hline(yintercept=1/ncol(df), color="red", linetype="dashed")
 
 # Barplot of 5 genes
-genes = c(rownames(df)[1:5], 'ENSG00000151067')
+frac = apply(df, 1, max)
+genes = c(rownames(df)[1:5], 'ENSG00000151067', names(frac)[which.max(frac)])
 
 ggplot(df_melt[df_melt$Var1 %in% genes,], aes(Var1, value, fill=Var2)) + 
   geom_bar(stat="identity") + 
