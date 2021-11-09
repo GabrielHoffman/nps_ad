@@ -166,7 +166,7 @@ df_meta = df_meta[,-1]
 colData(pbObj)$row.order = 1:nrow(colData(pbObj))
 
 # merge colData with additional metadata
-df_merge = merge(colData(pbObj), df_meta, by.x= "group_id", by.y="SubID", all.x=TRUE)
+df_merge = merge(colData(pbObj), df_meta, by="SubID", all.x=TRUE)
 
 # set rownames to be same as original, based on row.order
 # These rownames determine colnames(pbObj), which is used downstream
