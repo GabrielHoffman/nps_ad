@@ -352,11 +352,7 @@ plot_grid( plotlist=figList, nrow=2 )
 ```{r within_btw, fig.height=10, fig.width=10}
 source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
 
-eval_within_across_donor( res.proc )
-```
-
-```{r within_btw_sub, fig.height=6, fig.width=12}
-eval_within_across_donor( res.proc[7:9] )
+eval_within_across_donor( res.proc, "SubID" )
 ```
 
 
