@@ -232,14 +232,14 @@ ggplot(df_melt[df_melt$Var1 %in% genes,], aes(Var1, value, fill=Var2)) +
 
 ```{r Dx.summary}
 
-df = unique(data.frame(Dx2 = pbObj$Dx2, Donor = pbObj$group_id))
+df = unique(data.frame(Dx2 = pbObj$Dx2, Donor = pbObj$SubID))
 
 sort(table(df$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
 ```
 
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort), 
+res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort), 
   min.cells = 5,
   min.count = 10, 
   # pmetadata = df_collapse,  
@@ -290,7 +290,7 @@ ggplot(as.data.frame(df_sex), aes(IL1RAPL1, UTY, color=Sex)) + geom_point() + th
 
 
 ```{r varPart.plain}
-form = ~ (1|group_id)
+form = ~ (1|SubID)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
@@ -300,7 +300,7 @@ plotVarPart( sortCols(res.vp) )
 ```
 
 ```{r varPart}
-form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
@@ -309,7 +309,7 @@ res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 
 colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
 colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
-colnames(res.vp) = gsub("group_id", "Donor", colnames(res.vp))
+colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
 
 plotVarPart( sortCols(res.vp), label.angle=45 )
 ```
@@ -339,7 +339,7 @@ Examples
 figList = lapply( df$gene[i], function(geneName){
   df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
 
-  plotStratifyBy(df, 'group_id', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
+  plotStratifyBy(df, 'SubID', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
 })
 plot_grid( plotlist=figList, nrow=2 )
 ```
@@ -359,7 +359,7 @@ eval_within_across_donor( res.proc[7:9] )
 
 
 ```{r dreamlet.fit}
-form = ~ Sex + (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
 
 fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 
@@ -383,13 +383,13 @@ resMatList = lapply( assayNames(fit.for.resid), function(CT){
   # identical(colnames(resMat), rownames(info))
 
   # for each Donor, report mean expression
-  resMatCollapse = lapply( unique(info$group_id), function(grpid){
-    idx = which(info$group_id == grpid)
+  resMatCollapse = lapply( unique(info$SubID), function(grpid){
+    idx = which(info$SubID == grpid)
 
     rowMeans(resMat[,idx,drop=FALSE])
     })
   resMatCollapse = do.call(cbind, resMatCollapse)
-  colnames(resMatCollapse) = unique(info$group_id)
+  colnames(resMatCollapse) = unique(info$SubID)
 
   resMatCollapse
 })
@@ -522,13 +522,13 @@ plotCellComposition( t(colSums(df_cellCount)))
 ```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
 # Add dream here
 # deal with NA's here 
-form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
 df_vp = cellTypeCompositionVarPart( pbObj, form, method="lm")
 
 rownames(df_vp) = df_vp$assay
 colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
 colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("group_id", "Donor", colnames(df_vp))
+colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
 
 plotPercentBars(df_vp[,-1])
 ```
@@ -536,7 +536,7 @@ plotPercentBars(df_vp[,-1])
 
 ## Perform statistical tests
 ```{r cellTypeCompositionTest}
-form = ~ (1|group_id) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
 
 cellTypeCompositionTest( pbObj, form, coefs[1], "dream") %>% 
   kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>% 
@@ -570,31 +570,6 @@ cellTypeCompositionTest( pbObj, form, coefs[2], "dream") %>%
 ```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
 ```
-
-
-
-
-
-Perform statistical tests
-```{r testCellComposition, eval=FALSE}
-formula = ~ group_id
-coef = 'group_idstim'
-
-# default is negative binomial model
-# poisson model gives similar effect sizes, but *much* smaller standard errors
-cellTypeCompositionTest( pb, formula, coef)
-```
-
-```{r testCellComposition.eval, results="html", echo=FALSE}
-formula = ~ group_id
-coef = 'group_idstim'
-
-tab1 = cellTypeCompositionTest( pb, formula, coef)
-tab1$pValue = format(tab1$pValue, scientific = TRUE, digits=2)
-
-knitr::kable(tab1, row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  kable_classic(full_width = FALSE, html_font = "Cambria")
-```
-
 
 
 
