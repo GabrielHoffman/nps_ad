@@ -165,6 +165,8 @@ df_meta = df_meta[,-1]
 # save original order of samples
 colData(pbObj)$row.order = 1:nrow(colData(pbObj))
 
+# g = intersect(colnames(colData(pbObj)), colnames(df_meta))
+
 # merge colData with additional metadata
 df_merge = merge(colData(pbObj), df_meta, by="SubID", all.x=TRUE)
 
@@ -173,11 +175,11 @@ df_merge = merge(colData(pbObj), df_meta, by="SubID", all.x=TRUE)
 rownames(df_merge) = rownames(colData(pbObj))[df_merge$row.order]
 
 # extract batch info per sample
-df_batching = with( colData(sceCombine), unique(data.frame(id, round_num, batch, prep, HTO)))
-df_merge = merge(df_merge, df_batching, by.x= "row.names", by.y="id", all.x=TRUE)
+# df_batching = with( colData(sceCombine), unique(data.frame(id, round_num, batch, prep, HTO)))
+# df_merge = merge(df_merge, df_batching, by.x= "row.names", by.y="id", all.x=TRUE)
 
-rownames(df_merge) = df_merge$Row.names
-df_merge = df_merge[,-1]
+# rownames(df_merge) = df_merge$Row.names
+# df_merge = df_merge[,-1]
 
 # save merged data as colData while retaining original cell order
 colData(pbObj) = df_merge[order(df_merge$row.order),]
