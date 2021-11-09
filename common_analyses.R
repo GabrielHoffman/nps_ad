@@ -34,7 +34,9 @@ plot_within_btw = function( simMat, design, col=c("lightblue", "lightgreen"),mai
 }
 
 
-eval_within_across_donor = function( pbObj ){
+eval_within_across_donor = function( pbObj, Donor ){
+
+  formula = as.formula(paste0("~ 0 + ", Donor))
 
 	# for each assay, evaluate within/across donor correlation
 	resList = lapply( assayNames(pbObj), function(k){
@@ -49,7 +51,7 @@ eval_within_across_donor = function( pbObj ){
 	  info = colData(pbObj)[rownames(C),,drop=FALSE]
 
 	  # Evalute within-donor similarity
-	  res = plot_within_btw(C, model.matrix(~ 0 + group_id, info))
+	  res = plot_within_btw(C, model.matrix(formula, info))
 
 	  # return correlations
 	  data.frame(assay = k, res$variation)
