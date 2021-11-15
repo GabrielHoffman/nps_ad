@@ -76,7 +76,7 @@ if( compareVersion(as.character(vsn), "1.3.3") == -1){
 ```{r voom}
 pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
 
-methods = c( fixed = ~ (1|SubID) + batch + Dx2,
+methods = c( fixed = ~ (1|SubID) + Dx2,
               mixed = ~ (1|SubID) + (1|batch) + Dx2)
 
 keep = !is.na(colData(pbObj)$Dx2)
@@ -99,11 +99,13 @@ fit = dreamet( vobjList[['mixed']], ~ (1|SubID) + batch)
 
 coefNames(fit)
 
-toptable(fit, )
+tab = toptable(fit, coef, number=Inf)
 
 
 
 ```
+
+
 
 
 
