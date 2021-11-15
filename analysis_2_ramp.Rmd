@@ -1,0 +1,106 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'STAR-solo R1-4 merged h5ad'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{Decorrelate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+cd /hpc/users/hoffmg01/work/nps_ad
+ml python
+R
+# rm -rf analysis_2_cache/ /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS
+
+system("ml git; git pull")
+rmarkdown::render("analysis_2_ramp.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+
+
+ml git
+cd ~/build2/dreamlet
+git pull
+R CMD INSTALL .
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(dreamlet)
+library(muscat)
+library(cowplot)
+library(zenith)
+library(S4Vectors)
+library(tidyverse)
+library(kableExtra)
+library(qvalue)
+})
+
+vsn = packageVersion("zellkonverter")
+if( compareVersion(as.character(vsn), "1.3.3") == -1){
+  stop("zellkonverter version must be >=1.3.3  Currently: ", as.character(vsn))
+}
+```
+
+
+
+```{r voom}
+pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
+
+methods = c( fixed = ~ (1|SubID) + batch + Dx2,
+              mixed = ~ (1|SubID) + (1|batch) + Dx2)
+
+vobjList = lapply( methods, function(formula){
+
+  # Normalize and apply voom
+   processAssays( pbObj, 
+    formula,
+    min.cells = 5,
+    min.count = 10, 
+    BPPARAM = SnowParam(16, progressbar=TRUE))
+})
+names(vobjList) = names(methods)
+```
+
+
+
+
+
+
+
+
+
+
