@@ -83,10 +83,12 @@ pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS"
 methods = c( fixed = ~ (1|SubID) + batch + Dx2,
               mixed = ~ (1|SubID) + (1|batch) + Dx2)
 
+keep = !is.na(colData(pbObj)$Dx2
+
 vobjList = lapply( methods, function(formula){
 
   # Normalize and apply voom
-   processAssays( pbObj, 
+   processAssays( pbObj[,keep], 
     formula,
     min.cells = 5,
     min.count = 10, 
@@ -94,6 +96,24 @@ vobjList = lapply( methods, function(formula){
 })
 names(vobjList) = names(methods)
 ```
+
+
+```{r test.batch}
+fit = dreamet( vobjList[['mixed']], ~ (1|SubID) + batch)
+
+coefNames(fit)
+
+toptable(fit, )
+
+
+
+```
+
+
+
+
+
+
 
 
 
