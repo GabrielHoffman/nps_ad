@@ -60,10 +60,6 @@ knitr::opts_chunk$set(
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
 library(dreamlet)
-library(muscat)
-library(cowplot)
-library(zenith)
-library(S4Vectors)
 library(tidyverse)
 library(kableExtra)
 library(qvalue)
@@ -83,7 +79,7 @@ pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS"
 methods = c( fixed = ~ (1|SubID) + batch + Dx2,
               mixed = ~ (1|SubID) + (1|batch) + Dx2)
 
-keep = !is.na(colData(pbObj)$Dx2
+keep = !is.na(colData(pbObj)$Dx2)
 
 vobjList = lapply( methods, function(formula){
 
