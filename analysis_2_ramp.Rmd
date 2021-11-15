@@ -21,7 +21,7 @@ vignette: >
 cd /hpc/users/hoffmg01/work/nps_ad
 ml python
 R
-# rm -rf analysis_2_cache/ /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS
+# rm -rf analysis_2_ramp_cache/ 
 
 system("ml git; git pull")
 rmarkdown::render("analysis_2_ramp.Rmd");
