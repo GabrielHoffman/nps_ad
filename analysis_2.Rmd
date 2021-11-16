@@ -199,35 +199,14 @@ pbObj
 ```{r cellTypeSpecificity}
 df = cellTypeSpecificity( pbObj )
 
-df_melt = reshape2::melt(df)
+plotViolin(df)
 
-# Violin plot of cell type specificity
-ggplot(df_melt, aes(Var2, value, fill=Var2)) + 
-  geom_violin() + 
-  geom_boxplot(width=.1, fill="grey") + 
-  theme_classic() + 
-  theme(aspect.ratio=1, legend.position="none", 
-    plot.title = element_text(hjust = 0.5),
-    axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) + 
-  scale_y_continuous(limits=c(0,1), expand=c(0,0)) + 
-  ylab("Fraction of gene expression") + 
-  ggtitle("Cell type specificity") + 
-  geom_hline(yintercept=1/ncol(df), color="red", linetype="dashed")
 
 # Barplot of 5 genes
 frac = apply(df, 1, max)
 genes = c(rownames(df)[1:5], 'ENSG00000151067', names(frac)[which.max(frac)])
 
-ggplot(df_melt[df_melt$Var1 %in% genes,], aes(Var1, value, fill=Var2)) + 
-  geom_bar(stat="identity") + 
-  theme_classic() + 
-  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  scale_fill_discrete(name = "Cell type") + 
-  xlab("Gene") + 
-  ylab("Fraction of gene expression") + 
-  scale_y_continuous(limits=c(0, 1), expand=c(0,0)) + 
- ggtitle("Cell type specifity")
+plotPercentBars(df, genes = genes)
 ```
 
 
@@ -345,6 +324,48 @@ figList = lapply( df$gene[i], function(geneName){
 })
 plot_grid( plotlist=figList, nrow=2 )
 ```
+
+## Batch effects and gen sets
+```{r DE.batch}
+library(zenith)
+go.gs = get_GeneOntology(to="ENSEMBL")
+
+coef = "batch"
+n_genes_min = 10
+geneSets = go.gs
+
+res = lapply( unique(res.vp$assay), function(key){
+  
+  # subset by assay
+  df = res.vp[res.vp$assay == key,]
+
+  # get variance statistic
+  statistic = df[,coef]
+  names(statistic) = df$gene
+
+  # convert GeneSetCollection to list
+  geneSets.lst = recodeToList( geneSets )
+
+  # Map from Ensembl genes in geneSets_GO to 
+  # from trimmed Ensembl names from RNA-seq data 
+  index = ids2indices( geneSets.lst, names(statistic))
+     
+  # filter by size of gene set
+  index = index[vapply(index, length, FUN.VALUE=numeric(1)) >= n_genes_min]
+
+  res = cameraPR( statistic, index, use.ranks=TRUE)
+
+  DataFrame( assay = key, Geneset = rownames(res), res)
+})
+res = do.call(rbind, res)
+
+res$FDR = p.adjust(res$PValue, "fdr")
+
+# table(res$FDR < 0.05)
+```
+
+
+
 
 
 
