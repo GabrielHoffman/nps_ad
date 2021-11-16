@@ -502,6 +502,14 @@ fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
 
 
 
+```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
+```
+
+
+
+
+
 
 # Cell type composition
 
@@ -542,33 +550,44 @@ plotCellComposition( t(colSums(df_cellCount)))
 # Add dream here
 # deal with NA's here 
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
-df_vp = cellTypeCompositionVarPart( pbObj, form, method="lm")
 
-rownames(df_vp) = df_vp$assay
+i = with(colData(pbObj), !is.na(Dx2) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
+
+library(crumblr)
+cobj = crumblr(cellCounts(pbObj[,i]))
+df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
+
+# rownames(df_vp) = df_vp$assay
 colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
 colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
 colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
 
-plotPercentBars(df_vp[,-1])
+plotPercentBars( df_vp )
 ```
+
 
 
 ## Perform statistical tests
 ```{r cellTypeCompositionTest}
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
 
-cellTypeCompositionTest( pbObj, form, coefs[1], "dream") %>% 
-  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>% 
+fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
+fit = eBayes(fit)
+
+topTable(fit, coef=coefs[1], number=Inf, sort.by="none") %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2)) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 
-cellTypeCompositionTest( pbObj, form, coefs[2], "dream") %>% 
-  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  
+topTable(fit, coef=coefs[2], number=Inf, sort.by="none") %>%
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2)) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 
-  cellTypeCompositionTest( pbObj, form, coefs[3], "dream") %>% 
-  kable(row.names=FALSE, digits=c(2, 2, 2, 3, 3)) %>%  
+topTable(fit, coef=coefs[3], number=Inf, sort.by="none") %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2)) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
+
+
 
 # are too many genes being excluded?
 # what does voom look like from **complete** pseudobulk??
@@ -582,14 +601,6 @@ cellTypeCompositionTest( pbObj, form, coefs[2], "dream") %>%
 # + PMI and brain bank (Institution) and Ethnicity
 # mvIC
 # write data for QTL analysis
-
-
-
-
-```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
-
 
 
 
