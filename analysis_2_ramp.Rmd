@@ -86,7 +86,7 @@ vobjList = lapply( methods, function(formula){
   # Normalize and apply voom
    processAssays( pbObj[,keep], 
     formula,
-    assays = assayNames(pbObj)[1:3],
+    assays = assayNames(pbObj),
     min.cells = 5,
     min.count = 10, 
     BPPARAM = SnowParam(16, progressbar=TRUE))
@@ -96,17 +96,43 @@ names(vobjList) = names(methods)
 
 
 ```{r test.batch}
-# fit = dreamet( vobjList[['mixed']], ~ (1|SubID) + batch)
-fit = dreamlet( res.proc, ~ (1|SubID) + batch, 
+fitFull = fitVarPArt( vobjList[['mixed']], ~ (1|SubID) + batch, 
+    assays = "Astrocyte",
     BPPARAM = SnowParam(16, progressbar=TRUE))
 
-coefNames(fit)
+coef = coefNames(fitFull)[-1]
 
-tab = toptable(fit, coef, number=Inf)
+tab2 = topTable(fitFull, coef=coef, number=Inf)
+
+
+table(tab$adj.P.Val < 0.05)
+
+
+library(zenith)
+go.gs = get_GeneOntology(to="ENSEMBL")
+
+statistic = tab$F.std
+names(statistic) = tab$ProbeID
 
 
 
-```
+n_genes_min = 10
+geneSets = go.gs
+
+# convert GeneSetCollection to list
+geneSets.lst = recodeToList( geneSets )
+
+# Map from Ensembl genes in geneSets_GO to 
+# from trimmed Ensembl names from RNA-seq data 
+index = ids2indices( geneSets.lst, names(statistic))
+   
+# filter by size of gene set
+index = index[vapply(index, length, FUN.VALUE=numeric(1)) >= n_genes_min]
+
+res = cameraPR( statistic, index, use.ranks=TRUE)
+
+head(res)
+
 
 
 
