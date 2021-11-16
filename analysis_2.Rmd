@@ -502,11 +502,6 @@ fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
 
 
 
-```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
-
-
 
 
 
@@ -602,6 +597,11 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none") %>%
 # mvIC
 # write data for QTL analysis
 
+
+
+```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
+```
 
 
 
