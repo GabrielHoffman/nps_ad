@@ -488,7 +488,7 @@ plotVolcano( fit.dl, coef = coefs[3], nGenes=0 ) + ggtitle(coefs[3])
 ```
 
 # Cross-disease signature analysis
-```{r compare.signatures}
+```{r compare.signatures, fig.width=9, fig.height=9}
 
 # get one data.frame with all differential expression scores
 df = lapply( coefs, function(coef){
@@ -589,7 +589,12 @@ fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
 
 
-
+# MASH
+```{r mash}
+mashList = lapply( coefs, function(coef){
+  run_mash( fit.dl, coef)
+  })
+``` 
 
 
 
