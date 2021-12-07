@@ -674,7 +674,7 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>%
 
 
 ### Collapse neuronal subtypes
-```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
+```{r cellTypeCompositionVarPart.neuron, fig.height=4, fig.width=6}
 # Add dream here
 # deal with NA's here 
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
@@ -703,7 +703,7 @@ plotPercentBars( df_vp )
 
 ## Perform statistical tests
 For each cell type
-```{r cellTypeCompositionTest}
+```{r cellTypeCompositionTest.neuron}
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
 
 fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
