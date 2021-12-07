@@ -200,15 +200,32 @@ pbObj
 df = cellTypeSpecificity( pbObj )
 
 plotViolin(df)
-
-
-# Barplot of 5 genes
-frac = apply(df, 1, max)
-genes = c(rownames(df)[1:5], 'ENSG00000151067', names(frac)[which.max(frac)])
-
-plotPercentBars(df, genes = genes)
 ```
 
+### Show cell markers
+```{r cellMarkers}
+library(org.Hs.eg.db)
+
+genes = c('RBFOX3', 'MEG3', 'SLC17A7',
+'RBFOX3', 'MEG3', 'GAD1', 'GAD2', 'GRIK1',
+'SST',
+'PVALB',
+'VIP',
+'SLC1A3', 'GFAP', 'APOE', 'SLC1A2', 'SLC14A1',
+'PLP1', 'MAG', 'MBP',
+'PDGFRA', 'VCAN',
+'FLT1', 'CLDN5',
+'PDGFRB',
+'TGFBR1', 'DOCK8', 'CD74', 'CSF1R', 'MS4A6A', 'PLXDC2')
+
+df_genes = select(org.Hs.eg.db, genes,  "ENSEMBL", "SYMBOL")
+
+df_sub = df[rownames(df) %in% df_genes$ENSEMBL,]
+idx = match(rownames(df_sub), df_genes$ENSEMBL)
+rownames(df_sub) = df_genes$SYMBOL[idx]
+
+plotPercentBars(df_sub, genes=unique(genes))
+```
 
 
 ```{r Dx.summary}
@@ -467,6 +484,18 @@ plotVolcano( fit.dl, coef = coefs[2], nGenes=0 ) + ggtitle(coefs[2])
 plotVolcano( fit.dl, coef = coefs[3], nGenes=0 ) + ggtitle(coefs[3])
 ```
 
+# Cross-disease signature analysis
+```{r compare.signatures}
+
+
+
+
+
+
+
+
+
+```
 
 # zenith for gene set analysis
 ```{r zenith}
