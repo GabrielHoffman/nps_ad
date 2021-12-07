@@ -204,6 +204,9 @@ plotViolin(df)
 
 ### Show cell markers
 ```{r cellMarkers}
+# /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_brain_cell_markers.json
+# /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_brain_immune_cell_markers.json
+# /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_immune_cell_markers.json
 library(org.Hs.eg.db)
 
 genes = c('RBFOX3', 'MEG3', 'SLC17A7',
@@ -487,15 +490,72 @@ plotVolcano( fit.dl, coef = coefs[3], nGenes=0 ) + ggtitle(coefs[3])
 # Cross-disease signature analysis
 ```{r compare.signatures}
 
+# get one data.frame with all differential expression scores
+df = lapply( coefs, function(coef){
+  data.frame( coef=coef, topTable(fit.dl, coef=coef, number=Inf))
+})
+df = do.call(rbind, df)
 
+# dcast as wide matrix
+df2 = reshape2::dcast(df, ID ~ coef + assay , value.var="z.std")
 
+colnames(df2) = gsub("^Dx2", '', colnames(df2))
+C = cor(df2[,-1], use='pairwise.complete.obs')
 
+col = colorRampPalette(c("blue3", "white","red3"))(200)
 
+corrplot(C, col=col, tl.col="black")
 
-
-
-
+corrplot(C, order="hclust", col=col, tl.col="black")
 ```
+
+### Decompose differential expression: cell type by disease
+```{r vp.z.std}
+df_ids = lapply(strsplit(colnames(df2)[-1], "_"), function(x){
+  data.frame(Dx = x[1], CellType = x[2])
+  })
+df_ids = do.call(rbind, df_ids)
+
+df2_zeros = df2
+
+df2_elist = list(E = df2[,-1], weights = matrix(1, nrow(df2), ncol(df2)-1))
+rownames(df2_elist$E) = df2[,1]
+df2_elist = new("EList", df2_elist)
+
+keep = apply(df2, 1, function(x) sum(!is.na(x)) > 22)
+df2_elist = df2_elist[keep,]
+idx = is.na(df2_elist$E)
+df2_elist$E[idx] = 0
+df2_elist$weights[idx] = 1/1e4
+
+df_vp = fitExtractVarPartModel( df2_elist, ~ Dx + CellType, df_ids, colinearityCutoff=1)
+
+plotVarPart(df_vp)
+```
+
+# show top examples
+```{r}
+gene = rownames(df_vp)[which.max(df_vp$Dx)]
+fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
+fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
+fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
+plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+
+gene = rownames(df_vp)[which.max(df_vp$CellType)]
+fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
+fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
+fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
+plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+
+gene = rownames(df_vp)[which.max(df_vp$Residuals)]
+fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
+fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
+fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
+plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+```
+
+
+
 
 # zenith for gene set analysis
 ```{r zenith}
@@ -592,6 +652,7 @@ plotPercentBars( df_vp )
 
 
 ## Perform statistical tests
+For each cell type
 ```{r cellTypeCompositionTest}
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
 
@@ -599,17 +660,71 @@ fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
 fit = eBayes(fit)
 
 topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2)) %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 
 topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2)) %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 
 topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2)) %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
+
+
+### Collapse neuronal subtypes
+```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
+# Add dream here
+# deal with NA's here 
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
+
+i = with(colData(pbObj), !is.na(Dx2) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
+
+df_counts = as.data.frame(cellCounts(pbObj[,i]))
+idx = grep("GABA|Gluta", colnames(df_counts))
+
+# include summed neurons
+df_counts$Neurons = rowSums(df_counts[,idx])
+
+# drop split neurons
+df_counts = df_counts[,-idx]
+
+cobj = crumblr(as.matrix(df_counts))
+df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
+
+# rownames(df_vp) = df_vp$assay
+colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
+colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
+colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
+
+plotPercentBars( df_vp )
+```
+
+## Perform statistical tests
+For each cell type
+```{r cellTypeCompositionTest}
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+
+fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
+fit = eBayes(fit)
+
+topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+
+
+
 
 
 
