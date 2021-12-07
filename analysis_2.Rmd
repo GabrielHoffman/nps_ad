@@ -72,6 +72,8 @@ library(S4Vectors)
 library(tidyverse)
 library(kableExtra)
 library(qvalue)
+library(corrplot)
+library(org.Hs.eg.db)
 library(GSEABase)
 })
 
@@ -207,8 +209,6 @@ plotViolin(df)
 # /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_brain_cell_markers.json
 # /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_brain_immune_cell_markers.json
 # /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_immune_cell_markers.json
-library(org.Hs.eg.db)
-
 genes = c('RBFOX3', 'MEG3', 'SLC17A7',
 'RBFOX3', 'MEG3', 'GAD1', 'GAD2', 'GRIK1',
 'SST',
@@ -534,7 +534,7 @@ plotVarPart(df_vp)
 ```
 
 # show top examples
-```{r}
+```{r forest.summary}
 gene = rownames(df_vp)[which.max(df_vp$Dx)]
 fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
 fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
