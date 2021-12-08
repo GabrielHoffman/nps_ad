@@ -220,7 +220,7 @@ genes = c('RBFOX3', 'MEG3', 'SLC17A7',
 'FLT1', 'CLDN5',
 'PDGFRB',
 'TGFBR1', 'DOCK8', 'CD74', 'CSF1R', 'MS4A6A', 'PLXDC2')
-
+ 
 df_genes = select(org.Hs.eg.db, genes,  "ENSEMBL", "SYMBOL")
 
 df_sub = df[rownames(df) %in% df_genes$ENSEMBL,]
