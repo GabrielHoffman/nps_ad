@@ -230,6 +230,10 @@ rownames(df_sub) = df_genes$SYMBOL[idx]
 plotPercentBars(df_sub, genes=unique(genes))
 ```
 
+```{r heatmap}
+dreamlet::plotHeatmap(df_sub, genes=unique(genes))
+```
+
 
 ```{r Dx.summary}
 
