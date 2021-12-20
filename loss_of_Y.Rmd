@@ -23,7 +23,7 @@ ml python
 R
 
 system("ml git; git pull")
-rmarkdown::render("analysis_freeze1.Rmd");
+rmarkdown::render("loss_of_Y.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
@@ -72,7 +72,6 @@ library(tidyverse)
 library(kableExtra)
 library(qvalue)
 library(corrplot)
-library(org.Hs.eg.db)
 library(GSEABase)
 library(GenomicRanges)
 })
