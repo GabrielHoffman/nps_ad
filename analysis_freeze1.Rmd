@@ -1,0 +1,872 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'Freeze 1 merged h5ad'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{Decorrelate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+cd /hpc/users/hoffmg01/work/nps_ad
+ml python
+R
+# rm -rf analysis_2_cache/ /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS
+
+system("ml git; git pull")
+rmarkdown::render("analysis_2.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+
+
+ml git
+cd ~/build2/dreamlet
+git pull
+R CMD INSTALL .
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(HDF5Array)
+library(dreamlet)
+library(muscat)
+library(cowplot)
+library(zenith)
+library(scater)
+library(data.table)
+library(S4Vectors)
+library(tidyverse)
+library(kableExtra)
+library(qvalue)
+library(corrplot)
+library(org.Hs.eg.db)
+library(GSEABase)
+})
+
+vsn = packageVersion("zellkonverter")
+if( compareVersion(as.character(vsn), "1.3.3") == -1){
+  stop("zellkonverter version must be >=1.3.3  Currently: ", as.character(vsn))
+}
+```
+
+
+
+
+```{r load.data, cache=FALSE}
+# datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS"
+datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
+
+if( file.exists(datafile) ){
+  # reading data from RDS is much faster:
+  #   especially good for pipeline development
+  sceCombine = readRDS( datafile )
+}else{
+  # read snRNA-seq data with annotations build in
+  # h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
+  # h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/h5ad/211120_NPS-AD_roundMerged_pass2_res20_anno_meta.h5ad"
+  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1_proc/freeze1/211120_NPS-AD_roundMerged_pass2_res20_fixed.h5ad"
+
+  # read raw/* from h5ad file
+  sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
+
+  # only keep singlets
+  sce_in = sce_in[,sce_in$demux_type == "singlet"]
+
+  # extract raw counts
+  sceCombine = altExp( sce_in, "raw", withDimnames=TRUE, withColData=TRUE)
+
+  sceCombine = as(sceCombine, "SingleCellExperiment")
+  reducedDims(sceCombine) <- reducedDims(sce_in)
+  rownames(sceCombine) <- rownames(sce_in)
+  rowData(sceCombine) <- rowData(sce_in)
+
+  saveRDS(sceCombine, file=datafile)
+}
+```
+
+
+
+Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
+
+# Joint UMAP
+```{r umap, dev="png"}
+# extract UMAP coordinates and annotations
+df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "celltype", "class", "subtype", "leiden_labels")])
+df = data.frame(df)
+
+ggplot(df, aes(V1, V2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+```{r umap2, dev="png"}
+ggplot(df, aes(V1, V2, color=celltype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+```{r umap3, dev="png"}
+ggplot(df, aes(V1, V2, color=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+```{r umap4, dev="png"}
+ggplot(df, aes(V1, V2, color=subtype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+```{r umap5, dev="png"}
+ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
+
+# sceCombine_prep <- prepSCE(sceCombine, 
+#     kid = "celltype", # subpopulation assignments
+#     gid = "SubID",  # group IDs (i.e. Donor)
+#     sid = "id",   # sample IDs (i.e. Batch_Donor)
+#     drop = TRUE)
+
+
+```{r combineData, message=TRUE}
+# Specify how to collapse into pseudo-bulk
+sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
+
+# Create pseudo-bulk SingleCellExperiment
+pbObj <- aggregateToPseudoBulk(sceCombine,
+    assay = "X", 
+    fun = "sum",
+    cluster_id = "celltype",
+    sample_id  = "id",
+    BPPARAM = SnowParam(12, progressbar=TRUE))
+
+# Combine with phenotype data at the Donor level
+# read metadata
+meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
+df_meta = fread(meta_file)
+df_meta = df_meta[,-1]
+
+# save original order of samples
+colData(pbObj)$row.order = 1:nrow(colData(pbObj))
+
+# g = intersect(colnames(colData(pbObj)), colnames(df_meta))
+
+# merge colData with additional metadata
+df_merge = merge(colData(pbObj), df_meta, by="SubID", all.x=TRUE)
+
+# set rownames to be same as original, based on row.order
+# These rownames determine colnames(pbObj), which is used downstream
+rownames(df_merge) = rownames(colData(pbObj))[df_merge$row.order]
+
+# extract batch info per sample
+# df_batching = with( colData(sceCombine), unique(data.frame(id, round_num, batch, prep, HTO)))
+# df_merge = merge(df_merge, df_batching, by.x= "row.names", by.y="id", all.x=TRUE)
+
+# rownames(df_merge) = df_merge$Row.names
+# df_merge = df_merge[,-1]
+
+# save merged data as colData while retaining original cell order
+colData(pbObj) = df_merge[order(df_merge$row.order),]
+colData(pbObj)$row.order = c()# remove row.order
+
+# Set levels for Dx2
+lvls = sort(unique(as.character(colData(pbObj)$Dx2)))
+lvls = lvls[-which(lvls=="Control")]
+colData(pbObj)$Dx2 = factor(colData(pbObj)$Dx2, c("Control", lvls))
+
+saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS" )
+
+pbObj
+```
+
+## Cell type specificity
+```{r cellTypeSpecificity}
+df = cellTypeSpecificity( pbObj )
+
+plotViolin(df)
+```
+
+### Show cell markers
+```{r cellMarkers}
+# /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_brain_cell_markers.json
+# /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_brain_immune_cell_markers.json
+# /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_immune_cell_markers.json
+genes = c('RBFOX3', 'MEG3', 'SLC17A7',
+'RBFOX3', 'MEG3', 'GAD1', 'GAD2', 'GRIK1',
+'SST',
+'PVALB',
+'VIP',
+'SLC1A3', 'GFAP', 'APOE', 'SLC1A2', 'SLC14A1',
+'PLP1', 'MAG', 'MBP',
+'PDGFRA', 'VCAN',
+'FLT1', 'CLDN5',
+'PDGFRB',
+'TGFBR1', 'DOCK8', 'CD74', 'CSF1R', 'MS4A6A', 'PLXDC2')
+ 
+df_genes = select(org.Hs.eg.db, genes,  "ENSEMBL", "SYMBOL")
+
+df_sub = df[rownames(df) %in% df_genes$ENSEMBL,]
+idx = match(rownames(df_sub), df_genes$ENSEMBL)
+rownames(df_sub) = df_genes$SYMBOL[idx]
+
+plotPercentBars(df_sub, genes=unique(genes))
+```
+
+```{r heatmap, fig.height=7, fig.width=7}
+dreamlet::plotHeatmap(df_sub, genes=unique(genes))
+```
+
+
+```{r Dx.summary}
+
+df = unique(data.frame(Dx2 = pbObj$Dx2, Donor = pbObj$SubID))
+
+sort(table(df$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
+```
+
+```{r voom}
+# Normalize and apply voom
+res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort), 
+  min.cells = 5,
+  min.count = 10, 
+  # pmetadata = df_collapse,  
+  # pkeys=c('ID', 'anno'),
+  BPPARAM = SnowParam(16, progressbar=TRUE))
+  
+res.proc
+```
+
+```{r voom.plot, fig.height=10, fig.width=10, cache=TRUE}
+plotVoom( res.proc )
+```
+
+
+```{r voom.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
+plotVoom( res.proc[7:9] )
+```
+
+
+```{r plot.sex, eval=FALSE}
+ 
+library(org.Hs.eg.db)
+
+# find genes on chrX
+# df_gene = select(org.Hs.eg.db, keys=rowData(sceCombine)$gene_id, keytype="ENSEMBL", columns=c("SYMBOL", "CHR"))
+# df_gene_chrx = df_gene[with(df_gene, CHR=="X" & !is.na(CHR)),]
+
+# res = DelayedArray::rowSums(assay(sceCombine, "counts")[df_gene_chrx$ENSEMBL,1:10000])
+
+
+df_gene = select(org.Hs.eg.db, keys=c("IL1RAPL1", "UTY"), keytype="SYMBOL", columns="ENSEMBL")
+
+df_sex = lapply( names(res.proc), function(CT){
+  geneExpr = res.proc[[CT]]
+  df = NULL
+  if( sum(df_gene$ENSEMBL %in% rownames(geneExpr)) == 2){  
+    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), IL1RAPL1 = geneExpr$E[df_gene$ENSEMBL[1],], UTY = geneExpr$E[df_gene$ENSEMBL[2],])
+  }
+  df
+})
+df_sex = do.call(rbind, df_sex)
+
+df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.names")
+
+ggplot(as.data.frame(df_sex), aes(IL1RAPL1, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType)
+```
+
+
+
+```{r varPart.plain}
+form = ~ (1|SubID)
+
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
+```
+
+```{r vp.plot.plain, fig.height=15, fig.width=10, cache=FALSE}
+plotVarPart( sortCols(res.vp) )
+```
+
+```{r varPart}
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
+
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
+```
+
+```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
+
+colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
+colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
+colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
+
+plotVarPart( sortCols(res.vp), label.angle=45 )
+```
+
+```{r vp.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
+idx = res.vp$assay %in% c('GABAergic neuron', 'Glutamatergic neuron', 'Microglia')
+plotVarPart( sortCols(res.vp[idx,]), label.angle=70 )
+```
+
+
+
+### Examine variancePartition results
+```{r vp.examine, fig.height=3, fig.width=7}
+CT = "Astrocyte"
+
+i = 1:3
+df = sortCols(res.vp)[res.vp$assay == CT,]
+rownames(df) = df$gene
+i = c(i, which.max(df$Donor), which.max(df$Batch), which.max(df$Residuals))
+
+plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
+```
+
+Examples
+
+```{r vp.examine2, fig.height=6, fig.width=8, cache=TRUE}      
+figList = lapply( df$gene[i], function(geneName){
+  df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
+
+  plotStratifyBy(df, 'SubID', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
+})
+plot_grid( plotlist=figList, nrow=2 )
+```
+
+## Batch effects and gen sets
+```{r DE.batch}
+library(zenith)
+go.gs = get_GeneOntology(to="ENSEMBL")
+
+coef = "batch"
+n_genes_min = 10
+geneSets = go.gs
+
+res = lapply( unique(res.vp$assay), function(key){
+  
+  # subset by assay
+  df = res.vp[res.vp$assay == key,]
+
+  # get variance statistic
+  statistic = df[,coef]
+  names(statistic) = df$gene
+
+  # convert GeneSetCollection to list
+  geneSets.lst = recodeToList( geneSets )
+
+  # Map from Ensembl genes in geneSets_GO to 
+  # from trimmed Ensembl names from RNA-seq data 
+  index = ids2indices( geneSets.lst, names(statistic))
+     
+  # filter by size of gene set
+  index = index[vapply(index, length, FUN.VALUE=numeric(1)) >= n_genes_min]
+
+  res = cameraPR( statistic, index, use.ranks=TRUE)
+
+  DataFrame( assay = key, Geneset = rownames(res), res)
+})
+res = do.call(rbind, res)
+
+res$FDR = p.adjust(res$PValue, "fdr")
+
+# table(res$FDR < 0.05)
+```
+
+
+
+
+
+
+# Correlation with and between donors
+```{r within_btw, fig.height=10, fig.width=10}
+source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
+
+eval_within_across_donor( res.proc, "SubID" )
+```
+
+
+```{r dreamlet.fit}
+form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+
+fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
+
+saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
+```
+
+```{r write.residuals}
+form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+
+fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
+
+# extract residuals for each assay
+resMatList = lapply( assayNames(fit.for.resid), function(CT){
+
+  # get residuals for assay CT
+  resMat = residuals(assay(fit.for.resid, CT))
+
+  # extra colData for there samples
+  idx = match(colnames(resMat), rownames(colData(res.proc)))
+  info = droplevels(colData(res.proc)[idx,])
+  # identical(colnames(resMat), rownames(info))
+
+  # for each Donor, report mean expression
+  resMatCollapse = lapply( unique(info$SubID), function(grpid){
+    idx = which(info$SubID == grpid)
+
+    rowMeans(resMat[,idx,drop=FALSE])
+    })
+  resMatCollapse = do.call(cbind, resMatCollapse)
+  colnames(resMatCollapse) = unique(info$SubID)
+
+  resMatCollapse
+})
+names(resMatList) = assayNames(fit.for.resid)
+
+outPath = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/residuals"
+for( CT in names(resMatList) ){
+  file = paste0(outPath, "/", gsub(' ', '_',CT), '.tsv')
+  write.table( resMatList[[CT]], file=file, quote=FALSE, sep="\t")
+}
+```
+
+
+
+```{r de.summary}
+# library(dreamlet)
+# fit.dl = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
+# pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
+
+coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
+
+tabLst = lapply( coefs, function(key){
+  tab = topTable(fit.dl, coef=key, number=Inf)
+
+  tab %>% 
+    as_tibble %>% 
+    group_by(assay) %>% 
+    summarise( coef = key, 
+      nGenes = length(adj.P.Val), 
+      nDE = sum(adj.P.Val < 0.05),
+      pi1 = 1 - qvalue(P.Value)$pi0)
+  })
+tab = do.call(rbind, tabLst)
+
+as.data.frame(tab)
+```
+
+```{r de.plots}
+ggplot(tab, aes(assay, nGenes, fill=assay)) + geom_bar(stat="identity") + facet_wrap(~coef) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
+
+ggplot(tab, aes(assay, nDE, fill=assay)) + geom_bar(stat="identity") + facet_wrap(~coef) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
+
+ggplot(tab, aes(assay, pi1, fill=assay)) + geom_bar(stat="identity") + facet_wrap(~coef) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
+```
+
+# Volcanos
+```{r volcanos.1, fig.width=7, fig.height=12}
+plotVolcano( fit.dl, coef = coefs[1], nGenes=0 ) + ggtitle(coefs[1])
+```
+
+```{r volcanos.2, fig.width=7, fig.height=12}
+plotVolcano( fit.dl, coef = coefs[2], nGenes=0 ) + ggtitle(coefs[2])
+```
+
+```{r volcanos.3, fig.width=7, fig.height=12}
+plotVolcano( fit.dl, coef = coefs[3], nGenes=0 ) + ggtitle(coefs[3])
+```
+
+# Cross-disease signature analysis
+```{r compare.signatures, fig.width=9, fig.height=9}
+# get one data.frame with all differential expression scores
+df = lapply( coefs, function(coef){
+  data.frame( coef=coef, topTable(fit.dl, coef=coef, number=Inf))
+})
+df = do.call(rbind, df)
+
+# dcast as wide matrix
+df2 = reshape2::dcast(df, ID ~ coef + assay , value.var="z.std")
+
+colnames(df2) = gsub("^Dx2", '', colnames(df2))
+C = cor(df2[,-1], use='pairwise.complete.obs')
+
+col = colorRampPalette(c("blue3", "white","red3"))(200)
+
+corrplot(C, col=col, tl.col="black")
+
+corrplot(C, order="hclust", col=col, tl.col="black")
+```
+
+### Decompose differential expression: cell type by disease
+```{r vp.z.std}
+df_ids = lapply(strsplit(colnames(df2)[-1], "_"), function(x){
+  data.frame(Dx = x[1], CellType = x[2])
+  })
+df_ids = do.call(rbind, df_ids)
+
+df2_zeros = df2
+
+df2_elist = list(E = df2[,-1], weights = matrix(1, nrow(df2), ncol(df2)-1))
+rownames(df2_elist$E) = df2[,1]
+df2_elist = new("EList", df2_elist)
+
+keep = apply(df2, 1, function(x) sum(!is.na(x)) > 22)
+df2_elist = df2_elist[keep,]
+idx = is.na(df2_elist$E)
+df2_elist$E[idx] = 0
+df2_elist$weights[idx] = 1/1e4
+
+df_vp = fitExtractVarPartModel( df2_elist, ~ Dx + CellType, df_ids, colinearityCutoff=1)
+
+plotVarPart(df_vp)
+```
+
+# show top examples
+```{r forest.summary}
+gene = rownames(df_vp)[which.max(df_vp$Dx)]
+fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
+fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
+fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
+plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+
+gene = rownames(df_vp)[which.max(df_vp$CellType)]
+fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
+fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
+fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
+plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+
+gene = rownames(df_vp)[which.max(df_vp$Residuals)]
+fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
+fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
+fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
+plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+```
+
+
+
+
+# zenith for gene set analysis
+```{r zenith}
+# Load Gene Ontology database 
+go.gs = get_GeneOntology()
+
+ngenes = sapply(go.gs, function(gs) length(geneIds(gs)))
+go.gs = go.gs[(ngenes > 20) & (ngenes < 2000)]
+
+coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
+
+res.gsa = lapply( coefs, function(key){
+
+  # check inter.gene.cor=NA
+  zenith_gsa(fit.dl, coefs=key, go.gs, inter.gene.cor=.01)
+})
+names(res.gsa) = coefs
+res.gsa_cat = do.call(rbind, res.gsa)
+```
+
+```{r zenith.heatmap.1, fig.width=7, fig.height=12}
+fig = plotZenithResults(res.gsa[[1]], 3, 1) + ggtitle(names(res.gsa)[1])
+```
+
+```{r zenith.heatmap.2, fig.width=7, fig.height=12}
+fig = plotZenithResults(res.gsa[[2]], 3, 1) + ggtitle(names(res.gsa)[3])
+```
+
+```{r zenith.heatmap.3, fig.width=7, fig.height=12}
+fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
+```
+
+
+# MASH
+```{r mash}
+mashList = lapply( coefs, function(coef){
+  run_mash( fit.dl, coef)
+  })
+names(mashList) = coefs
+``` 
+
+```{r mash_downstream}
+library(mashr)
+
+lapply( coefs, function(coef){
+  table( apply(get_lfsr(mashList[[coef]]$model), 1, min, na.rm=TRUE) < 0.05)
+})
+
+df_lfsr = lapply( coefs, function(coef){
+  nDE = apply(get_lfsr(mashList[[coef]]$model), 2, function(x) sum(x < 0.05, na.rm=TRUE))
+  data.frame(Dx = coef, CellType = names(nDE), nDE)
+})
+df_lfsr = do.call(rbind, df_lfsr)
+
+ggplot(df_lfsr, aes(CellType, nDE, fill=CellType)) + geom_bar(stat="identity") + facet_wrap(~Dx) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
+```
+
+
+
+
+## Cross-disease signature analysis
+```{r compare.signatures.mashr, fig.width=9, fig.height=9}
+# get one data.frame with all differential expression scores
+df = lapply( coefs, function(coef){
+  beta = get_pm(mashList[[coef]]$model) / get_psd(mashList[[coef]]$model)
+  reshape2::melt(data.frame(coef=coef, ID = rownames(beta), beta), id.vars=c("coef", "ID"))
+})
+df = do.call(rbind, df)
+
+# dcast as wide matrix
+df2 = reshape2::dcast(df, ID ~ coef + variable , value.var="value")
+
+colnames(df2) = gsub("^Dx2", '', colnames(df2))
+C = cor(df2[,-1], use='pairwise.complete.obs')
+
+col = colorRampPalette(c("blue3", "white","red3"))(200)
+
+corrplot(C, col=col, tl.col="black")
+
+corrplot(C, order="hclust", col=col, tl.col="black")
+```
+
+## zenith
+```{r zenith.mash}
+res_zenith = lapply( coefs, function(coef){
+  zenith_gsa(mashList[[coef]], go.gs)
+})
+names(res_zenith) = coefs
+```
+
+```{r zenith.heatmap.mash.1, fig.width=7, fig.height=12}
+fig = plotZenithResults(res_zenith[[1]], 3, 1) + ggtitle(names(res_zenith)[1])
+```
+
+```{r zenith.heatmap.mash.2, fig.width=7, fig.height=12}
+fig = plotZenithResults(res_zenith[[2]], 3, 1) + ggtitle(names(res_zenith)[3])
+```
+
+```{r zenith.heatmap.mash.3, fig.width=7, fig.height=12}
+fig = plotZenithResults(res_zenith[[3]], 3, 1) + ggtitle(names(res_zenith)[3])
+```
+
+
+
+
+
+# Cell type composition
+
+## Plot cell type composition
+```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
+tab = sort(table(pbObj$Dx2))
+tab = tab[tab<40][1:4]
+
+figLst = lapply(names(tab), function(lvl){
+
+  idx = which(pbObj$Dx2 == lvl)
+  idx = idx[!is.na(idx)]
+
+  fig = plotCellComposition(pbObj[,idx]) + ggtitle(lvl) 
+
+  if( lvl != names(tab)[which.max(tab)] ){
+    fig = fig + theme(legend.position="none")
+  }
+  fig
+})
+
+plot_grid(plotlist=figLst, rel_heights= tab[ids], ncol=1, align="hv", axis="tblr")
+```
+
+
+```{r plotCellComposition.summary, fig.height=1, fig.width=6}
+df_cellCount = do.call(rbind, int_colData(pbObj)$n_cells)
+
+plotCellComposition( t(colSums(df_cellCount)))
+```
+
+
+
+
+## Partition variation in cell type composition
+```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
+# Add dream here
+# deal with NA's here 
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
+
+i = with(colData(pbObj), !is.na(Dx2) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
+
+library(crumblr)
+cobj = crumblr(cellCounts(pbObj[,i]))
+df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
+
+# rownames(df_vp) = df_vp$assay
+colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
+colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
+colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
+
+plotPercentBars( df_vp )
+```
+
+
+
+## Perform statistical tests
+For each cell type
+```{r cellTypeCompositionTest}
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+
+fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
+fit = eBayes(fit)
+
+topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+
+### Collapse neuronal subtypes
+```{r cellTypeCompositionVarPart.neuron, fig.height=4, fig.width=6}
+# Add dream here
+# deal with NA's here 
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
+
+i = with(colData(pbObj), !is.na(Dx2) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
+
+df_counts = as.data.frame(cellCounts(pbObj[,i]))
+idx = grep("GABA|Gluta", colnames(df_counts))
+
+# include summed neurons
+df_counts$Neurons = rowSums(df_counts[,idx])
+
+# drop split neurons
+df_counts = df_counts[,-idx]
+
+cobj = crumblr(as.matrix(df_counts))
+df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
+
+# rownames(df_vp) = df_vp$assay
+colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
+colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
+colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
+
+plotPercentBars( df_vp )
+```
+
+## Perform statistical tests
+For each cell type
+```{r cellTypeCompositionTest.neuron}
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+
+fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
+fit = eBayes(fit)
+
+topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+
+
+# Check ploidy
+```{r ploidy, eval=FALSE}
+sce = sceCombine[,1:100000]
+
+# sum reads across chromosome to identify chromsome loss
+chromExpr = lapply( levels(rowData(sce)$gene_chrom), function(chrom){
+
+  cat("\r", chrom, "    ")
+
+  # genes on specified chromsome
+  genes = rownames(rowData(sce))[rowData(sce)$gene_chrom == chrom]
+
+  # sum reads across genes on this chromosome
+  chromCounts = colSums2(assay(sce, 'X'), rows=genes)
+
+  df = data.frame(t(chromCounts), check.names=FALSE)
+  rownames(df) = chrom
+  colnames(df) = colnames(sce)
+
+  df
+  })
+chromExpr = do.call(rbind, chromExpr)
+
+library(OUTRIDER)
+ods <- OutriderDataSet(countData=chromExpr)
+
+ods <- OUTRIDER(ods, q=2, implementation="pca")
+
+# or should I use a negative binomial model directly and the produce residauls.
+
+head(results(ods))
+
+nrow(results(odsa,all=TRUE))
+
+table(results(ods)$padjust < 0.05)
+
+
+
+
+
+```
+
+
+# are too many genes being excluded?
+# what does voom look like from **complete** pseudobulk??
+# TODO get pH info?
+# Missing Sex
+# XIST genes and mito-rate
+# cellTypeCompositionTest is failing
+# create contrasts
+# df_meta$Age[1500:1800] ages are fractions
+# is there are difference between number of reads per cell type?
+# + PMI and brain bank (Institution) and Ethnicity
+# mvIC
+# write data for QTL analysis
+
+
+
+```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
+```
+
+
+
+
+
+
+
