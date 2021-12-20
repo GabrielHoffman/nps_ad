@@ -139,7 +139,7 @@ chromExpr = bplapply( chroms, function(chrom, sce){
   library(SingleCellExperiment)
   library(DelayedMatrixStats)
 
-  cat("\r", chrom, "    ")
+  message("\r", chrom, "    ")
 
   # genes on specified chromsome
   genes = rownames(rowData(sce))[rowData(sce)$gene_chrom == chrom]
