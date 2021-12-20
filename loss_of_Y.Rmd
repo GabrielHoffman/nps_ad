@@ -153,7 +153,7 @@ chromExpr = bplapply( chroms, function(chrom, sce){
   colnames(df) = colnames(sce)
 
   df
-  }, sce=sceCombine, BPPARAM=SnowParam(4))
+  }, sce=sceCombine, BPPARAM=SnowParam(12))
 chromExpr = do.call(rbind, chromExpr)
 ```
 
