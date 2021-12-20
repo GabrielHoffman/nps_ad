@@ -23,7 +23,7 @@ ml python
 R
 
 system("ml git; git pull")
-rmarkdown::render("analysis_2.Rmd");
+rmarkdown::render("analysis_freeze1.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
@@ -94,9 +94,7 @@ if( file.exists(datafile) ){
   sceCombine = readRDS( datafile )
 }else{
   # read snRNA-seq data with annotations build in
-  # h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
-  # h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/h5ad/211120_NPS-AD_roundMerged_pass2_res20_anno_meta.h5ad"
-  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1_proc/freeze1/211120_NPS-AD_roundMerged_pass2_res20_fixed.h5ad"
+  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1_proc/freeze1/211120_NPS-AD_roundMerged_pass2_res20_anno_meta_fixed.h5ad"
 
   # read raw/* from h5ad file
   sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
@@ -123,46 +121,28 @@ Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r l
 # Joint UMAP
 ```{r umap, dev="png"}
 # extract UMAP coordinates and annotations
-df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "celltype", "class", "subtype", "leiden_labels")])
+df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "leiden_labels")])
 df = data.frame(df)
 
 ggplot(df, aes(V1, V2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
 ```{r umap2, dev="png"}
-ggplot(df, aes(V1, V2, color=celltype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
-```
-
-```{r umap3, dev="png"}
-ggplot(df, aes(V1, V2, color=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
-```
-
-```{r umap4, dev="png"}
-ggplot(df, aes(V1, V2, color=subtype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
-```
-
-```{r umap5, dev="png"}
 ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
-
-# sceCombine_prep <- prepSCE(sceCombine, 
-#     kid = "celltype", # subpopulation assignments
-#     gid = "SubID",  # group IDs (i.e. Donor)
-#     sid = "id",   # sample IDs (i.e. Batch_Donor)
-#     drop = TRUE)
+```{r exit1, cache=FALSE}
+knitr::knit_exit()
+```
 
 
 ```{r combineData, message=TRUE}
-# Specify how to collapse into pseudo-bulk
-sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
-
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine,
     assay = "X", 
     fun = "sum",
-    cluster_id = "celltype",
-    sample_id  = "id",
+    cluster_id = "anno",
+    sample_id  = "Channel",
     BPPARAM = SnowParam(12, progressbar=TRUE))
 
 # Combine with phenotype data at the Donor level
