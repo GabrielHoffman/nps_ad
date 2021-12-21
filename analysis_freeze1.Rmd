@@ -206,7 +206,7 @@ sort(table(df$dx), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE
 
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort), 
+res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution), 
   min.cells = 5,
   min.count = 10, 
   # pmetadata = df_collapse,  
@@ -226,7 +226,7 @@ plotVoom( res.proc[7:9] )
 ```
 
 
-```{r plot.sex, eval=FALSE}
+```{r plot.sex, eval=TRUE}
  
 library(org.Hs.eg.db)
 
