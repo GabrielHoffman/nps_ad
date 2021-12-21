@@ -60,6 +60,7 @@ knitr::opts_chunk$set(
 library(SingleCellExperiment)
 library(zellkonverter)
 library(DelayedArray)
+library(DelayedMatrixStats)
 library(HDF5Array)
 library(dreamlet)
 library(scater)
