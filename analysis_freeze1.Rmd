@@ -199,9 +199,9 @@ dreamlet::plotHeatmap(df_sub, genes=unique(genes))
 
 ```{r Dx.summary}
 
-df = unique(data.frame(Dx2 = pbObj$Dx2, Donor = pbObj$SubID))
+df = unique(data.frame(Dx = pbObj$dx, Donor = pbObj$SubID))
 
-sort(table(df$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
+sort(table(df$dx), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
 ```
 
 ```{r voom}
@@ -267,7 +267,7 @@ plotVarPart( sortCols(res.vp) )
 ```
 
 ```{r varPart}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
@@ -364,7 +364,7 @@ eval_within_across_donor( res.proc, "SubID" )
 
 
 ```{r dreamlet.fit}
-form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + dx + scale(Age) + scale(PMI)
 
 fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 
@@ -372,7 +372,7 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
 
 ```{r write.residuals}
-form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + dx + scale(Age) + scale(PMI)
 
 fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 
@@ -414,7 +414,7 @@ for( CT in names(resMatList) ){
 # fit.dl = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 # pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
 
-coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
+coefs = c('dxAD', 'dxBP', 'dxSCZ')
 
 tabLst = lapply( coefs, function(key){
   tab = topTable(fit.dl, coef=key, number=Inf)
@@ -464,7 +464,7 @@ df = do.call(rbind, df)
 # dcast as wide matrix
 df2 = reshape2::dcast(df, ID ~ coef + assay , value.var="z.std")
 
-colnames(df2) = gsub("^Dx2", '', colnames(df2))
+colnames(df2) = gsub("^dx", '', colnames(df2))
 C = cor(df2[,-1], use='pairwise.complete.obs')
 
 col = colorRampPalette(c("blue3", "white","red3"))(200)
@@ -530,7 +530,7 @@ go.gs = get_GeneOntology()
 ngenes = sapply(go.gs, function(gs) length(geneIds(gs)))
 go.gs = go.gs[(ngenes > 20) & (ngenes < 2000)]
 
-coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
+coefs = c('dxAD', 'dxBP', 'dxSCZ')
 
 res.gsa = lapply( coefs, function(key){
 
@@ -593,7 +593,7 @@ df = do.call(rbind, df)
 # dcast as wide matrix
 df2 = reshape2::dcast(df, ID ~ coef + variable , value.var="value")
 
-colnames(df2) = gsub("^Dx2", '', colnames(df2))
+colnames(df2) = gsub("^dx", '', colnames(df2))
 C = cor(df2[,-1], use='pairwise.complete.obs')
 
 col = colorRampPalette(c("blue3", "white","red3"))(200)
@@ -631,12 +631,12 @@ fig = plotZenithResults(res_zenith[[3]], 3, 1) + ggtitle(names(res_zenith)[3])
 
 ## Plot cell type composition
 ```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
-tab = sort(table(pbObj$Dx2))
+tab = sort(table(pbObj$dx))
 tab = tab[tab<40][1:4]
 
 figLst = lapply(names(tab), function(lvl){
 
-  idx = which(pbObj$Dx2 == lvl)
+  idx = which(pbObj$dx == lvl)
   idx = idx[!is.na(idx)]
 
   fig = plotCellComposition(pbObj[,idx]) + ggtitle(lvl) 
@@ -664,9 +664,9 @@ plotCellComposition( t(colSums(df_cellCount)))
 ```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
 # Add dream here
 # deal with NA's here 
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|cohort) + scale(Age) + scale(PMI)
 
-i = with(colData(pbObj), !is.na(Dx2) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
+i = with(colData(pbObj), !is.na(dx) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
 
 library(crumblr)
 cobj = crumblr(cellCounts(pbObj[,i]))
@@ -685,7 +685,7 @@ plotPercentBars( df_vp )
 ## Perform statistical tests
 For each cell type
 ```{r cellTypeCompositionTest}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + dx + scale(Age) + scale(PMI)
 
 fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
 fit = eBayes(fit)
@@ -708,9 +708,9 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>%
 ```{r cellTypeCompositionVarPart.neuron, fig.height=4, fig.width=6}
 # Add dream here
 # deal with NA's here 
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|cohort) + scale(Age) + scale(PMI)
 
-i = with(colData(pbObj), !is.na(Dx2) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
+i = with(colData(pbObj), !is.na(dx) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
 
 df_counts = as.data.frame(cellCounts(pbObj[,i]))
 idx = grep("GABA|Gluta", colnames(df_counts))
@@ -735,7 +735,7 @@ plotPercentBars( df_vp )
 ## Perform statistical tests
 For each cell type
 ```{r cellTypeCompositionTest.neuron}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + dx + scale(Age) + scale(PMI)
 
 fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
 fit = eBayes(fit)
