@@ -145,7 +145,7 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=Serial
   }
 
   # unique set of chroms
-  chroms = sort(unique(geneInfo[[chromCol]]))
+  chroms = as.character(sort(unique(geneInfo[[chromCol]])))
 
   # for each chromosome
   chromExpr = bplapply( chroms, function(chrom, counts){
@@ -156,10 +156,10 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=Serial
     library(DelayedMatrixStats)
     })
 
-    # message("\r", chrom, "    ")
-
     # genes on specified chromsome
     genes = geneInfo[[geneCol]][geneInfo[[chromCol]] == chrom]
+
+    message("\r", chrom, ": ", length(genes), '     ')
 
     # sum reads across genes on this chromosome
     # this function call avoids overflow
