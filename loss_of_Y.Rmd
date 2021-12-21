@@ -117,6 +117,7 @@ idx = which(gr[seqnames(gr) == 'Y'] %over% gr_par[names(gr_par) == "Ypar"])
 gr[seqnames(gr) == 'Y'][idx]
 ```
 
+
 # Check ploidy
 ```{r ploidy}
 #' Sum counts across chromosome
@@ -131,7 +132,7 @@ gr[seqnames(gr) == 'Y'][idx]
 #'
 #' @import SingleCellExperiment
 #' @importFrom DelayedMatrixStats colSums2 
-countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol){
+countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=SerialParam()){
 
   if( ! chromCol %in% colnames(geneInfo) ){
     stop("geneInfo must have column ", chromCol)
@@ -147,7 +148,7 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol){
   chroms = sort(unique(geneInfo[[chromCol]]))
 
   # for each chromosome
-  chromExpr = lapply( chroms, function(chrom){
+  chromExpr = bplapply( chroms, function(chrom){
 
     message("\r", chrom, "    ")
 
@@ -156,7 +157,7 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol){
 
     # sum reads across genes on this chromosome
     # this function call avoids overflow
-    chromCounts = colSums2(assay(sce, assay)[genes,])
+    chromCounts = colSums2(counts[genes,])
 
     # return as data.frame
     df = data.frame(t(chromCounts), check.names=FALSE)
@@ -164,14 +165,71 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol){
     colnames(df) = colnames(sce)
 
     df
-    })
+    }, counts = assay(sce, assay), BPPARAM=BPPARAM)
   chromExpr = do.call(rbind, chromExpr)
 
   chromExpr
 }
 
-chromExpr = countsByChrom(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id')
+chromExpr = countsByChrom(sceCombine[,1:1000], 'X', rowData(sceCombine), 'gene_chrom', 'gene_id')
 ```
+
+
+# # Check ploidy
+# ```{r ploidy}
+# #' Sum counts across chromosome
+# #'
+# #' Sum counts across chromosome
+# #'
+# #' @param sce SingleCellExperiment
+# #' @param assay which assay to summarize
+# #' @param geneInfo \code{data.frame} storing gene ids and chromosome
+# #' @param chromCol name of column in \code{geneInfo} storing chromosome
+# #' @param geneCol name of column in \code{geneInfo} storing gene
+# #'
+# #' @import SingleCellExperiment
+# #' @importFrom DelayedMatrixStats colSums2 
+# countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol){
+
+#   if( ! chromCol %in% colnames(geneInfo) ){
+#     stop("geneInfo must have column ", chromCol)
+#   }
+#   if( ! geneCol %in% colnames(geneInfo) ){
+#     stop("geneInfo must have column ", geneCol)
+#   }
+#    if( ! assay %in% assayNames(sceCombine) ){
+#     stop("assay not found in SingleCellExperiment: ", assay)
+#   }
+
+#   # unique set of chroms
+#   chroms = sort(unique(geneInfo[[chromCol]]))
+
+#   # for each chromosome
+#   chromExpr = lapply( chroms, function(chrom){
+
+#     message("\r", chrom, "    ")
+
+#     # genes on specified chromsome
+#     genes = geneInfo[[geneCol]][geneInfo[[chromCol]] == chrom]
+
+#     # sum reads across genes on this chromosome
+#     # this function call avoids overflow
+#     chromCounts = colSums2(assay(sce, assay)[genes,])
+
+#     # return as data.frame
+#     df = data.frame(t(chromCounts), check.names=FALSE)
+#     rownames(df) = chrom
+#     colnames(df) = colnames(sce)
+
+#     df
+#     })
+#   chromExpr = do.call(rbind, chromExpr)
+
+#   chromExpr
+# }
+
+# chromExpr = countsByChrom(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id')
+# ```
 
 
 ```{r outrider}
