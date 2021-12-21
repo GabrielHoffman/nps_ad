@@ -132,12 +132,13 @@ gr[seqnames(gr) == 'Y'][idx]
 
 # Check ploidy
 ```{r ploidy}
-library(SingleCellExperiment)
-library(DelayedMatrixStats)
-
 # sum reads across chromosome to identify chromsome loss
 chroms = levels(rowData(sceCombine)$gene_chrom)
-chromExpr = lapply( rev(chroms), function(chrom, sce){
+chromExpr = bplapply( rev(chroms), function(chrom, sce){
+
+  suppressPackageStartupMessages({
+  library(SingleCellExperiment)
+  library(DelayedMatrixStats)})
 
   message("\r", chrom, "    ")
 
@@ -145,14 +146,15 @@ chromExpr = lapply( rev(chroms), function(chrom, sce){
   genes = rownames(rowData(sce))[rowData(sce)$gene_chrom == chrom]
 
   # sum reads across genes on this chromosome
-  chromCounts = colSums2(assay(sce, 'X'), rows=genes)
+  chromCounts = colSums2(assay(sce, 'X'), rows=genes[1:3])
 
   df = data.frame(t(chromCounts), check.names=FALSE)
   rownames(df) = chrom
   colnames(df) = colnames(sce)
-
+  rm(chromCounts)
+  
   df
-  }, sce=sceCombine)
+  }, sce=sceCombine, BPPARAM=SnowParam(6))
 chromExpr = do.call(rbind, chromExpr)
 ```
 
@@ -164,7 +166,29 @@ ods <- OutriderDataSet(countData=chromExpr)
 # ods <- OUTRIDER(ods, q=2, implementation="pca")
 
 # Withoutout autoencoder
+ods = estimateSizeFactors(ods)
+# ods = OUTRIDER::controlForConfounders(ods, q=2)
 ods = OUTRIDER::fit(ods)
+ods = OUTRIDER::computePvalues(ods, alternative="less", method="BH")
+# ods = OUTRIDER::computeZscores(ods, FALSE)
+
+plotQQ(ods, geneID='feature_1')
+plotQQ(ods, global=TRUE)
+
+
+plotVolcano(ods, "Y", basePlot=TRUE)
+
+plotExpressionRank(ods, "Y", basePlot=TRUE)
+
+plotExpectedVsObservedCounts(ods, "Y", basePlot=TRUE)
+
+plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
+
+
+# need to exclude replicates
+
+
+
 
 # or should I use a negative binomial model directly and the produce residauls.
 
