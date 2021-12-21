@@ -150,9 +150,9 @@ pbObj <- aggregateToPseudoBulk(sceCombine,
     BPPARAM = SnowParam(12, progressbar=TRUE))
 
 # Set levels for Dx2
-lvls = sort(unique(as.character(colData(pbObj)$Dx2)))
+lvls = sort(unique(as.character(colData(pbObj)$dx)))
 lvls = lvls[-which(lvls=="Control")]
-colData(pbObj)$Dx2 = factor(colData(pbObj)$Dx2, c("Control", lvls))
+colData(pbObj)$dx = factor(colData(pbObj)$dx, c("Control", lvls))
 
 saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_f1.RDS" )
 

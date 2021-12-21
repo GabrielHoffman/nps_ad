@@ -161,7 +161,10 @@ chromExpr = do.call(rbind, chromExpr)
 library(OUTRIDER)
 ods <- OutriderDataSet(countData=chromExpr)
 
-ods <- OUTRIDER(ods, q=2, implementation="pca")
+# ods <- OUTRIDER(ods, q=2, implementation="pca")
+
+# Withoutout autoencoder
+ods = OUTRIDER::fit(ods)
 
 # or should I use a negative binomial model directly and the produce residauls.
 
