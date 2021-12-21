@@ -134,7 +134,7 @@ gr[seqnames(gr) == 'Y'][idx]
 ```{r ploidy}
 # sum reads across chromosome to identify chromsome loss
 chroms = levels(rowData(sceCombine)$gene_chrom)
-chromExpr = bplapply( chroms, function(chrom, sce){
+chromExpr = lapply( chroms, function(chrom, sce){
 
   library(SingleCellExperiment)
   library(DelayedMatrixStats)
@@ -152,7 +152,7 @@ chromExpr = bplapply( chroms, function(chrom, sce){
   colnames(df) = colnames(sce)
 
   df
-  }, sce=sceCombine, BPPARAM=SerialParam())
+  }, sce=sceCombine)
 chromExpr = do.call(rbind, chromExpr)
 ```
 
