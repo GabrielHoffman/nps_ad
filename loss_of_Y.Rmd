@@ -132,12 +132,12 @@ gr[seqnames(gr) == 'Y'][idx]
 
 # Check ploidy
 ```{r ploidy}
+library(SingleCellExperiment)
+library(DelayedMatrixStats)
+
 # sum reads across chromosome to identify chromsome loss
 chroms = levels(rowData(sceCombine)$gene_chrom)
 chromExpr = lapply( rev(chroms), function(chrom, sce){
-
-  library(SingleCellExperiment)
-  library(DelayedMatrixStats)
 
   message("\r", chrom, "    ")
 
