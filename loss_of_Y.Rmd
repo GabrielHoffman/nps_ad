@@ -148,9 +148,15 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=Serial
   chroms = sort(unique(geneInfo[[chromCol]]))
 
   # for each chromosome
-  chromExpr = bplapply( chroms, function(chrom){
+  chromExpr = bplapply( chroms, function(chrom, counts){
 
-    message("\r", chrom, "    ")
+    suppressPackageStartupMessages({
+    library(DelayedArray)
+    library(HDF5Array)
+    library(DelayedMatrixStats)
+    })
+
+    # message("\r", chrom, "    ")
 
     # genes on specified chromsome
     genes = geneInfo[[geneCol]][geneInfo[[chromCol]] == chrom]
@@ -171,7 +177,7 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=Serial
   chromExpr
 }
 
-chromExpr = countsByChrom(sceCombine[,1:1000], 'X', rowData(sceCombine), 'gene_chrom', 'gene_id')
+chromExpr = countsByChrom(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id', BPPARAM=SnowParam(6, progressbar=TRUE))
 ```
 
 
