@@ -62,23 +62,9 @@ library(zellkonverter)
 library(DelayedArray)
 library(HDF5Array)
 library(dreamlet)
-library(muscat)
-library(cowplot)
-library(zenith)
 library(scater)
-library(data.table)
-library(S4Vectors)
-library(tidyverse)
 library(kableExtra)
-library(qvalue)
-library(corrplot)
-library(GSEABase)
 library(GenomicRanges)
-
-vsn = packageVersion("zellkonverter")
-if( compareVersion(as.character(vsn), "1.3.3") == -1){
-  stop("zellkonverter version must be >=1.3.3  Currently: ", as.character(vsn))
-}
 ```
 
 
@@ -132,30 +118,58 @@ gr[seqnames(gr) == 'Y'][idx]
 
 # Check ploidy
 ```{r ploidy}
-# sum reads across chromosome to identify chromsome loss
-chroms = levels(rowData(sceCombine)$gene_chrom)
-chromExpr = bplapply( rev(chroms), function(chrom, sce){
+#' Sum counts across chromosome
+#'
+#' Sum counts across chromosome
+#'
+#' @param sce SingleCellExperiment
+#' @param assay which assay to summarize
+#' @param geneInfo \code{data.frame} storing gene ids and chromosome
+#' @param chromCol name of column in \code{geneInfo} storing chromosome
+#' @param geneCol name of column in \code{geneInfo} storing gene
+#'
+#' @import SingleCellExperiment
+#' @importFrom DelayedMatrixStats colSums2 
+countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol){
 
-  suppressPackageStartupMessages({
-  library(SingleCellExperiment)
-  library(DelayedMatrixStats)})
+  if( ! chromCol %in% colnames(geneInfo) ){
+    stop("geneInfo must have column ", chromCol)
+  }
+  if( ! geneCol %in% colnames(geneInfo) ){
+    stop("geneInfo must have column ", geneCol)
+  }
+   if( ! assay %in% assayNames(sceCombine) ){
+    stop("assay not found in SingleCellExperiment: ", assay)
+  }
 
-  message("\r", chrom, "    ")
+  # unique set of chroms
+  chroms = sort(unique(geneInfo[[chromCol]]))
 
-  # genes on specified chromsome
-  genes = rownames(rowData(sce))[rowData(sce)$gene_chrom == chrom]
+  # for each chromosome
+  chromExpr = lapply( chroms, function(chrom){
 
-  # sum reads across genes on this chromosome
-  chromCounts = DelayedMatrixStats::colSums2(assay(sce, 'X'), rows=genes[1:3])
+    message("\r", chrom, "    ")
 
-  df = data.frame(t(chromCounts), check.names=FALSE)
-  rownames(df) = chrom
-  colnames(df) = colnames(sce)
-  rm(chromCounts)
+    # genes on specified chromsome
+    genes = geneInfo[[geneCol]][geneInfo[[chromCol]] == chrom]
 
-  df
-  }, sce=sceCombine, BPPARAM=SnowParam(6))
-chromExpr = do.call(rbind, chromExpr)
+    # sum reads across genes on this chromosome
+    # this function call avoids overflow
+    chromCounts = colSums2(assay(sce, assay)[genes,])
+
+    # return as data.frame
+    df = data.frame(t(chromCounts), check.names=FALSE)
+    rownames(df) = chrom
+    colnames(df) = colnames(sce)
+
+    df
+    })
+  chromExpr = do.call(rbind, chromExpr)
+
+  chromExpr
+}
+
+chromExpr = countsByChrom(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id')
 ```
 
 
