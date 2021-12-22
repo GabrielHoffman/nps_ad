@@ -57,6 +57,8 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
     chromCounts
     }, counts = assay(sce, assay), BPPARAM=BPPARAM)
 
+  browser()
+  
   chromExpr = do.call(rbind, chromExpr)
   rownames(chromExpr) = chrUnique
   colnames(chromExpr) = colnames(sce)
