@@ -30,7 +30,7 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
   chrUnique = as.character(sort(unique(chroms)))
 
   # for each chromosome
-  chromExpr = bplapply( , function(chrom, counts){
+  chromExpr = bplapply( chrUnique, function(chrom, counts){
 
     suppressPackageStartupMessages({
     library(DelayedArray)
