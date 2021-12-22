@@ -29,6 +29,10 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
 
   chrUnique = as.character(sort(unique(chroms)))
 
+  # divide columns into chunks
+  d = seq(1, ncol(sce))
+  idx = split(d, ceiling(seq_along(d)/batchSize))
+
   # for each chromosome
   chromExpr = bplapply( chrUnique, function(chrom, counts){
 
@@ -47,18 +51,14 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
     # colSums2() causes overflow when used directly
     # here is a workaround
     # use colSums2() in batches
-    idx = unique(c(seq(1, ncol(counts), by=batchSize), ncol(counts)))
-
-    chromCounts = lapply( seq(2, length(idx)), function(i){
-      colSums2( counts[feature_local,seq(idx[i-1], idx[i]),drop=FALSE] )
+    chromCounts = lapply( idx, function(i){
+      colSums2( counts[feature_local,i,drop=FALSE] )
     })
     chromCounts = do.call(c, chromCounts)
 
     chromCounts
     }, counts = assay(sce, assay), BPPARAM=BPPARAM)
 
-  browser()
-  
   chromExpr = do.call(rbind, chromExpr)
   rownames(chromExpr) = chrUnique
   colnames(chromExpr) = colnames(sce)
