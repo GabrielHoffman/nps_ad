@@ -226,24 +226,14 @@ plotVoom( res.proc[7:9] )
 ```
 
 
-```{r plot.sex, eval=TRUE}
- 
-library(org.Hs.eg.db)
-
-# find genes on chrX
-# df_gene = select(org.Hs.eg.db, keys=rowData(sceCombine)$gene_id, keytype="ENSEMBL", columns=c("SYMBOL", "CHR"))
-# df_gene_chrx = df_gene[with(df_gene, CHR=="X" & !is.na(CHR)),]
-
-# res = DelayedArray::rowSums(assay(sceCombine, "counts")[df_gene_chrx$ENSEMBL,1:10000])
-
-
-df_gene = select(org.Hs.eg.db, keys=c("IL1RAPL1", "UTY"), keytype="SYMBOL", columns="ENSEMBL")
+```{r plot.sex} 
+df_gene = select(org.Hs.eg.db, keys=c("XIST", "UTY"), keytype="SYMBOL", columns="ENSEMBL")
 
 df_sex = lapply( names(res.proc), function(CT){
   geneExpr = res.proc[[CT]]
   df = NULL
   if( sum(df_gene$ENSEMBL %in% rownames(geneExpr)) == 2){  
-    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), IL1RAPL1 = geneExpr$E[df_gene$ENSEMBL[1],], UTY = geneExpr$E[df_gene$ENSEMBL[2],])
+    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), XIST = geneExpr$E[df_gene$ENSEMBL[1],], UTY = geneExpr$E[df_gene$ENSEMBL[2],])
   }
   df
 })
@@ -251,7 +241,7 @@ df_sex = do.call(rbind, df_sex)
 
 df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.names")
 
-ggplot(as.data.frame(df_sex), aes(IL1RAPL1, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType)
+fig = ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType)
 ```
 
 

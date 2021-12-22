@@ -129,10 +129,11 @@ gr[seqnames(gr) == 'Y'][idx]
 #' @param geneInfo \code{data.frame} storing gene ids and chromosome
 #' @param chromCol name of column in \code{geneInfo} storing chromosome
 #' @param geneCol name of column in \code{geneInfo} storing gene
+#' @param batchSize number of columns in a batch
 #'
 #' @import SingleCellExperiment
 #' @importFrom DelayedMatrixStats colSums2 
-countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=SerialParam()){
+aggregateByFeatures = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=SerialParam(), batchSize=100000){
 
   if( ! chromCol %in% colnames(geneInfo) ){
     stop("geneInfo must have column ", chromCol)
@@ -162,8 +163,15 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=Serial
     message("\r", chrom, ": ", length(genes), '     ')
 
     # sum reads across genes on this chromosome
-    # this function call avoids overflow
-    chromCounts = colSums2(counts[genes,])
+    # colSums2() causes overflow when used directly
+    # here is a workaround
+    # use colSums2() in batches
+    idx = c(seq(1, ncol(counts), by=batchSize), ncol(counts))
+
+    chromCounts = lapply( 2:length(idx), function(i){
+      colSums2( counts[genes,idx[i-1]:idx[i],drop=FALSE] )
+    })
+    chromCounts = do.call(c, chromCounts)
 
     # return as data.frame
     df = data.frame(t(chromCounts), check.names=FALSE)
@@ -177,8 +185,29 @@ countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=Serial
   chromExpr
 }
 
+
+chromExpr = countsByChrom(sceCombine[,1:320000], 'X', df_gene, 'SYMBOL', 'ENSEMBL')
+
+
+
+
 chromExpr = countsByChrom(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id', BPPARAM=SnowParam(6, progressbar=TRUE))
 ```
+
+library(DelayedMatrixStats)
+library(HDF5Array)
+
+a = matrix(0, 200, 4000000)
+idx = sample(length(a), 1e5, replace=FALSE)
+a[idx] = 1
+file.remove("test.h5")
+writeHDF5Array(as( a, "sparseMatrix"), "test.h5")
+
+
+b = HDF5Array('test.h5', "HDF5ArrayAUTO00001")
+
+res = colSums2(b)
+
 
 
 # # Check ploidy
