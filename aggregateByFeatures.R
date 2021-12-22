@@ -27,8 +27,10 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
   feature = feature[idx]
   chroms = chroms[idx]
 
+  chrUnique = as.character(sort(unique(chroms)))
+
   # for each chromosome
-  chromExpr = bplapply( as.character(sort(unique(chroms))), function(chrom, counts){
+  chromExpr = bplapply( , function(chrom, counts){
 
     suppressPackageStartupMessages({
     library(DelayedArray)
@@ -55,9 +57,9 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
     chromCounts
     }, counts = assay(sce, assay), BPPARAM=BPPARAM)
 
-  browser()
-  
   chromExpr = do.call(rbind, chromExpr)
+  rownames(chromExpr) = chrUnique
+  colnames(chromExpr) = colnames(sce)
 
   chromExpr
 }
