@@ -267,7 +267,7 @@ plotVarPart( sortCols(res.vp) )
 ```
 
 ```{r varPart}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|dx) + (1|Sex) + (1|Institution) + scale(Age)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
