@@ -25,7 +25,7 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
   # keep only chroms/features that are in sce
   idx = feature %in% rownames(sce)
   feature = feature[idx]
-  chroms = chrom[idx]
+  chroms = chroms[idx]
 
   # for each chromosome
   chromExpr = bplapply( as.character(sort(unique(chroms))), function(chrom, counts){
