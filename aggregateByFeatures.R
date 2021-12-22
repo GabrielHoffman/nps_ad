@@ -47,28 +47,28 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
     # use colSums2() in batches
     idx = unique(c(seq(1, ncol(counts), by=batchSize), ncol(counts)))
 
-    chromCounts = lapply( 2:length(idx), function(i){
-      colSums2( counts[feature_local,idx[i-1]:idx[i],drop=FALSE] )
+    chromCounts = lapply( seq(2, length(idx)), function(i){
+      colSums2( counts[feature_local,seq(idx[i-1], idx[i]),drop=FALSE] )
     })
-    chromCounts = do.call(cbind, chromCounts)
+    chromCounts = do.call(c, chromCounts)
 
-    browser()
-
-    # return as data.frame
-    df = data.frame(chromCounts, check.names=FALSE)
-    rownames(df) = chrom
-    colnames(df) = colnames(sce)
-
-    df
+    chromCounts
     }, counts = assay(sce, assay), BPPARAM=BPPARAM)
+
+  browser()
+  
   chromExpr = do.call(rbind, chromExpr)
 
   chromExpr
 }
 
-# if( ! chromCol %in% colnames(geneInfo) ){
-#     stop("geneInfo must have column ", chromCol)
-#   }
-#   if( ! geneCol %in% colnames(geneInfo) ){
-#     stop("geneInfo must have column ", geneCol)
-#   }
+
+
+    # browser()
+
+    # # return as data.frame
+    # df = data.frame(chromCounts, check.names=FALSE)
+    # rownames(df) = chrom
+    # colnames(df) = colnames(sce)
+
+    # df
