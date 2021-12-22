@@ -69,8 +69,6 @@ library(GenomicRanges)
 ```
 
 
-
-
 ```{r load.data, cache=FALSE}
 datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
 
@@ -120,151 +118,31 @@ gr[seqnames(gr) == 'Y'][idx]
 
 # Check ploidy
 ```{r ploidy}
-#' Sum counts across chromosome
-#'
-#' Sum counts across chromosome
-#'
-#' @param sce SingleCellExperiment
-#' @param assay which assay to summarize
-#' @param geneInfo \code{data.frame} storing gene ids and chromosome
-#' @param chromCol name of column in \code{geneInfo} storing chromosome
-#' @param geneCol name of column in \code{geneInfo} storing gene
-#' @param batchSize number of columns in a batch
-#'
-#' @import SingleCellExperiment
-#' @importFrom DelayedMatrixStats colSums2 
-aggregateByFeatures = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=SerialParam(), batchSize=100000){
+source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
+chromExpr = aggregateByFeatures(sceCombine[,1:32000], 'X', df_gene, 'SYMBOL', 'ENSEMBL')
 
-  if( ! chromCol %in% colnames(geneInfo) ){
-    stop("geneInfo must have column ", chromCol)
-  }
-  if( ! geneCol %in% colnames(geneInfo) ){
-    stop("geneInfo must have column ", geneCol)
-  }
-   if( ! assay %in% assayNames(sceCombine) ){
-    stop("assay not found in SingleCellExperiment: ", assay)
-  }
-
-  # unique set of chroms
-  chroms = as.character(sort(unique(geneInfo[[chromCol]])))
-
-  # for each chromosome
-  chromExpr = bplapply( chroms, function(chrom, counts){
-
-    suppressPackageStartupMessages({
-    library(DelayedArray)
-    library(HDF5Array)
-    library(DelayedMatrixStats)
-    })
-
-    # genes on specified chromsome
-    genes = geneInfo[[geneCol]][geneInfo[[chromCol]] == chrom]
-
-    message("\r", chrom, ": ", length(genes), '     ')
-
-    # sum reads across genes on this chromosome
-    # colSums2() causes overflow when used directly
-    # here is a workaround
-    # use colSums2() in batches
-    idx = c(seq(1, ncol(counts), by=batchSize), ncol(counts))
-
-    chromCounts = lapply( 2:length(idx), function(i){
-      colSums2( counts[genes,idx[i-1]:idx[i],drop=FALSE] )
-    })
-    chromCounts = do.call(c, chromCounts)
-
-    # return as data.frame
-    df = data.frame(t(chromCounts), check.names=FALSE)
-    rownames(df) = chrom
-    colnames(df) = colnames(sce)
-
-    df
-    }, counts = assay(sce, assay), BPPARAM=BPPARAM)
-  chromExpr = do.call(rbind, chromExpr)
-
-  chromExpr
-}
-
-
-chromExpr = countsByChrom(sceCombine[,1:320000], 'X', df_gene, 'SYMBOL', 'ENSEMBL')
-
-
-
-
-chromExpr = countsByChrom(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id', BPPARAM=SnowParam(6, progressbar=TRUE))
+# chromExpr = aggregateByFeatures(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id', BPPARAM=SnowParam(6, progressbar=TRUE))
 ```
 
 library(DelayedMatrixStats)
 library(HDF5Array)
 
-a = matrix(0, 200, 4000000)
-idx = sample(length(a), 1e5, replace=FALSE)
-a[idx] = 1
+ngenes = 40000
+ncells = 4000000
+i = sample(ngenes, 1e5, replace=TRUE)
+j = sample(ncells, 1e5, replace=TRUE)
+
+M = sparseMatrix(i=i, j=j, x=runif(1e5), dims=c(ngenes, ncells))
+
 file.remove("test.h5")
-writeHDF5Array(as( a, "sparseMatrix"), "test.h5")
+writeHDF5Array(M, "test.h5")
 
+h5ls('test.h5')
 
-b = HDF5Array('test.h5', "HDF5ArrayAUTO00001")
+b = HDF5Array('test.h5', h5ls('test.h5')$name)
 
 res = colSums2(b)
 
-
-
-# # Check ploidy
-# ```{r ploidy}
-# #' Sum counts across chromosome
-# #'
-# #' Sum counts across chromosome
-# #'
-# #' @param sce SingleCellExperiment
-# #' @param assay which assay to summarize
-# #' @param geneInfo \code{data.frame} storing gene ids and chromosome
-# #' @param chromCol name of column in \code{geneInfo} storing chromosome
-# #' @param geneCol name of column in \code{geneInfo} storing gene
-# #'
-# #' @import SingleCellExperiment
-# #' @importFrom DelayedMatrixStats colSums2 
-# countsByChrom = function(sce, assay, geneInfo, chromCol, geneCol){
-
-#   if( ! chromCol %in% colnames(geneInfo) ){
-#     stop("geneInfo must have column ", chromCol)
-#   }
-#   if( ! geneCol %in% colnames(geneInfo) ){
-#     stop("geneInfo must have column ", geneCol)
-#   }
-#    if( ! assay %in% assayNames(sceCombine) ){
-#     stop("assay not found in SingleCellExperiment: ", assay)
-#   }
-
-#   # unique set of chroms
-#   chroms = sort(unique(geneInfo[[chromCol]]))
-
-#   # for each chromosome
-#   chromExpr = lapply( chroms, function(chrom){
-
-#     message("\r", chrom, "    ")
-
-#     # genes on specified chromsome
-#     genes = geneInfo[[geneCol]][geneInfo[[chromCol]] == chrom]
-
-#     # sum reads across genes on this chromosome
-#     # this function call avoids overflow
-#     chromCounts = colSums2(assay(sce, assay)[genes,])
-
-#     # return as data.frame
-#     df = data.frame(t(chromCounts), check.names=FALSE)
-#     rownames(df) = chrom
-#     colnames(df) = colnames(sce)
-
-#     df
-#     })
-#   chromExpr = do.call(rbind, chromExpr)
-
-#   chromExpr
-# }
-
-# chromExpr = countsByChrom(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id')
-# ```
 
 
 ```{r outrider}
