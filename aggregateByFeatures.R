@@ -66,13 +66,3 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
   chromExpr
 }
 
-
-
-    # browser()
-
-    # # return as data.frame
-    # df = data.frame(chromCounts, check.names=FALSE)
-    # rownames(df) = chrom
-    # colnames(df) = colnames(sce)
-
-    # df

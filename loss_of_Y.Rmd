@@ -120,14 +120,7 @@ gr[seqnames(gr) == 'Y'][idx]
 ```{r ploidy}
 source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
 
-chromExpr = aggregateByFeatures(sceCombine[,c(4000000:4067811)], 'X', rowData(sceCombine)[1:10,], 'gene_chrom', 'gene_id', BPPARAM=SnowParam(1, progressbar=TRUE), batchSize=100000)
-
-colnames(chromExpr)
-
-
-
-
-
+chromExpr = aggregateByFeatures(sceCombine, 'X', rowData(sceCombine)$gene_chrom, rowData(sceCombine)$gene_id, BPPARAM=SnowParam(6, progressbar=TRUE))
 
 saveRDS(chromExpr, "chromExpr.RDS")
 ```
