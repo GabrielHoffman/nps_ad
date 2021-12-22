@@ -14,7 +14,7 @@
 #' @importFrom DelayedMatrixStats colSums2 
 aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(), batchSize=100000){
 
-  if( length(chrom) !+ length(feature) ){
+  if( length(chrom) != length(feature) ){
     stop("chrom and feature must be the same length")
   }
 
@@ -53,7 +53,7 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
     chromCounts = do.call(cbind, chromCounts)
 
     browser()
-    
+
     # return as data.frame
     df = data.frame(chromCounts, check.names=FALSE)
     rownames(df) = chrom
