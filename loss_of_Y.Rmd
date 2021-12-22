@@ -124,6 +124,7 @@ chromExpr = aggregateByFeatures(sceCombine[,1:32000], 'X', df_gene, 'SYMBOL', 'E
 # chromExpr = aggregateByFeatures(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id', BPPARAM=SnowParam(6, progressbar=TRUE))
 ```
 
+```{r test, eval=FALSE}
 library(DelayedMatrixStats)
 library(HDF5Array)
 
@@ -142,7 +143,7 @@ h5ls('test.h5')
 b = HDF5Array('test.h5', h5ls('test.h5')$name)
 
 res = colSums2(b)
-
+```
 
 
 ```{r outrider}
