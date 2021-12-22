@@ -27,7 +27,6 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
   feature = feature[idx]
   chroms = chrom[idx]
 
-
   # for each chromosome
   chromExpr = bplapply( as.character(sort(unique(chroms))), function(chrom, counts){
 
@@ -51,10 +50,12 @@ aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(
     chromCounts = lapply( 2:length(idx), function(i){
       colSums2( counts[feature_local,idx[i-1]:idx[i],drop=FALSE] )
     })
-    chromCounts = do.call(c, chromCounts)
+    chromCounts = do.call(cbind, chromCounts)
 
+    browser()
+    
     # return as data.frame
-    df = data.frame(t(chromCounts), check.names=FALSE)
+    df = data.frame(chromCounts, check.names=FALSE)
     rownames(df) = chrom
     colnames(df) = colnames(sce)
 
