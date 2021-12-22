@@ -14,8 +14,8 @@
 #' @importFrom DelayedMatrixStats colSums2 
 aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(), batchSize=100000){
 
-  if( length(chrom) != length(feature) ){
-    stop("chrom and feature must be the same length")
+  if( length(chroms) != length(feature) ){
+    stop("chroms and feature must be the same length")
   }
 
   if( ! assay %in% assayNames(sceCombine) ){
