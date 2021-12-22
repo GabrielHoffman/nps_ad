@@ -12,23 +12,24 @@
 #'
 #' @import SingleCellExperiment
 #' @importFrom DelayedMatrixStats colSums2 
-aggregateByFeatures = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=SerialParam(), batchSize=100000){
+aggregateByFeatures = function(sce, assay, chroms, feature, BPPARAM=SerialParam(), batchSize=100000){
 
-  if( ! chromCol %in% colnames(geneInfo) ){
-    stop("geneInfo must have column ", chromCol)
+  if( length(chrom) !+ length(feature) ){
+    stop("chrom and feature must be the same length")
   }
-  if( ! geneCol %in% colnames(geneInfo) ){
-    stop("geneInfo must have column ", geneCol)
-  }
-   if( ! assay %in% assayNames(sceCombine) ){
+
+  if( ! assay %in% assayNames(sceCombine) ){
     stop("assay not found in SingleCellExperiment: ", assay)
   }
 
-  # unique set of chroms
-  chroms = as.character(sort(unique(geneInfo[[chromCol]])))
+  # keep only chroms/features that are in sce
+  idx = feature %in% rownames(sce)
+  feature = feature[idx]
+  chroms = chrom[idx]
+
 
   # for each chromosome
-  chromExpr = bplapply( chroms, function(chrom, counts){
+  chromExpr = bplapply( as.character(sort(unique(chroms))), function(chrom, counts){
 
     suppressPackageStartupMessages({
     library(DelayedArray)
@@ -36,19 +37,19 @@ aggregateByFeatures = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=
     library(DelayedMatrixStats)
     })
 
-    # genes on specified chromsome
-    genes = geneInfo[[geneCol]][geneInfo[[chromCol]] == chrom]
+    # features on specified chromsome
+    feature_local = feature[chroms == chrom]
 
-    message("\r", chrom, ": ", length(genes), '     ')
+    message("\r", chrom, ": ", length(feature_local), '     ')
 
     # sum reads across genes on this chromosome
     # colSums2() causes overflow when used directly
     # here is a workaround
     # use colSums2() in batches
-    idx = c(seq(1, ncol(counts), by=batchSize), ncol(counts))
+    idx = unique(c(seq(1, ncol(counts), by=batchSize), ncol(counts)))
 
     chromCounts = lapply( 2:length(idx), function(i){
-      colSums2( counts[genes,idx[i-1]:idx[i],drop=FALSE] )
+      colSums2( counts[feature_local,idx[i-1]:idx[i],drop=FALSE] )
     })
     chromCounts = do.call(c, chromCounts)
 
@@ -64,3 +65,9 @@ aggregateByFeatures = function(sce, assay, geneInfo, chromCol, geneCol, BPPARAM=
   chromExpr
 }
 
+# if( ! chromCol %in% colnames(geneInfo) ){
+#     stop("geneInfo must have column ", chromCol)
+#   }
+#   if( ! geneCol %in% colnames(geneInfo) ){
+#     stop("geneInfo must have column ", geneCol)
+#   }

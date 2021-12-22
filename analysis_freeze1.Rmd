@@ -247,7 +247,7 @@ fig = ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + 
 ```{r sex.combine}
 source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
 
-chromExpr = countsByChrom(sceCombine, 'X', df_gene, 'SYMBOL', 'ENSEMBL')
+chromExpr = aggregateByFeatures(sceCombine, 'X', df_gene, 'SYMBOL', 'ENSEMBL')
 
 # df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.names")
 

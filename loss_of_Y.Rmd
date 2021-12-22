@@ -120,15 +120,24 @@ gr[seqnames(gr) == 'Y'][idx]
 ```{r ploidy}
 source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
 
-chromExpr = aggregateByFeatures(sceCombine, 'X', rowData(sceCombine), 'gene_chrom', 'gene_id', BPPARAM=SnowParam(6, progressbar=TRUE))
+chromExpr = aggregateByFeatures(sceCombine[,c(4000000:4067811)], 'X', rowData(sceCombine)[1:10,], 'gene_chrom', 'gene_id', BPPARAM=SnowParam(1, progressbar=TRUE), batchSize=100000)
+
+colnames(chromExpr)
+
+
+
+
+
+
+saveRDS(chromExpr, "chromExpr.RDS")
 ```
 
 ```{r test, eval=FALSE}
 library(DelayedMatrixStats)
 library(HDF5Array)
 
-ngenes = 40000
-ncells = 4000000
+ngenes = 4000
+ncells = 400000
 i = sample(ngenes, 1e5, replace=TRUE)
 j = sample(ncells, 1e5, replace=TRUE)
 
@@ -147,11 +156,11 @@ res = colSums2(b)
 
 ```{r outrider}
 library(OUTRIDER)
-ods <- OutriderDataSet(countData=chromExpr)
+ods <- OutriderDataSet(countData=chromExpr[, -c(1:4000000)])
 
 # ods <- OUTRIDER(ods, q=2, implementation="pca")
 
-# Withoutout autoencoder
+# Without autoencoder
 ods = estimateSizeFactors(ods)
 # ods = OUTRIDER::controlForConfounders(ods, q=2)
 ods = OUTRIDER::fit(ods)
