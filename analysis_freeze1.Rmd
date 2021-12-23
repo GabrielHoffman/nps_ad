@@ -247,11 +247,25 @@ fig = ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + 
 ```{r sex.combine}
 source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
 
-chromExpr = aggregateByFeatures(sceCombine, 'X', df_gene, 'SYMBOL', 'ENSEMBL')
+# get reads on X and Y chroms
+chromExpr = aggregateByFeatures(sceCombine, 'X', df_gene$SYMBOL, df_gene$ENSEMBL)
 
-# df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.names")
+# get total reads
+totalReads = colSums2(assay(sceCombine, "X"))
+df_totalReads = data.frame(totalReads)
+rownames(df_totalReads) = colnames(sceCombine)
 
-# fig = ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType)
+# combine
+df_sex = merge(colData(sceCombine), t(chromExpr), by="row.names")
+df_sex = merge(df_sex, df_totalReads, by.x = "Row.names", by.y="row.names")
+
+df_sex2 = df_sex %>% 
+          group_by(Channel) %>%
+          summarise(Sex = unique(Sex),
+                    UTY = log2(sum(UTY) + 0.25) - log2(sum(totalReads)) + log2(1e6),
+                    XIST= log2(sum(XIST) + 0.25) - log2(sum(totalReads)) + log2(1e6))
+
+ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + scale_color_manual(values=c("red", "blue", "green"))
 ```
 
 
