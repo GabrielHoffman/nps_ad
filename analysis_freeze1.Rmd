@@ -380,7 +380,7 @@ eval_within_across_donor( res.proc, "SubID" )
 
 
 ```{r dreamlet.fit}
-form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + dx + scale(Age) + scale(PMI)
+form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age)
 
 fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 
