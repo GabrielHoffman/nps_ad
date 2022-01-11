@@ -382,7 +382,7 @@ eval_within_across_donor( res.proc, "SubID" )
 ```{r dreamlet.fit}
 form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age)
 
-fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
+fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(12))
 
 saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
@@ -390,7 +390,7 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```{r write.residuals}
 form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + dx + scale(Age) + scale(PMI)
 
-fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
+fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(12))
 
 # extract residuals for each assay
 resMatList = lapply( assayNames(fit.for.resid), function(CT){
