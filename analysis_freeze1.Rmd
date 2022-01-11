@@ -159,6 +159,8 @@ saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_f1.
 pbObj
 ```
 
+pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_f1.RDS")
+
 ## Cell type specificity
 ```{r cellTypeSpecificity}
 df = cellTypeSpecificity( pbObj )
