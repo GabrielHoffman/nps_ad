@@ -82,8 +82,6 @@ if( compareVersion(as.character(vsn), "1.3.3") == -1){
 ```
 
 
-
-
 ```{r load.data, cache=FALSE}
 datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
 
@@ -141,13 +139,15 @@ ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_clas
 ```
 
 ```{r combineData, message=TRUE}
+# update block size for reading h5ad file from disk
+setAutoBlockSize(1e9)
+
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine,
     assay = "X", 
     fun = "sum",
     cluster_id = "celltype",
-    sample_id  = "Channel",
-    BPPARAM = SnowParam(12, progressbar=TRUE))
+    sample_id  = "Channel")
 
 # Set levels for Dx2
 lvls = sort(unique(as.character(colData(pbObj)$dx)))
@@ -159,7 +159,9 @@ saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_f1.
 pbObj
 ```
 
+<!---
 pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_f1.RDS")
+--->
 
 ## Cell type specificity
 ```{r cellTypeSpecificity}
@@ -200,7 +202,6 @@ dreamlet::plotHeatmap(df_sub, genes=unique(genes))
 
 
 ```{r Dx.summary}
-
 df = unique(data.frame(Dx = pbObj$dx, Donor = pbObj$SubID))
 
 sort(table(df$dx), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
@@ -213,7 +214,7 @@ res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HT
   min.count = 10, 
   # pmetadata = df_collapse,  
   # pkeys=c('ID', 'anno'),
-  BPPARAM = SnowParam(16, progressbar=TRUE))
+  BPPARAM = SnowParam(6, progressbar=TRUE))
   
 res.proc
 ```
@@ -275,7 +276,7 @@ ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + sc
 ```{r varPart.plain}
 form = ~ (1|SubID)
 
-res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
 ```
 
 ```{r vp.plot.plain, fig.height=15, fig.width=10, cache=FALSE}
@@ -285,7 +286,7 @@ plotVarPart( sortCols(res.vp) )
 ```{r varPart}
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|dx) + (1|Sex) + (1|Institution) + scale(Age)
 
-res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
 ```
 
 ```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
@@ -382,7 +383,7 @@ eval_within_across_donor( res.proc, "SubID" )
 ```{r dreamlet.fit}
 form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age)
 
-fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(5))
+fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(6))
 
 saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
@@ -390,7 +391,7 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```{r write.residuals}
 form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + dx + scale(Age) + scale(PMI)
 
-fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(5))
+fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(6))
 
 # extract residuals for each assay
 resMatList = lapply( assayNames(fit.for.resid), function(CT){
