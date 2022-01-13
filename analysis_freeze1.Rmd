@@ -265,11 +265,9 @@ grid = colAutoGrid(counts, ncol=100000)
 
 df = dreamlet:::colsum_fast(counts, droplevels(sceCombine$Channel), grid=grid)
 
-
 # merge expression with metadata
 df_meta_uniq = unique(colData(sceCombine)[,c("Channel", "Sex")])
 df_meta_uniq = merge(df_meta_uniq, df_totalReads, by="Channel")
-
 
 df_sex = merge(df_meta_uniq, as.matrix(t(df)), by.x="Channel", by.y="row.names")
 
