@@ -61,6 +61,7 @@ knitr::opts_chunk$set(
 library(SingleCellExperiment)
 library(zellkonverter)
 library(DelayedArray)
+library(DelayedMatrixStats)
 library(HDF5Array)
 library(dreamlet)
 library(muscat)
@@ -248,11 +249,11 @@ df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.
 fig = ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType)
 ```
 
+Sex expression based on XIST and UTY
 ```{r sex.combine}
-source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
-
-# get reads on X and Y chroms
-chromExpr = aggregateByFeatures(sceCombine, 'X', df_gene$SYMBOL, df_gene$ENSEMBL)
+chromExpr = assay(sceCombine[df_gene$ENSEMBL,], "X")
+rownames(chromExpr)[rownames(chromExpr) == df_gene$ENSEMBL[1]] = df_gene$SYMBOL[1]
+rownames(chromExpr)[rownames(chromExpr) == df_gene$ENSEMBL[2]] = df_gene$SYMBOL[2]
 
 # get total reads
 totalReads = colSums2(assay(sceCombine, "X"))
@@ -272,6 +273,29 @@ df_sex2 = df_sex %>%
 ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + scale_color_manual(values=c("red", "blue", "green"))
 ```
 
+
+Sex expression based on summing reads from chrX and chrY
+```{r sex.combine2}
+idx = rowData(sceCombine)$gene_chrom %in% c("X", "Y")
+chromExpr = rowsum(assay(sceCombine[idx,], "X"), rowData(sceCombine[idx,])$gene_chrom)
+
+# get total reads
+totalReads = colSums2(assay(sceCombine, "X"))
+df_totalReads = data.frame(totalReads)
+rownames(df_totalReads) = colnames(sceCombine)
+
+# combine
+df_sex = merge(colData(sceCombine), t(chromExpr), by="row.names")
+df_sex = merge(df_sex, df_totalReads, by.x = "Row.names", by.y="row.names")
+
+df_sex2 = df_sex %>% 
+          group_by(Channel) %>%
+          summarise(Sex = unique(Sex),
+                    Y = log2(sum(Y) + 0.25) - log2(sum(totalReads)) + log2(1e6),
+                    X = log2(sum(X) + 0.25) - log2(sum(totalReads)) + log2(1e6))
+
+ggplot(df_sex2, aes(X, Y, color=Sex)) + geom_point() + theme_classic() + scale_color_manual(values=c("red", "blue", "green"))
+```
 
 
 ```{r varPart.plain}
