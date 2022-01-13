@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import sys, getopt
-import scanpy as sc, anndata as ad, os
+import sys, getopt, os
+#import scanpy as sc
+import anndata as ad
 from numpy import loadtxt
 
 def main(argv):
