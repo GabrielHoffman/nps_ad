@@ -20,6 +20,7 @@ vignette: >
 
 cd /hpc/users/hoffmg01/work/nps_ad
 ml python
+# rm -rf analysis_freeze1_cache/ analysis_freeze1_files
 R
 
 system("ml git; git pull")
