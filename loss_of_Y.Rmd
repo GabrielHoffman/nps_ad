@@ -117,13 +117,28 @@ gr[seqnames(gr) == 'Y'][idx]
 
 
 # Check ploidy
-```{r ploidy}
+```{r ploidy, eval=FALSE}
 source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
 
 chromExpr = aggregateByFeatures(sceCombine, 'X', rowData(sceCombine)$gene_chrom, rowData(sceCombine)$gene_id, BPPARAM=SnowParam(6, progressbar=TRUE))
 
 saveRDS(chromExpr, "chromExpr.RDS")
 ```
+
+```{r compute.ploidy}
+system.time({
+chromExpr = rowsum(assay(sceCombine, "X"), rowData(sceCombine)$gene_chrom)
+})
+saveRDS("chromExpr.RDS")
+```
+
+
+```{r exit, cache=FALSE}
+knitr::knit_exit()
+```
+
+
+chromExpr = readRDS("chromExpr.RDS")
 
 ```{r test, eval=FALSE}
 library(DelayedMatrixStats)
@@ -149,19 +164,32 @@ res = colSums2(b)
 
 ```{r outrider}
 library(OUTRIDER)
-ods <- OutriderDataSet(countData=chromExpr[, -c(1:4000000)])
+ods <- OutriderDataSet(countData=chromExpr)
 
-# ods <- OUTRIDER(ods, q=2, implementation="pca")
+# standard call
+# ods <- OUTRIDER(ods)
 
 # Without autoencoder
 ods = estimateSizeFactors(ods)
-# ods = OUTRIDER::controlForConfounders(ods, q=2)
-ods = OUTRIDER::fit(ods)
-ods = OUTRIDER::computePvalues(ods, alternative="less", method="BH")
-# ods = OUTRIDER::computeZscores(ods, FALSE)
+ods = controlForConfounders(ods, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
+ods = fit(ods, BPPARAM=SnowParam(12, progressbar=TRUE))
+ods = computePvalues(ods, alternative="less", method="BH")
+ods = computeZscores(ods)
 
-plotQQ(ods, geneID='feature_1')
+# compute results
+res = results(ods, all=TRUE)
+```
+
+
+
+```{r make.plots}
+png("test.png")
+dev.off()
+
+plotQQ(ods, geneID='Y')
 plotQQ(ods, global=TRUE)
+
+ggs
 
 
 plotVolcano(ods, "Y", basePlot=TRUE)
@@ -186,6 +214,19 @@ nrow(results(odsa,all=TRUE))
 
 table(results(ods)$padjust < 0.05)
 ```
+
+
+fit = MGLMreg(cbind(y1, y2, y3, y4) ~ 1, data=ydata, dist='DM')
+
+fit@coefficients / fit@SE
+
+
+
+
+
+
+
+
 
 
 
