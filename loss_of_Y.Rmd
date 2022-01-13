@@ -126,45 +126,23 @@ saveRDS(chromExpr, "chromExpr.RDS")
 ```
 
 ```{r compute.ploidy}
-system.time({
 chromExpr = rowsum(assay(sceCombine, "X"), rowData(sceCombine)$gene_chrom)
-})
-saveRDS("chromExpr.RDS")
 ```
 
 
-```{r exit, cache=FALSE}
-knitr::knit_exit()
-```
-
-
-chromExpr = readRDS("chromExpr.RDS")
-
-```{r test, eval=FALSE}
-library(DelayedMatrixStats)
-library(HDF5Array)
-
-ngenes = 4000
-ncells = 400000
-i = sample(ngenes, 1e5, replace=TRUE)
-j = sample(ncells, 1e5, replace=TRUE)
-
-M = sparseMatrix(i=i, j=j, x=runif(1e5), dims=c(ngenes, ncells))
-
-file.remove("test.h5")
-writeHDF5Array(M, "test.h5")
-
-h5ls('test.h5')
-
-b = HDF5Array('test.h5', h5ls('test.h5')$name)
-
-res = colSums2(b)
-```
-
+# OUTRIDER analysis
+Only keep males, and only keep one replicate per Donor
 
 ```{r outrider}
+#chromExpr = readRDS("chromExpr.RDS")
+
 library(OUTRIDER)
-ods <- OutriderDataSet(countData=chromExpr)
+ods <- OutriderDataSet(countData=chromExpr[,sceCombine$Sex=="Male"])
+
+# exclude technical replicates since they are not independent
+keep = grep("_1", as.character(sceCombine$Channel[sceCombine$Sex=="Male"]))
+sampleExclusionMask(ods) <- TRUE 
+sampleExclusionMask(ods[,keep]) <- FALSE
 
 # standard call
 # ods <- OUTRIDER(ods)

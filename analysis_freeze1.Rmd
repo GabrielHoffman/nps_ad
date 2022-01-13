@@ -251,17 +251,38 @@ fig = ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + 
 
 Sex expression based on XIST and UTY
 ```{r sex.combine}
-chromExpr = assay(sceCombine[df_gene$ENSEMBL,], "X")
+chromExpr = assay(sceCombine, "X")[df_gene$ENSEMBL,]
 rownames(chromExpr)[rownames(chromExpr) == df_gene$ENSEMBL[1]] = df_gene$SYMBOL[1]
 rownames(chromExpr)[rownames(chromExpr) == df_gene$ENSEMBL[2]] = df_gene$SYMBOL[2]
 
 # get total reads
 totalReads = colSums2(assay(sceCombine, "X"))
-df_totalReads = data.frame(totalReads)
+df_totalReads = data.table(totalReads)
 rownames(df_totalReads) = colnames(sceCombine)
 
+# sum across cells for each Donor
+setAutoBlockSize(1e8)
+grid = colAutoGrid(chromExpr, ncol=100000)
+df = dreamlet:::colsum_fast(assay(sceCombine[1:10,1:103], "X"), sceCombine$Channel[1:10], grid=grid)
+
+# merge expression with metadata
+df_sex = merge(colData(sceCombine), t(df), by="row.names")
+
+
+
+
+
+
 # combine
-df_sex = merge(colData(sceCombine), t(chromExpr), by="row.names")
+df_sex = merge(colData(sceCombine)[,"Sex",drop=FALSE], t(chromExpr), by="row.names")
+
+df_tmp = data.table(id = colnames(sceCombine), Sex=colData(sceCombine)[,"Sex"])
+df_tmp2 = data.table(id = colnames(chromExpr), t(as.matrix(chromExpr)))
+
+df_sex = merge(colData(sceCombine)[,"Sex",drop=FALSE], t(chromExpr), by="row.names")
+
+
+
 df_sex = merge(df_sex, df_totalReads, by.x = "Row.names", by.y="row.names")
 
 df_sex2 = df_sex %>% 
