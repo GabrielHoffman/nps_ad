@@ -23,11 +23,37 @@ ml python
 R
 
 system("ml git; git pull")
-rmarkdown::render("loss_of_Y.Rmd");
+rmarkdown::render('loss_of_Y.Rmd');
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
 
+
+# submit as job
+
+DIR=`pwd`
+echo '#!/bin/bash' > loss_of_Y.lsf 
+echo "#BSUB -J loss_of_Y
+#BSUB -P acc_CommonMind
+#BSUB -q premium
+#BSUB -n 36
+#BSUB -R span[hosts=1]
+#BSUB -W 12:00
+#BSUB -o $DIR/loss_of_Y_%J.stdout
+#BSUB -eo $DIR/loss_of_Y_%J.stderr
+#BSUB -L /bin/bash
+
+ml R/4.1.0-cairo libpng/16 python
+
+R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_410/
+R_LIBS=$R_LIBS_USER:$R_LIBS
+
+cd /hpc/users/hoffmg01/work/nps_ad
+
+echo \"rmarkdown::render('loss_of_Y.Rmd')\" | R --vanilla
+" >> loss_of_Y.lsf 
+
+bsub < loss_of_Y.lsf
 
 ml git
 cd ~/build2/dreamlet
@@ -191,10 +217,9 @@ plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotExpressionRank, fig.width=8, fig.height=8}
-figList = lapply(rownames(ods), function(x){
-  plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-})
-plot_grid(plotlist=figList, ncol=4)
+for( x in rownames(ods) ){
+  plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1
+}
 ```
 
 ```{r plotExpectedVsObservedCounts, fig.width=8, fig.height=8}
