@@ -161,24 +161,24 @@ res = results(ods, all=TRUE)
 ```
 
 ```{r plotQQ.Y, fig.width=5, fig.height=4}
-plotQQ(ods, geneID='Y')
+plotQQ(ods, geneID='Y') + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotQQ.global, fig.width=5, fig.height=4}
-plotQQ(ods, global=TRUE)
+plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 
 ```{r plotVolcano, eval=FALSE, fig.width=5, fig.height=4}
-plotVolcano(ods, "Y", basePlot=TRUE)
+plotVolcano(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotExpressionRank, fig.width=5, fig.height=4}
-plotExpressionRank(ods, "Y", basePlot=TRUE)
+plotExpressionRank(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotExpectedVsObservedCounts, fig.width=5, fig.height=4}
-plotExpectedVsObservedCounts(ods, "Y", basePlot=TRUE)
+plotExpectedVsObservedCounts(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 
@@ -196,7 +196,7 @@ plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
 ```{r results}
 head(results(ods))
 
-nrow(results(odsa,all=TRUE))
+nrow(results(ods,all=TRUE))
 
 table(results(ods,all=TRUE)$padjust < 0.05)
 ```
