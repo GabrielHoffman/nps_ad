@@ -187,14 +187,14 @@ plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotExpressionRank, fig.width=8, fig.height=8}
-figList = lapply(, function(x){
+figList = lapply(rownames(ods), function(x){
   plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 })
 plot_grid(plotlist=figList, ncol=4)
 ```
 
 ```{r plotExpectedVsObservedCounts, fig.width=8, fig.height=8}
-figList = lapply(, function(x){
+figList = lapply(rownames(ods), function(x){
   plotExpectedVsObservedCounts(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 })
 plot_grid(plotlist=figList, ncol=4)
