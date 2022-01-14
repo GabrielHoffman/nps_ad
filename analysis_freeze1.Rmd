@@ -30,6 +30,13 @@ rmarkdown::render("analysis_freeze1.Rmd");
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
 
 
+echo "echo \"rmarkdown::render('analysis_freeze1.Rmd');\" | R" > script.sh
+
+
+bsub -q premium -o test.out -e test.err -R "span[hosts=1]" -W 12:00 -P acc_CommonMind -n 24 'cd /hpc/users/hoffmg01/work/nps_ad; pwd'
+
+
+
 ml git
 cd ~/build2/dreamlet
 git pull
@@ -260,7 +267,7 @@ df_totalReads = data.frame(totalReads, Channel=sceCombine$Channel) %>%
 # sum across cells for each Donor
 counts = assay(sceCombine[df_gene$ENSEMBL,], "X")
 
-setAutoBlockSize(1e9)
+setAutoBlockSize(1e8)
 grid = colAutoGrid(counts, ncol=100000)
 
 df = dreamlet:::colsum_fast(counts, droplevels(sceCombine$Channel), grid=grid)

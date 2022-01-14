@@ -64,6 +64,7 @@ library(DelayedMatrixStats)
 library(HDF5Array)
 library(dreamlet)
 library(scater)
+library(cowplot)
 library(kableExtra)
 library(GenomicRanges)
 ```
@@ -167,7 +168,7 @@ plotExpressedGenes(ods)
 
 
 ```{r plotAberrantPerSample}
-plotAberrantPerSample(ods, padjCutoff=0.05)
+plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotQQ.Y, fig.width=5, fig.height=4}
@@ -180,19 +181,23 @@ plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 
-```{r plotVolcano, fig.width=5, fig.height=4}
+```{r plotVolcano, fig.width=8, fig.height=8}
 plotVolcano(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
-```{r plotExpressionRank, fig.width=5, fig.height=4}
-plotExpressionRank(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-plotExpressionRank(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+```{r plotExpressionRank, fig.width=8, fig.height=8}
+figList = lapply(, function(x){
+  plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+})
+plot_grid(plotlist=figList, ncol=4)
 ```
 
-```{r plotExpectedVsObservedCounts, fig.width=5, fig.height=4}
-plotExpectedVsObservedCounts(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-plotExpectedVsObservedCounts(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+```{r plotExpectedVsObservedCounts, fig.width=8, fig.height=8}
+figList = lapply(, function(x){
+  plotExpectedVsObservedCounts(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+})
+plot_grid(plotlist=figList, ncol=4)
 ```
 
 
