@@ -160,7 +160,7 @@ res = results(ods, all=TRUE)
 ```
 
 ```{r rm}
-rm(c("res", "chromExpr", "sceCombine"))
+rm("res", "chromExpr", "sceCombine")
 gc()
 ```
 
