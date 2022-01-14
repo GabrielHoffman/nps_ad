@@ -162,7 +162,7 @@ res = results(ods, all=TRUE)
 
 is Y sufficiently expressed?
 
-```{r plotExpressedGenes}
+```{r plotExpressedGenes, eval=FALSE}
 plotExpressedGenes(ods)
 ```
 
