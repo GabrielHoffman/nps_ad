@@ -76,7 +76,7 @@ datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
 sceCombine = readRDS( datafile )
 ```
 
-```{r par}
+```{r par, eval=FALSE}
 library(stringr)
 library(AnnotationHub)
 ah = AnnotationHub()
@@ -159,6 +159,10 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
+```{r rm}
+rm(c("res", "chromExpr", "sceCombine"))
+gc()
+```
 
 is Y sufficiently expressed?
 
