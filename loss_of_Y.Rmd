@@ -161,13 +161,9 @@ res = results(ods, all=TRUE)
 
 
 ```{r make.plots}
-png("test.png")
-dev.off()
 
 plotQQ(ods, geneID='Y')
 plotQQ(ods, global=TRUE)
-
-ggs
 
 
 plotVolcano(ods, "Y", basePlot=TRUE)
