@@ -134,8 +134,6 @@ chromExpr = rowsum(assay(sceCombine, "X"), rowData(sceCombine)$gene_chrom)
 Only keep males, and only keep one replicate per Donor
 
 ```{r outrider}
-#chromExpr = readRDS("chromExpr.RDS")
-
 library(OUTRIDER)
 ods <- OutriderDataSet(countData=chromExpr[,sceCombine$Sex=="Male"])
 
@@ -162,6 +160,7 @@ res = results(ods, all=TRUE)
 
 ```{r plotQQ.Y, fig.width=5, fig.height=4}
 plotQQ(ods, geneID='Y') + theme_classic() + theme(aspect.ratio=1)
+plotQQ(ods, geneID='1') + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotQQ.global, fig.width=5, fig.height=4}
@@ -171,14 +170,17 @@ plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
 
 ```{r plotVolcano, eval=FALSE, fig.width=5, fig.height=4}
 plotVolcano(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotExpressionRank, fig.width=5, fig.height=4}
 plotExpressionRank(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+plotExpressionRank(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 ```{r plotExpectedVsObservedCounts, fig.width=5, fig.height=4}
 plotExpectedVsObservedCounts(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+plotExpectedVsObservedCounts(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 
