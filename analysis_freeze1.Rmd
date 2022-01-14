@@ -258,6 +258,7 @@ fig = ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + 
 
 Sex expression based on XIST and UTY
 ```{r sex.combine}
+asdf
 # get total reads
 totalReads = colSums2(assay(sceCombine, "X"))
 df_totalReads = data.frame(totalReads, Channel=sceCombine$Channel) %>%
