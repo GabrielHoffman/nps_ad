@@ -181,7 +181,7 @@ plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 
-```{r plotVolcano, fig.width=8, fig.height=8}
+```{r plotVolcano, fig.width=8, fig.height=8, eval=FALSE}
 plotVolcano(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
