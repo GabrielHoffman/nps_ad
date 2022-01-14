@@ -253,17 +253,19 @@ df_sex = do.call(rbind, df_sex)
 
 df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.names")
 
-fig = ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType)
+ggplot(as.data.frame(df_sex), aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType) + theme(aspect.ratio=1)
 ```
 
 Sex expression based on XIST and UTY
-```{r sex.combine}
-asdf
+```{r sex.combine, eval=FALSE}
 # get total reads
-totalReads = colSums2(assay(sceCombine, "X"))
+totalReads = DelayedMatrixStats::colSums2(assay(sceCombine, "X"))
 df_totalReads = data.frame(totalReads, Channel=sceCombine$Channel) %>%
   group_by(Channel) %>%
   summarise(LibSize = sum(totalReads))
+
+rm(totalReads)
+gc()
 
 # sum across cells for each Donor
 counts = assay(sceCombine[df_gene$ENSEMBL,], "X")
@@ -279,6 +281,9 @@ df_meta_uniq = merge(df_meta_uniq, df_totalReads, by="Channel")
 
 df_sex = merge(df_meta_uniq, as.matrix(t(df)), by.x="Channel", by.y="row.names")
 
+rm(df, df_meta_uniq)
+gc()
+
 colnames(df_sex)[colnames(df_sex) == df_gene$ENSEMBL[1]] = df_gene$SYMBOL[1] 
 colnames(df_sex)[colnames(df_sex) == df_gene$ENSEMBL[2]] = df_gene$SYMBOL[2]
 
@@ -292,28 +297,6 @@ ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + sc
 ```
 
 
-Sex expression based on summing reads from chrX and chrY
-```{r sex.combine2, eval=FALSE}
-idx = rowData(sceCombine)$gene_chrom %in% c("X", "Y")
-chromExpr = rowsum(assay(sceCombine[idx,], "X"), rowData(sceCombine[idx,])$gene_chrom)
-
-# get total reads
-totalReads = colSums2(assay(sceCombine, "X"))
-df_totalReads = data.frame(totalReads)
-rownames(df_totalReads) = colnames(sceCombine)
-
-# combine
-df_sex = merge(colData(sceCombine), t(chromExpr), by="row.names")
-df_sex = merge(df_sex, df_totalReads, by.x = "Row.names", by.y="row.names")
-
-df_sex2 = df_sex %>% 
-          group_by(Channel) %>%
-          summarise(Sex = unique(Sex),
-                    Y = log2(sum(Y) + 0.25) - log2(sum(totalReads)) + log2(1e6),
-                    X = log2(sum(X) + 0.25) - log2(sum(totalReads)) + log2(1e6))
-
-ggplot(df_sex2, aes(X, Y, color=Sex)) + geom_point() + theme_classic() + scale_color_manual(values=c("red", "blue", "green"))
-```
 
 
 ```{r varPart.plain}
