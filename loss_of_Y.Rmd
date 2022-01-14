@@ -144,6 +144,8 @@ keep = grep("_1", as.character(sceCombine$Channel[sceCombine$Sex=="Male"]))
 sampleExclusionMask(ods) <- TRUE 
 sampleExclusionMask(ods[,keep]) <- FALSE
 
+ods <- filterExpression(ods, minCounts=TRUE, filterGenes=TRUE)
+
 # standard call
 # ods <- OUTRIDER(ods)
 
@@ -158,29 +160,29 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
-```{r plotQQ.Y}
+```{r plotQQ.Y, fig.width=5, fig.height=4}
 plotQQ(ods, geneID='Y')
 ```
 
-```{r plotQQ.global}
+```{r plotQQ.global, fig.width=5, fig.height=4}
 plotQQ(ods, global=TRUE)
 ```
 
 
-```{r plotVolcano, eval=FALSE}
+```{r plotVolcano, eval=FALSE, fig.width=5, fig.height=4}
 plotVolcano(ods, "Y", basePlot=TRUE)
 ```
 
-```{r plotExpressionRank}
+```{r plotExpressionRank, fig.width=5, fig.height=4}
 plotExpressionRank(ods, "Y", basePlot=TRUE)
 ```
 
-```{r plotExpectedVsObservedCounts}
+```{r plotExpectedVsObservedCounts, fig.width=5, fig.height=4}
 plotExpectedVsObservedCounts(ods, "Y", basePlot=TRUE)
 ```
 
 
-```{r plotPowerAnalysis}
+```{r plotPowerAnalysis, fig.width=5, fig.height=4}
 plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
 ```
 
