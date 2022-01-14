@@ -158,21 +158,31 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
-
-
-```{r make.plots}
-
+```{r plotQQ.Y}
 plotQQ(ods, geneID='Y')
+```
+
+```{r plotQQ}
 plotQQ(ods, global=TRUE)
+```
 
 
+```{r plotQQ, eval=FALSE}
 plotVolcano(ods, "Y", basePlot=TRUE)
+```
 
+```{r plotExpressionRank}
 plotExpressionRank(ods, "Y", basePlot=TRUE)
+```
 
+```{r plotExpectedVsObservedCounts}
 plotExpectedVsObservedCounts(ods, "Y", basePlot=TRUE)
+```
 
+
+```{r plotPowerAnalysis}
 plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
+```
 
 
 # need to exclude replicates
@@ -181,12 +191,12 @@ plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
 
 
 # or should I use a negative binomial model directly and the produce residauls.
-
+```{r results}
 head(results(ods))
 
 nrow(results(odsa,all=TRUE))
 
-table(results(ods)$padjust < 0.05)
+table(results(ods,all=TRUE)$padjust < 0.05)
 ```
 
 
