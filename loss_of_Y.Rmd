@@ -162,12 +162,12 @@ res = results(ods, all=TRUE)
 plotQQ(ods, geneID='Y')
 ```
 
-```{r plotQQ}
+```{r plotQQ.global}
 plotQQ(ods, global=TRUE)
 ```
 
 
-```{r plotQQ, eval=FALSE}
+```{r plotVolcano, eval=FALSE}
 plotVolcano(ods, "Y", basePlot=TRUE)
 ```
 
