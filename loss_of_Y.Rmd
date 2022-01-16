@@ -216,17 +216,16 @@ plotVolcano(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
-```{r plotExpressionRank, fig.width=8, fig.height=8}
+```{r plotExpressionRank, fig.width=8, fig.height=8, dev="png"}
 for( x in rownames(ods) ){
   plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 }
 ```
 
 ```{r plotExpectedVsObservedCounts, fig.width=8, fig.height=8}
-figList = lapply(rownames(ods), function(x){
+for( x in rownames(ods) ){
   plotExpectedVsObservedCounts(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-})
-plot_grid(plotlist=figList, ncol=4)
+}
 ```
 
 
