@@ -415,7 +415,7 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
 
 ```{r write.residuals}
-form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + dx + scale(Age) + scale(PMI)
+form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age) 
 
 fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(6))
 
