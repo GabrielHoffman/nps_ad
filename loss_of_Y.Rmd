@@ -218,7 +218,7 @@ plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 
 ```{r plotExpressionRank, fig.width=8, fig.height=8}
 for( x in rownames(ods) ){
-  plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1
+  plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 }
 ```
 
