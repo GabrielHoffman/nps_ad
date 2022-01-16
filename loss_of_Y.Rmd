@@ -222,10 +222,11 @@ for( x in rownames(ods) ){
 }
 ```
 
-```{r plotExpectedVsObservedCounts, fig.width=8, fig.height=8}
-for( x in rownames(ods) ){
+```{r plotExpectedVsObservedCounts, fig.width=8, fig.height=8, dev="png"}
+figList = lapply(rownames(ods), function(x){
   plotExpectedVsObservedCounts(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-}
+})
+plot_grid(plotlist=figList, ncol=4)
 ```
 
 
