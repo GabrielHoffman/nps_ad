@@ -185,6 +185,16 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
+
+library(qvalue)
+library(ashr)
+
+
+df_pi1 = res %>% 
+  group_by(Individual + cell type) %>% 
+  summarize( pi1 = 1 - qvalue(p)$pi0)
+
+
 ```{r rm}
 rm("res", "chromExpr", "sceCombine")
 gc()
@@ -222,7 +232,7 @@ for( x in rownames(ods) ){
 }
 ```
 
-```{r plotExpectedVsObservedCounts, fig.width=8, fig.height=8, dev="png"}
+```{r plotExpectedVsObservedCounts, fig.width=50, fig.height=8, dev="png"}
 figList = lapply(rownames(ods), function(x){
   plotExpectedVsObservedCounts(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 })
