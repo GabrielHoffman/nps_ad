@@ -33,7 +33,7 @@ rmarkdown::render("analysis_freeze1.Rmd");
 echo "echo \"rmarkdown::render('analysis_freeze1.Rmd');\" | R" > script.sh
 
 
-bsub -q premium -o test.out -e test.err -R "span[hosts=1]" -W 12:00 -P acc_CommonMind -n 24 'cd /hpc/users/hoffmg01/work/nps_ad; pwd'
+bsub -Is -q interactive -R "span[hosts=1]" -W 12:00 -P acc_CommonMind -n 24 bash
 
 
 
@@ -415,7 +415,8 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
 
 ```{r write.residuals}
-form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age) 
+# form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age) 
+form = ~ Sex + (1|Institution) 
 
 fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(6))
 
@@ -443,10 +444,12 @@ resMatList = lapply( assayNames(fit.for.resid), function(CT){
 })
 names(resMatList) = assayNames(fit.for.resid)
 
+library(R.utils)
 outPath = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/residuals"
 for( CT in names(resMatList) ){
   file = paste0(outPath, "/", gsub(' ', '_',CT), '.tsv')
   write.table( resMatList[[CT]], file=file, quote=FALSE, sep="\t")
+  gzip(file, overwrite=TRUE)
 }
 ```
 
