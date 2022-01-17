@@ -236,7 +236,7 @@ for( x in rownames(ods) ){
 figList = lapply(rownames(ods), function(x){
   plotExpectedVsObservedCounts(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 })
-plot_grid(plotlist=figList, ncol=4)
+plot_grid(plotlist=figList, ncol=3)
 rm(figList); gc()
 ```
 
