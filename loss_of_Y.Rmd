@@ -232,7 +232,7 @@ for( x in rownames(ods) ){
 }
 ```
 
-```{r plotExpectedVsObservedCounts, fig.width=50, fig.height=8, dev="png"}
+```{r plotExpectedVsObservedCounts, fig.height=50, fig.width=8, dev="png"}
 figList = lapply(rownames(ods), function(x){
   plotExpectedVsObservedCounts(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 })
