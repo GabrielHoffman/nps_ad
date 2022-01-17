@@ -710,7 +710,7 @@ plotCellComposition( t(colSums(df_cellCount)))
 ```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
 # Add dream here
 # deal with NA's here 
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|cohort) + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|Institution) + scale(Age) 
 
 i = with(colData(pbObj), !is.na(dx) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
 
@@ -731,7 +731,7 @@ plotPercentBars( df_vp )
 ## Perform statistical tests
 For each cell type
 ```{r cellTypeCompositionTest}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + dx + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + dx + scale(Age) 
 
 fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
 fit = eBayes(fit)
@@ -754,7 +754,7 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>%
 ```{r cellTypeCompositionVarPart.neuron, fig.height=4, fig.width=6}
 # Add dream here
 # deal with NA's here 
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|cohort) + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|Institution) + scale(Age) 
 
 i = with(colData(pbObj), !is.na(dx) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
 
@@ -781,7 +781,7 @@ plotPercentBars( df_vp )
 ## Perform statistical tests
 For each cell type
 ```{r cellTypeCompositionTest.neuron}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + dx + scale(Age) + scale(PMI)
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + dx + scale(Age) 
 
 fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
 fit = eBayes(fit)
@@ -797,50 +797,6 @@ topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
 topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
   kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
-```
-
-
-
-# Check ploidy
-```{r ploidy, eval=FALSE}
-sce = sceCombine[,1:100000]
-
-# sum reads across chromosome to identify chromsome loss
-chromExpr = lapply( levels(rowData(sce)$gene_chrom), function(chrom){
-
-  cat("\r", chrom, "    ")
-
-  # genes on specified chromsome
-  genes = rownames(rowData(sce))[rowData(sce)$gene_chrom == chrom]
-
-  # sum reads across genes on this chromosome
-  chromCounts = colSums2(assay(sce, 'X'), rows=genes)
-
-  df = data.frame(t(chromCounts), check.names=FALSE)
-  rownames(df) = chrom
-  colnames(df) = colnames(sce)
-
-  df
-  })
-chromExpr = do.call(rbind, chromExpr)
-
-library(OUTRIDER)
-ods <- OutriderDataSet(countData=chromExpr)
-
-ods <- OUTRIDER(ods, q=2, implementation="pca")
-
-# or should I use a negative binomial model directly and the produce residauls.
-
-head(results(ods))
-
-nrow(results(odsa,all=TRUE))
-
-table(results(ods)$padjust < 0.05)
-
-
-
-
-
 ```
 
 
