@@ -120,7 +120,10 @@ if( file.exists(datafile) ){
 }
 ```
 
-Data freeze includes ??? rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
+Data freeze includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
+
+
+
 
 # Joint UMAP
 ```{r umap, dev="png"}
@@ -414,11 +417,11 @@ fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(6))
 saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
 
-```{r write.residuals}
-# form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age) 
-form = ~ Sex + (1|Institution) 
+```{r write.residuals, eval=FALSE}
+form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age) 
+# form = ~ Sex + (1|Institution) 
 
-fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(6))
+fit.for.resid = dreamlet( res.proc[1:2], form, BPPARAM=SnowParam(6))
 
 # extract residuals for each assay
 resMatList = lapply( assayNames(fit.for.resid), function(CT){
