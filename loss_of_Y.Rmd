@@ -197,36 +197,48 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
-```{r exit, cache=FALSE}
+```{r exit, cache=FALSE, eval=FALSE}
 knitr::knit_exit()
 ```
 
-```{r pi1}
-source("/hpc/users/hoffmg01/work/nps_ad/helper/plotScatterDensity.R")
+```{r pi1, eval=FALSE}
 library(qvalue)
 library(ashr)
 library(tidyverse)
-library(ggplot2)
-library(viridis)
 
 # saveRDS(res, "/sc/arion/scratch/hoffmg01/res.RDS")
 # saveRDS(ods, "/sc/arion/scratch/hoffmg01/ods.RDS")
 # res = readRDS("/sc/arion/scratch/hoffmg01/res.RDS")
 # ods = readRDS("/sc/arion/scratch/hoffmg01/ods.RDS")
 
-source("~/workspace/repos/nps_ad/helper/plotExpObsCounts.R")
-
-
 pi1 = function(beta, se){
-
-  fit = ash(beta, se)
+  if( length(beta) < 10) return(NA)
+  # fit = ash(beta, se)
+  fit = ash(beta/se, rep(1, length(se)))
   1 - get_pi0(fit)
 }
 
-df_pi1 = res %>% 
-  group_by(Individual + cell type) %>% 
-  summarize( pi1 = 1 - qvalue(p)$pi0,
-             pi1.ash = pi1())
+df_res = res %>% 
+  as_tibble %>% 
+  mutate(Channel = gsub('-.*$','', sampleID),
+    se = l2fc / zScore)
+
+
+df_counts = df_res %>% 
+  group_by(Channel, geneID) %>% 
+  summarize(nAbb = sum(aberrant),
+            nObs = length(aberrant))
+
+# pi1 = 1 - qvalue(pValue)$pi0
+df_pi1 = df_res %>% 
+  group_by(Channel, geneID) %>% 
+  summarize( pi1.ash = pi1(l2fc, se))
+
+
+idx = with(df_res, which(Channel == "H1004_1" & geneID == "10"))
+
+with(df_res[idx,], pi1(l2fc, se))
+```
 
 
 ```{r rm}
@@ -267,6 +279,7 @@ for( x in rownames(ods) ){
 ```
 
 ```{r plotExpectedVsObservedCounts, fig.height=50, fig.width=14, dev="png"}
+source("~/workspace/repos/nps_ad/helper/plotExpObsCounts.R")
 figList = lapply(rownames(ods), function(x){
   plotExpObsCounts(ods, x) + theme_classic() 
 })
