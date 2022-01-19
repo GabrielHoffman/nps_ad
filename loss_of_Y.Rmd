@@ -205,6 +205,7 @@ knitr::knit_exit()
 library(qvalue)
 library(ashr)
 library(lmerTest)
+library(data.table)
 library(tidyverse)
 
 # saveRDS(res, "/sc/arion/scratch/hoffmg01/res.RDS")
@@ -235,6 +236,8 @@ df_res = left_join(res, df_data, by="sampleID") %>%
   mutate(Channel = gsub('-.*$','', sampleID),
          se = l2fc / zScore)  
 
+
+# Get outliers for aggregated across groups
 df_counts = df_res %>% 
   group_by(Channel, geneID, celltype) %>% 
   summarize(nAbb = sum(aberrant),
@@ -279,15 +282,32 @@ fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|geneID) + (1|celltype) + s
 calcVarPart(fit)
 
 
-# using z-score directly
+# Using z-score directly
 # lm() uses too much memory
-df_sub = df_res[(df_res$geneID=="1") &(df_res$dx %in% c('ad', 'Control')),]
+# test AD-control directly
+df_sub = df_res[(df_res$geneID=="Y") &(df_res$dx %in% c('AD', 'Control')),]
 df_sub = droplevels(df_sub)
-fit = lmer( abs(zScore) ~ scale(rawcounts) + (1|celltype) + (1|SubID) + dx, data = )
+fit = lmer( abs(zScore) ~ scale(rawcounts) + (1|celltype) + (1|Channel) + (1|SubID) + as.numeric(dx), data = df_sub)
 
 calcVarPart(fit)
 
 summary(fit)
+
+lapply( levels(df_res$geneID), function(chrom){
+
+  # test chromsome loss using pmin
+  fit1 = lmer( pmin(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|celltype) + (1|Channel) + (1|SubID) + as.numeric(dx), data = df_sub)
+  
+  # test chromsome gain using pmax
+  fit2 = lmer( pmax(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|celltype) + (1|Channel) + (1|SubID) + as.numeric(dx), data = df_sub)
+
+  rbind(data.frame(Direction="loss", t(coef(summary(fit1))['as.numeric(dx)',])),
+        data.frame(Direction="gain", t(coef(summary(fit2))['as.numeric(dx)',])))
+
+
+
+
+
 
 
 # pi1 = 1 - qvalue(pValue)$pi0
@@ -342,7 +362,7 @@ for( x in rownames(ods) ){
 ```{r plotExpectedVsObservedCounts, fig.height=50, fig.width=14, dev="png"}
 source("./helper/plotExpObsCounts.R")
 figList = lapply(rownames(ods), function(x){
-  plotExpObsCounts(ods, x) + theme_classic() 
+  plotExpObsCounts(ods, x)  
 })
 plot_grid(plotlist=figList, ncol=3)
 rm(figList); gc()
