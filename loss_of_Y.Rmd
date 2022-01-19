@@ -197,13 +197,14 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
-```{r exit, cache=FALSE, eval=FALSE}
+```{r exit, cache=FALSE, eval=TRUE}
 knitr::knit_exit()
 ```
 
 ```{r pi1, eval=FALSE}
 library(qvalue)
 library(ashr)
+library(lmerTest)
 library(tidyverse)
 
 # saveRDS(res, "/sc/arion/scratch/hoffmg01/res.RDS")
@@ -224,19 +225,28 @@ df_data = data.table(data.frame(sampleID = colnames(sceCombine), colData(sceComb
 setkey(df_data, sampleID)
 setkey(res, sampleID)
 
-df_res = merge(res, df_data, by="sampleID") %>%
+# total counts per chromosome
+df_chr_counts = res %>%
+                group_by(geneID) %>%
+                summarize(totalCounts = sum(rawcounts))
+
+df_res = left_join(res, df_data, by="sampleID") %>%
   as_tibble %>% 
   mutate(Channel = gsub('-.*$','', sampleID),
-         se = l2fc / zScore) 
+         se = l2fc / zScore)  
 
 df_counts = df_res %>% 
   group_by(Channel, geneID, celltype) %>% 
   summarize(nAbb = sum(aberrant),
             nObs = length(aberrant),
+            nAbb.up = sum(aberrant*(l2fc>1)),
+            nAbb.down = sum(aberrant*(l2fc>1)),
             abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
             abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) )
 
+
 df_uniq = with(colData(sceCombine), unique(data.frame(Channel, SubID)))
+
 
 df_counts = merge(df_counts, df_uniq, by="Channel")
 
@@ -244,7 +254,7 @@ library(lme4)
 # fit = glmer.nb(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|celltype), df_counts[df_counts$geneID==2,])
 
 df_vp = lapply(1:22, function(x){
-  fit = glmer(nAbb ~ offset(log(nObs)) + (celltype|SubID) , df_counts[df_counts$geneID==x,], family="poisson")
+  fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|celltype) , df_counts[df_counts$geneID==x,], family="poisson")
 
   data.frame(chrom = x, t(calcVarPart(fit)))
 })
@@ -252,6 +262,32 @@ df_vp = do.call(rbind, df_vp)
 
 
 
+df_counts_aggr = df_res  %>% 
+  group_by(Channel, geneID, celltype) %>% 
+  summarize(nAbb = sum(aberrant),
+            nObs = length(aberrant),
+            nAbb.up = sum(aberrant*(l2fc>1)),
+            nAbb.down = sum(aberrant*(l2fc>1)),
+            abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
+            abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) ) %>% 
+  left_join(df_uniq, by="Channel")%>%
+  left_join(df_chr_counts, by="geneID")
+
+
+fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)), df_counts_aggr, family="poisson")
+
+calcVarPart(fit)
+
+
+# using z-score directly
+# lm() uses too much memory
+df_sub = df_res[(df_res$geneID=="1") &(df_res$dx %in% c('ad', 'Control')),]
+df_sub = droplevels(df_sub)
+fit = lmer( abs(zScore) ~ scale(rawcounts) + (1|celltype) + (1|SubID) + dx, data = )
+
+calcVarPart(fit)
+
+summary(fit)
 
 
 # pi1 = 1 - qvalue(pValue)$pi0
