@@ -197,7 +197,7 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
-```{r exit, cache=FALSE, eval=FALSE}
+```{r exit, cache=FALSE, eval=TRUE}
 knitr::knit_exit()
 ```
 
