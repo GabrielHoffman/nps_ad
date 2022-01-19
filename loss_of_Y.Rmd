@@ -201,14 +201,32 @@ res = results(ods, all=TRUE)
 knitr::knit_exit()
 ```
 
-
+```{r pi1}
+source("/hpc/users/hoffmg01/work/nps_ad/helper/plotScatterDensity.R")
 library(qvalue)
 library(ashr)
+library(tidyverse)
+library(ggplot2)
+library(viridis)
 
+# saveRDS(res, "/sc/arion/scratch/hoffmg01/res.RDS")
+# saveRDS(ods, "/sc/arion/scratch/hoffmg01/ods.RDS")
+# res = readRDS("/sc/arion/scratch/hoffmg01/res.RDS")
+# ods = readRDS("/sc/arion/scratch/hoffmg01/ods.RDS")
+
+source("~/workspace/repos/nps_ad/helper/plotExpObsCounts.R")
+
+
+pi1 = function(beta, se){
+
+  fit = ash(beta, se)
+  1 - get_pi0(fit)
+}
 
 df_pi1 = res %>% 
   group_by(Individual + cell type) %>% 
-  summarize( pi1 = 1 - qvalue(p)$pi0)
+  summarize( pi1 = 1 - qvalue(p)$pi0,
+             pi1.ash = pi1())
 
 
 ```{r rm}
@@ -250,7 +268,7 @@ for( x in rownames(ods) ){
 
 ```{r plotExpectedVsObservedCounts, fig.height=50, fig.width=14, dev="png"}
 figList = lapply(rownames(ods), function(x){
-  plotExpectedVsObservedCounts(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+  plotExpObsCounts(ods, x) + theme_classic() 
 })
 plot_grid(plotlist=figList, ncol=3)
 rm(figList); gc()
