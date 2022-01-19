@@ -218,16 +218,20 @@ pi1 = function(beta, se){
   1 - get_pi0(fit)
 }
 
+# allow grouping by Channel, geneID, and celltype
 df_res = res %>% 
   as_tibble %>% 
   mutate(Channel = gsub('-.*$','', sampleID),
-    se = l2fc / zScore)
+         se = l2fc / zScore) %>% 
+  merge(with(colData(sceCombine), data.frame(sampleID = colnames(sceCombine), celltype)), by="sampleID")  
 
 
 df_counts = df_res %>% 
-  group_by(Channel, geneID) %>% 
+  group_by(Channel, geneID, celltype) %>% 
   summarize(nAbb = sum(aberrant),
-            nObs = length(aberrant))
+            nObs = length(aberrant),
+            abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
+            abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) )
 
 # pi1 = 1 - qvalue(pValue)$pi0
 df_pi1 = df_res %>% 
