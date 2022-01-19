@@ -63,6 +63,18 @@ R CMD INSTALL .
 
 --->
 
+Examine distribution of chromosome loss events per cell 
+  Is the probability of losing chrA related to loss of chrB after correcting for depth
+  show overall loss rate per chromosome vs depth
+  Is count per cell Poisson distributed?
+  Use t-statistic as a proxy?
+
+
+Donor level
+  ashr within each cell type
+  loss with age
+  relate to phenotype
+
 
 
 ```{r setup, include=FALSE}
@@ -183,6 +195,10 @@ ods = computeZscores(ods)
 
 # compute results
 res = results(ods, all=TRUE)
+```
+
+```{r exit, cache=FALSE}
+knitr::knit_exit()
 ```
 
 
