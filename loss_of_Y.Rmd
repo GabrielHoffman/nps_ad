@@ -197,7 +197,7 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
-```{r exit, cache=FALSE, eval=TRUE}
+```{r exit, cache=FALSE, eval=FALSE}
 knitr::knit_exit()
 ```
 
@@ -219,12 +219,15 @@ pi1 = function(beta, se){
 }
 
 # allow grouping by Channel, geneID, and celltype
-df_res = res %>% 
+# use data.table for faster merge
+df_data = data.table(data.frame(sampleID = colnames(sceCombine), colData(sceCombine)))
+setkey(df_data, sampleID)
+setkey(res, sampleID)
+
+df_res = merge(res, df_data, by="sampleID") %>%
   as_tibble %>% 
   mutate(Channel = gsub('-.*$','', sampleID),
-         se = l2fc / zScore) %>% 
-  merge(with(colData(sceCombine), data.frame(sampleID = colnames(sceCombine), celltype)), by="sampleID")  
-
+         se = l2fc / zScore) 
 
 df_counts = df_res %>% 
   group_by(Channel, geneID, celltype) %>% 
@@ -233,9 +236,27 @@ df_counts = df_res %>%
             abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
             abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) )
 
+df_uniq = with(colData(sceCombine), unique(data.frame(Channel, SubID)))
+
+df_counts = merge(df_counts, df_uniq, by="Channel")
+
+library(lme4)
+# fit = glmer.nb(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|celltype), df_counts[df_counts$geneID==2,])
+
+df_vp = lapply(1:22, function(x){
+  fit = glmer(nAbb ~ offset(log(nObs)) + (celltype|SubID) , df_counts[df_counts$geneID==x,], family="poisson")
+
+  data.frame(chrom = x, t(calcVarPart(fit)))
+})
+df_vp = do.call(rbind, df_vp)
+
+
+
+
+
 # pi1 = 1 - qvalue(pValue)$pi0
 df_pi1 = df_res %>% 
-  group_by(Channel, geneID) %>% 
+  group_by(Channel, geneID, celltype) %>% 
   summarize( pi1.ash = pi1(l2fc, se))
 
 
@@ -283,7 +304,7 @@ for( x in rownames(ods) ){
 ```
 
 ```{r plotExpectedVsObservedCounts, fig.height=50, fig.width=14, dev="png"}
-source("~/workspace/repos/nps_ad/helper/plotExpObsCounts.R")
+source("./helper/plotExpObsCounts.R")
 figList = lapply(rownames(ods), function(x){
   plotExpObsCounts(ods, x) + theme_classic() 
 })
