@@ -240,13 +240,21 @@ ods = computeZscores(ods)
 res = results(ods, all=TRUE)
 ```
 
+# find the optimal encoding dimension q
+ods <- findEncodingDim(ods, BPPARAM=SnowParam(12, progressbar=TRUE), implementation="pca")
+
+# visualize the hyper parameter optimization
+plotEncDimSearch(ods)
+
+
+
 ```{r outrider.v2.males}
 library(OUTRIDER)
 
 # just males
 idx = which(ods.all$Sex == "Male")
 
-ods_male <- filterExpression(ods.all[idx,], minCounts=TRUE, filterGenes=TRUE)
+ods_male <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
 
 # Without autoencoder
 ods_male = estimateSizeFactors(ods_male)
@@ -265,7 +273,7 @@ library(OUTRIDER)
 # just males
 idx = which(ods.all$Sex == "Female")
 
-ods_female <- filterExpression(ods.all[idx,], minCounts=TRUE, filterGenes=TRUE)
+ods_female <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
 
 # Without autoencoder
 ods_female = estimateSizeFactors(ods_female)
