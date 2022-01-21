@@ -23,7 +23,8 @@ ml python
 R
 
 system("ml git; git pull")
-rmarkdown::render('chrom_loss.Rmd', intermediates_dir='/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/');
+path = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/'
+rmarkdown::render('chrom_loss.Rmd', intermediates_dir=path, output_dir=path);
 
 
 
@@ -110,66 +111,13 @@ library(GenomicRanges)
 ```
 
 
-```{r load.data, cache=FALSE}
+```{r load.data}
 datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
 
 sceCombine = readRDS( datafile )
-```
 
-```{r par, eval=FALSE}
-library(stringr)
-library(AnnotationHub)
-ah = AnnotationHub()
-
-# Get ENSEMBL v104
-res = query(ah,"EnsDb.Hsapiens.v104")
-ann = ah[[res$ah_id]]
-
-# get GRanges of gene locations 
-# all genes:  keys(ann)
-res = select(ann, keys = rownames(sceCombine), columns = c('SEQNAME', 'GENESEQSTART', 'GENESEQEND'))
-gr = with(res, GRanges(SEQNAME, IRanges(GENESEQSTART, GENESEQEND, name=GENEID)))
-
-# https://useast.ensembl.org/info/genome/genebuild/human_PARS.html
-# chromosome:GRCh38:Y:1 - 10000 is unique to Y but is a string of 10000 Ns
-# chromosome:GRCh38:Y:10001 - 2781479 is shared with X: 10001 - 2781479 (PAR1)
-# chromosome:GRCh38:Y:2781480 - 56887902 is unique to Y
-# chromosome:GRCh38:Y:56887903 - 57217415 is shared with X: 155701383 - 156030895 (PAR2)
-# chromosome:GRCh38:Y:57217416 - 57227415 is unique to Y
-
-regions = c(Ypar = 'Y:1-10000',
-  Ypar = 'Y:10001-2781479', # shared with X: 10001 - 2781479 (PAR1)
-  # Ypar = 'Y:2781480-56887902', # unique to Y
-  Ypar = 'Y:56887903-57217415', # shared with X: 155701383 - 156030895 (PAR2)
-  # Ypar = 'Y:57217416-57227415', # unique to Y
-  PAR1 = 'X:10001-2781479',
-  PAR2 = 'X:155701383-156030895')
-
-df_regions = str_split(regions, ':|-', simplify=TRUE)
-df_regions = data.frame(df_regions, SEQ=names(regions))
-gr_par = with(df_regions, GRanges(X1, IRanges(as.numeric(X2), as.numeric(X3), name=SEQ)))
-
-idx = which(gr %within% gr_par[names(gr_par) == "Ypar"])
-
-# genes from chrY to exclude due to overlap with PAR
-idx = which(gr[seqnames(gr) == 'Y'] %over% gr_par[names(gr_par) == "Ypar"])
-gr[seqnames(gr) == 'Y'][idx]
-```
-
-
-# Check ploidy
-```{r ploidy, eval=FALSE}
-source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
-
-chromExpr = aggregateByFeatures(sceCombine, 'X', rowData(sceCombine)$gene_chrom, rowData(sceCombine)$gene_id, BPPARAM=SnowParam(6, progressbar=TRUE))
-
-saveRDS(chromExpr, "chromExpr.RDS")
-```
-
-```{r compute.ploidy}
 chromExpr = rowsum(assay(sceCombine, "X"), rowData(sceCombine)$gene_chrom)
 ```
-
 
 # OUTRIDER analysis
 ```{r outrider.v2}
