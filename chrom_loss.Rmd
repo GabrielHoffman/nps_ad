@@ -18,13 +18,12 @@ vignette: >
 
 <!--- 
 
-cd /hpc/users/hoffmg01/work/nps_ad
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
 ml python
 R
 
 system("ml git; git pull")
-path = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/'
-rmarkdown::render('chrom_loss.Rmd', intermediates_dir=path, output_dir=path);
+rmarkdown::render('chrom_loss.Rmd');
 
 
 
@@ -182,7 +181,7 @@ res_female = results(ods_female, all=TRUE)
 ```{r combine}
 # combine 3 analyses
 res_combine = rbind(res[res$geneID %in% c(1:22, "MT"),],
-                    res_male[res_male$geneID %in% c("X", "Y"),]
+                    res_male[res_male$geneID %in% c("X", "Y"),],
                     res_female[res_female$geneID %in% c("X"),])
 
 saveRDS(res_combine, file="/hpc/users/hoffmg01/work/nps_ad/outliers.RDS")
