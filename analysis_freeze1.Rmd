@@ -422,9 +422,8 @@ saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 
 ```{r write.residuals, eval=TRUE}
 form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx #+ scale(Age) 
-# form = ~ Sex + (1|Institution) 
 
-fit.for.resid = dreamlet( res.proc[1:2], form, BPPARAM=SnowParam(6))
+fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(6))
 
 # extract residuals for each assay
 resMatList = lapply( assayNames(fit.for.resid), function(CT){
@@ -452,13 +451,14 @@ names(resMatList) = assayNames(fit.for.resid)
 
 library(R.utils)
 outPath = paste0("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/residuals/", Sys.Date())
-if(! folder.exists(outPath) ){
-  create.dir(outPath)
+if(! dir.exists(outPath) ){
+  dir.create(outPath)
 }
 
 for( CT in names(resMatList) ){
   file = paste0(outPath, "/", gsub(' ', '_',CT), '.tsv')
-  write.table( resMatList[[CT]], file=file, quote=FALSE, sep="\t")
+  data = format(resMatList[[CT]], digits=5)
+  write.table( data, file=file, quote=FALSE, sep="\t")
   gzip(file, overwrite=TRUE)
 }
 ```
