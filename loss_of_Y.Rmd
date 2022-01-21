@@ -249,8 +249,6 @@ plotEncDimSearch(ods)
 
 
 ```{r outrider.v2.males}
-library(OUTRIDER)
-
 # just males
 idx = which(ods.all$Sex == "Male")
 
@@ -268,8 +266,6 @@ res_male = results(ods_male, all=TRUE)
 
 
 ```{r outrider.v2.females}
-library(OUTRIDER)
-
 # just males
 idx = which(ods.all$Sex == "Female")
 
