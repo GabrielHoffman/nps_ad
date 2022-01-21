@@ -1,0 +1,571 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'Loss of chrY'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{Decorrelate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+cd /hpc/users/hoffmg01/work/nps_ad
+ml python
+R
+
+system("ml git; git pull")
+rmarkdown::render('chrom_loss.Rmd', intermediates_dir='/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/');
+
+
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+
+
+# submit as job
+
+DIR=`pwd`
+echo '#!/bin/bash' > loss_of_Y.lsf 
+echo "#BSUB -J loss_of_Y
+#BSUB -P acc_CommonMind
+#BSUB -q premium
+#BSUB -n 36
+#BSUB -R span[hosts=1]
+#BSUB -W 12:00
+#BSUB -o $DIR/loss_of_Y_%J.stdout
+#BSUB -eo $DIR/loss_of_Y_%J.stderr
+#BSUB -L /bin/bash
+
+ml R/4.1.0-cairo libpng/16 python
+
+R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_410/
+R_LIBS=$R_LIBS_USER:$R_LIBS
+
+cd /hpc/users/hoffmg01/work/nps_ad
+
+echo \"rmarkdown::render('loss_of_Y.Rmd')\" | R --vanilla
+" >> loss_of_Y.lsf 
+
+bsub < loss_of_Y.lsf
+
+ml git
+cd ~/build2/dreamlet
+git pull
+R CMD INSTALL .
+
+
+--->
+
+Examine distribution of chromosome loss events per cell 
+  Is the probability of losing chrA related to loss of chrB after correcting for depth
+  show overall loss rate per chromosome vs depth
+  Is count per cell Poisson distributed?
+  Use t-statistic as a proxy?
+
+
+Donor level
+  ashr within each cell type
+  loss with age
+  relate to phenotype
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(DelayedMatrixStats)
+library(HDF5Array)
+library(dreamlet)
+library(scater)
+library(cowplot)
+library(kableExtra)
+library(GenomicRanges)
+```
+
+
+```{r load.data, cache=FALSE}
+datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
+
+sceCombine = readRDS( datafile )
+```
+
+```{r par, eval=FALSE}
+library(stringr)
+library(AnnotationHub)
+ah = AnnotationHub()
+
+# Get ENSEMBL v104
+res = query(ah,"EnsDb.Hsapiens.v104")
+ann = ah[[res$ah_id]]
+
+# get GRanges of gene locations 
+# all genes:  keys(ann)
+res = select(ann, keys = rownames(sceCombine), columns = c('SEQNAME', 'GENESEQSTART', 'GENESEQEND'))
+gr = with(res, GRanges(SEQNAME, IRanges(GENESEQSTART, GENESEQEND, name=GENEID)))
+
+# https://useast.ensembl.org/info/genome/genebuild/human_PARS.html
+# chromosome:GRCh38:Y:1 - 10000 is unique to Y but is a string of 10000 Ns
+# chromosome:GRCh38:Y:10001 - 2781479 is shared with X: 10001 - 2781479 (PAR1)
+# chromosome:GRCh38:Y:2781480 - 56887902 is unique to Y
+# chromosome:GRCh38:Y:56887903 - 57217415 is shared with X: 155701383 - 156030895 (PAR2)
+# chromosome:GRCh38:Y:57217416 - 57227415 is unique to Y
+
+regions = c(Ypar = 'Y:1-10000',
+  Ypar = 'Y:10001-2781479', # shared with X: 10001 - 2781479 (PAR1)
+  # Ypar = 'Y:2781480-56887902', # unique to Y
+  Ypar = 'Y:56887903-57217415', # shared with X: 155701383 - 156030895 (PAR2)
+  # Ypar = 'Y:57217416-57227415', # unique to Y
+  PAR1 = 'X:10001-2781479',
+  PAR2 = 'X:155701383-156030895')
+
+df_regions = str_split(regions, ':|-', simplify=TRUE)
+df_regions = data.frame(df_regions, SEQ=names(regions))
+gr_par = with(df_regions, GRanges(X1, IRanges(as.numeric(X2), as.numeric(X3), name=SEQ)))
+
+idx = which(gr %within% gr_par[names(gr_par) == "Ypar"])
+
+# genes from chrY to exclude due to overlap with PAR
+idx = which(gr[seqnames(gr) == 'Y'] %over% gr_par[names(gr_par) == "Ypar"])
+gr[seqnames(gr) == 'Y'][idx]
+```
+
+
+# Check ploidy
+```{r ploidy, eval=FALSE}
+source("/hpc/users/hoffmg01/work/nps_ad/aggregateByFeatures.R")
+
+chromExpr = aggregateByFeatures(sceCombine, 'X', rowData(sceCombine)$gene_chrom, rowData(sceCombine)$gene_id, BPPARAM=SnowParam(6, progressbar=TRUE))
+
+saveRDS(chromExpr, "chromExpr.RDS")
+```
+
+```{r compute.ploidy}
+chromExpr = rowsum(assay(sceCombine, "X"), rowData(sceCombine)$gene_chrom)
+```
+
+
+# OUTRIDER analysis
+```{r outrider.v2}
+library(OUTRIDER)
+
+# Include everything
+ods.all = OutriderDataSet(countData=chromExpr, colData = colData(sceCombine))
+
+ods <- filterExpression(ods.all, minCounts=TRUE, filterGenes=TRUE)
+
+# Without autoencoder
+ods = estimateSizeFactors(ods)
+ods = controlForConfounders(ods, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
+ods = fit(ods, BPPARAM=SnowParam(12, progressbar=TRUE))
+ods = computePvalues(ods, method="BH")
+ods = computeZscores(ods)
+
+res = results(ods, all=TRUE)
+```
+
+# find the optimal encoding dimension q
+ods <- findEncodingDim(ods, BPPARAM=SnowParam(12, progressbar=TRUE), implementation="pca")
+
+# visualize the hyper parameter optimization
+plotEncDimSearch(ods)
+
+
+
+```{r outrider.v2.males}
+# just males
+idx = which(ods.all$Sex == "Male")
+
+ods_male <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
+
+# Without autoencoder
+ods_male = estimateSizeFactors(ods_male)
+ods_male = controlForConfounders(ods_male, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
+ods_male = fit(ods_male, BPPARAM=SnowParam(12, progressbar=TRUE))
+ods_male = computePvalues(ods_male, method="BH")
+ods_male = computeZscores(ods_male)
+
+res_male = results(ods_male, all=TRUE)
+```
+
+
+```{r outrider.v2.females}
+# just males
+idx = which(ods.all$Sex == "Female")
+
+ods_female <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
+
+# Without autoencoder
+ods_female = estimateSizeFactors(ods_female)
+ods_female = controlForConfounders(ods_female, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
+ods_female = fit(ods_female, BPPARAM=SnowParam(12, progressbar=TRUE))
+ods_female = computePvalues(ods_female, method="BH")
+ods_female = computeZscores(ods_female)
+
+res_female = results(ods_female, all=TRUE)
+```
+
+```{r combine}
+# combine 3 analyses
+res_combine = rbind(res[res$geneID %in% c(1:22, "MT"),],
+                    res_male[res_male$geneID %in% c("X", "Y"),]
+                    res_female[res_female$geneID %in% c("X"),])
+
+saveRDS(res_combine, file="/hpc/users/hoffmg01/work/nps_ad/outliers.RDS")
+```
+
+```{r exit, cache=FALSE, eval=TRUE}
+knitr::knit_exit()
+```
+
+
+```{r rm}
+rm("res_combine", "chromExpr", "sceCombine")
+gc()
+```
+
+# Plots from main analysis of all samples
+```{r plotExpressedGenes}
+plotExpressedGenes(ods)
+```
+
+
+```{r plotAberrantPerSample}
+plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
+```
+
+```{r plotQQ.Y, fig.width=5, fig.height=4}
+plotQQ(ods, geneID='Y') + theme_classic() + theme(aspect.ratio=1)
+plotQQ(ods, geneID='1') + theme_classic() + theme(aspect.ratio=1)
+```
+
+```{r plotQQ.global, fig.width=5, fig.height=4}
+plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
+```
+
+
+```{r plotVolcano, fig.width=8, fig.height=8, eval=FALSE}
+plotVolcano(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+```
+
+```{r plotExpressionRank, fig.width=8, fig.height=8, dev="png"}
+for( x in rownames(ods) ){
+  plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+}
+```
+
+```{r plotExpectedVsObservedCounts, fig.height=50, fig.width=14, dev="png"}
+source("./helper/plotExpObsCounts.R")
+figList = lapply(rownames(ods), function(x){
+  plotExpObsCounts(ods, x)  
+})
+plot_grid(plotlist=figList, ncol=3)
+rm(figList); gc()
+```
+
+
+```{r plotPowerAnalysis, fig.width=5, fig.height=4}
+plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
+```
+
+# make plots from ods here
+# process 
+
+
+# END
+
+
+```{r pi1, eval=FALSE}
+library(qvalue)
+library(ashr)
+library(lmerTest)
+library(data.table)
+library(tidyverse)
+
+# saveRDS(res, "/sc/arion/scratch/hoffmg01/res.RDS")
+# saveRDS(ods, "/sc/arion/scratch/hoffmg01/ods.RDS")
+# res = readRDS("/sc/arion/scratch/hoffmg01/res.RDS")
+# ods = readRDS("/sc/arion/scratch/hoffmg01/ods.RDS")
+
+pi1 = function(beta, se){
+  if( length(beta) < 10) return(NA)
+  # fit = ash(beta, se)
+  fit = ash(beta/se, rep(1, length(se)))
+  1 - get_pi0(fit)
+}
+
+# get unique information for each Channel
+df_uniq = with(colData(sceCombine), unique(data.frame(Channel, SubID, dx, Sex, Age)))
+
+# allow grouping by Channel, geneID, and celltype
+# use data.table for faster merge
+df_data = data.table(data.frame(sampleID = colnames(sceCombine), colData(sceCombine)))
+setkey(df_data, sampleID)
+setkey(res, sampleID)
+
+# total counts per chromosome
+df_chr_counts = res %>%
+                group_by(geneID) %>%
+                summarize(totalCounts = sum(rawcounts))
+
+df_res = left_join(res, df_data, by="sampleID") %>%
+  as_tibble %>% 
+  mutate(Channel = gsub('-.*$','', sampleID),
+         se = l2fc / zScore)  
+
+
+# Get outliers for aggregated across groups
+df_counts = df_res %>% 
+  group_by(Channel, geneID, celltype) %>% 
+  summarize(nAbb = sum(aberrant),
+            nObs = length(aberrant),
+            nAbb.up = sum(aberrant*(l2fc>1)),
+            nAbb.down = sum(aberrant*(l2fc>1)),
+            abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
+            abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) )
+
+
+df_counts = merge(df_counts, df_uniq, by="Channel")
+
+library(lme4)
+# fit = glmer.nb(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|celltype), df_counts[df_counts$geneID==2,])
+
+df_vp = lapply(1:22, function(x){
+  fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|celltype) , df_counts[df_counts$geneID==x,], family="poisson")
+
+  data.frame(chrom = x, t(calcVarPart(fit)))
+})
+df_vp = do.call(rbind, df_vp)
+
+
+
+df_counts_aggr = df_res %>% 
+  group_by(Channel, geneID, celltype) %>% 
+  summarize(nAbb = sum(aberrant),
+            nObs = length(aberrant),
+            nAbb.up = sum(aberrant*(l2fc>1)),
+            nAbb.down = sum(aberrant*(l2fc>1)),
+            abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
+            abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) ) %>% 
+  left_join(df_uniq, by="Channel") %>%
+  left_join(df_chr_counts, by="geneID")
+
+
+fit = glmer(nAbb ~ offset(log(nObs)) + (1|Channel) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)) + dx, df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),], family="poisson")
+
+calcVarPart(fit)
+summary(fit)
+
+df_sub = df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),]
+
+grid = expand.grid(geneID = sort(unique(df_sub$geneID)),
+            celltype = sort(unique(df_sub$celltype)))
+
+# test outlier rate
+###################
+# note: outliers only called in Males
+rm(res_lm)
+res_lm = mclapply(1:nrow(grid), function(i){
+  cat("\r", i, "   ")
+
+  idx = with(df_sub, (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+  data = droplevels(df_sub[idx,])
+  data$dx = factor(data$dx, c("Control", "AD"))
+
+  if( sum(data$nAbb> 0) < 10){
+    df = NULL
+  }else{
+
+    fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age)*dx, data, family="poisson")
+
+    coefs = c('scale(Age)','dxAD', 'dxAD:scale(Age)')
+    df = data.frame( geneID = grid$geneID[i],
+                celltype = grid$celltype[i],
+                coef = coefs,
+                coef(summary(fit))[coefs,,drop=FALSE])
+  }
+  df
+  }, mc.cores=12)
+res_lm = do.call(rbind, res_lm)
+
+colnames(res_lm)[colnames(res_lm) == "Pr...z.."] = "pvalue"
+res_lm$FDR = p.adjust(res_lm$pvalue, "fdr")
+res_lm = res_lm[order(res_lm$FDR),]
+
+res_lm$geneID = factor(res_lm$geneID, c(1:22, "X", "Y", "MT"))
+
+ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
+
+fig = ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
+
+ggsave("test.png", fig)
+
+
+
+# Using z-score directly
+#########################
+
+
+# chr21 trisomy is Down syndrome
+# APP gene is on chr21
+
+df_sub = df_res[df_res$dx %in% c("AD", "Control"),]
+
+grid = expand.grid(geneID = sort(unique(df_sub$geneID)),
+            celltype = sort(unique(df_sub$celltype)))
+
+res_lm = lapply(1:nrow(grid), function(i){
+  cat("\r", i, "   ")
+
+  idx = with(df_res, (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+
+  data = droplevels(df_res[idx,])
+  data$dx = factor(data$dx, c("Control", "AD"))
+
+  # test chromsome loss using pmin
+  fit1 = lmer( pmin(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
+  
+  # test chromsome gain using pmax
+  fit2 = lmer( pmax(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
+
+  coefs = c('dxAD', 'scale(Age)')
+  df1 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
+                    Direction="loss", coef = coefs,
+                    coef(summary(fit1))[coefs,])
+
+  df2 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
+                    Direction="gain", coef = coefs,
+                    coef(summary(fit2))[coefs,])
+
+  rbind(df1, df2)
+})
+res_lm = do.call(rbind, res_lm)
+
+colnames(res_lm)[colnames(res_lm) == "Pr...t.."] = "pvalue"
+res_lm$FDR = p.adjust(res_lm$pvalue, "fdr")
+res_lm = res_lm[order(res_lm$FDR),]
+
+res_lm$geneID = factor(res_lm$chrom, c(1:22, "X", "Y", "MT"))
+
+ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
+
+fig = ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
+
+ggsave("test.png", fig)
+
+
+
+
+
+
+
+
+
+
+
+
+# Using z-score directly
+# lm() uses too much memory
+# test AD-control directly
+idx = with(df_res, (geneID=="21") & (dx %in% c('AD', 'Control')) & (celltype=='Glutamatergic neuron'))
+df_sub = df_res[idx,]
+df_sub = droplevels(df_sub)
+df_sub$dx = factor(df_sub$dx, c("Control", "AD"))
+fit = lmer( pmax(zScore, 0) ~ scale(rawcounts) + (1|Channel) + (1|SubID) + scale(Age) + dx, data = df_sub)
+
+summary(fit)
+
+
+
+
+df_ad = lapply( sort(unique(df_res$geneID)), function(chrom){
+  df_sub = df_res[(df_res$geneID=="Y") &(df_res$dx %in% c('AD', 'Control')),]
+  df_sub = droplevels(df_sub)
+
+  # test chromsome loss using pmin
+  fit1 = lmer( pmin(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|celltype) + (1|Channel) + (1|SubID) + as.numeric(dx), data = df_sub)
+  
+  # test chromsome gain using pmax
+  fit2 = lmer( pmax(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|celltype) + (1|Channel) + (1|SubID) + as.numeric(dx), data = df_sub)
+
+  rbind(data.frame(chrom = chrom, Direction="loss", t(coef(summary(fit1))['as.numeric(dx)',])),
+        data.frame(chrom = chrom, Direction="gain", t(coef(summary(fit2))['as.numeric(dx)',])))
+})
+df_ad = do.call(rbind, df_ad)
+
+
+
+
+
+# pi1 = 1 - qvalue(pValue)$pi0
+df_pi1 = df_res %>% 
+  group_by(Channel, geneID, celltype) %>% 
+  summarize( pi1.ash = pi1(l2fc, se))
+
+
+idx = with(df_res, which(Channel == "H1004_1" & geneID == "10"))
+
+with(df_res[idx,], pi1(l2fc, se))
+```
+
+
+
+# need to exclude replicates
+
+
+
+
+# or should I use a negative binomial model directly and the produce residauls.
+```{r results}
+head(results(ods))
+
+nrow(results(ods,all=TRUE))
+
+table(results(ods,all=TRUE)$padjust < 0.05)
+```
+
+
+fit = MGLMreg(cbind(y1, y2, y3, y4) ~ 1, data=ydata, dist='DM')
+
+fit@coefficients / fit@SE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
