@@ -153,9 +153,6 @@ ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_clas
 # Specify how to collapse into pseudo-bulk
 sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
 
-# keep AD, SCZ, Control
-idx = with(colData(sceCombine), Dx2 %in% c("AD", "SCZ", "Control"))
-
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine[,idx],
     assay = "X", 
@@ -251,8 +248,6 @@ plotVarPart( sortCols(res.vp), label.angle=45 )
 idx = res.vp$assay %in% c('GABAergic neuron', 'Glutamatergic neuron', 'Microglia')
 plotVarPart( sortCols(res.vp[idx,]), label.angle=70 )
 ```
-
-
 
 ### Examine variancePartition results
 ```{r vp.examine, fig.height=3, fig.width=7}
