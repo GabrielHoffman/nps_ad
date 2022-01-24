@@ -18,10 +18,10 @@ vignette: >
 
 <!--- 
 
-cd /hpc/users/hoffmg01/work/nps_ad
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
 ml python
 R
-# rm -rf analysis_2_cache/ /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_v2.RDS
 
 system("ml git; git pull")
 rmarkdown::render("demo_dreamlet.Rmd");
@@ -38,6 +38,16 @@ R CMD INSTALL .
 
 --->
 
+
+* Analyses to implement
+  + Concordance as a function of 
+    + number donors
+    + number of cells
+    + mixed model
+    + batch effect
+  + which genes have batch effect?
+ + compare cell tpyes  Demonstrate performance by sampling two populations from the same cell cluster, and running showing the unpaired doesnt control false positive rate.  How to demonstrate false positive rate.
+  
 
 
 ```{r setup, include=FALSE}
