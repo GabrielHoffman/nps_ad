@@ -138,7 +138,7 @@ df_counts_aggr = df_res %>%
   summarize(nAbb = sum(aberrant),
             nObs = length(aberrant),
             nAbb.up = sum(aberrant*(l2fc>1)),
-            nAbb.down = sum(aberrant*(l2fc>1)),
+            nAbb.down = sum(aberrant*(l2fc<1)),
             abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
             abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) ) %>% 
   left_join(df_uniq, by="Channel") %>%
@@ -159,26 +159,35 @@ coefs = c('scale(Age)','dxAD')
 # test outlier rate
 ###################
 
-res_lm = mclapply(1:nrow(grid), function(i){
+res_lm = lapply(1:nrow(grid), function(i){
   cat("\r", i, "   ")
 
-  idx = with(df_res,  (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
-  data = droplevels(df_res[idx,])
+  idx = with(df_counts_aggr,  (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+  data = droplevels(df_counts_aggr[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
 
   if( sum(data$nAbb> 0) < 10){
     df = NULL
   }else{
 
-    fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|batch) + dx + scale(Age), data, family="poisson")
+    fit1 = glmer.nb(nAbb.down ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age), data)
+    fit2 = glmer.nb(nAbb.up ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age), data)
 
-    df = data.frame( geneID = grid$geneID[i],
+    df1 = data.frame( geneID = grid$geneID[i],
                 celltype = grid$celltype[i],
+                Direction="loss",
                 coef = coefs,
-                coef(summary(fit))[coefs,,drop=FALSE])
+                coef(summary(fit1))[coefs,,drop=FALSE])
+    df2 = data.frame( geneID = grid$geneID[i],
+                celltype = grid$celltype[i],
+                Direction="gain",
+                coef = coefs,
+                coef(summary(fit2))[coefs,,drop=FALSE])
+
+    rbind(df1, df2)
   }
   df
-  }, mc.cores=12)
+  })
 res_lm = do.call(rbind, res_lm)
 
 colnames(res_lm)[colnames(res_lm) == "Pr...z.."] = "pvalue"
