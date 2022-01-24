@@ -99,6 +99,7 @@ library(cowplot)
 library(lme4)
 library(lmerTest)
 library(SingleCellExperiment)
+library(RNOmni)
 ```
 
 
@@ -121,18 +122,17 @@ df_uniq = with(colData(sceCombine), unique(data.frame(Channel, SubID, dx, Sex, A
 df_data = data.frame(sampleID = colnames(sceCombine), colData(sceCombine))
 
 # total counts per chromosome
-df_chr_counts = res %>%
+df_chr_counts = res_combine %>%
                 group_by(geneID) %>%
                 summarize(totalCounts = sum(rawcounts))
 
-df_res = left_join(res, df_data, by="sampleID") %>%
+# combine outlier and sample data
+df_res = left_join(res_combine, df_data, by="sampleID") %>%
   as_tibble %>% 
   mutate(Channel = gsub('-.*$','', sampleID),
          se = l2fc / zScore)  
 
-
-
-
+# group and summarize
 df_counts_aggr = df_res %>% 
   group_by(Channel, geneID, celltype) %>% 
   summarize(nAbb = sum(aberrant),
@@ -145,24 +145,24 @@ df_counts_aggr = df_res %>%
   left_join(df_chr_counts, by="geneID")
 
 
-fit = glmer(nAbb ~ offset(log(nObs)) + (1|Channel) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)) + dx, df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),], family="poisson")
+# fit = glmer(nAbb ~ offset(log(nObs)) + (1|Channel) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)) + dx, df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),], family="poisson")
 
-calcVarPart(fit)
-summary(fit)
+# calcVarPart(fit)
+# summary(fit)
 
-df_sub = df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),]
-
+# only examine AD vs control
 grid = expand.grid(geneID = sort(unique(df_sub$geneID)),
             celltype = sort(unique(df_sub$celltype)))
 
+coefs = c('scale(Age)','dxAD')
+
 # test outlier rate
 ###################
-# note: outliers only called in Males
-rm(res_lm)
+
 res_lm = mclapply(1:nrow(grid), function(i){
   cat("\r", i, "   ")
 
-  idx = with(df_sub, (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+  idx = with(df_res,  (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
   data = droplevels(df_sub[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
 
@@ -170,9 +170,8 @@ res_lm = mclapply(1:nrow(grid), function(i){
     df = NULL
   }else{
 
-    fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age)*dx, data, family="poisson")
+    fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|batch) + dx + scale(Age), data, family="poisson")
 
-    coefs = c('scale(Age)','dxAD', 'dxAD:scale(Age)')
     df = data.frame( geneID = grid$geneID[i],
                 celltype = grid$celltype[i],
                 coef = coefs,
@@ -190,39 +189,35 @@ res_lm$geneID = factor(res_lm$geneID, c(1:22, "X", "Y", "MT"))
 
 ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
 
-fig = ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
-
-ggsave("test.png", fig)
+ggplot(res_lm[res_lm$coef=="dxAD",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
 ```
 
-```{r z.score}
-# Using z-score directly
-#########################
 
 
 # chr21 trisomy is Down syndrome
 # APP gene is on chr21
 
-df_sub = df_res[df_res$dx %in% c("AD", "Control"),]
-
+# Using z-score directly
+```{r z.score}
 grid = expand.grid(geneID = sort(unique(df_sub$geneID)),
             celltype = sort(unique(df_sub$celltype)))
 
-res_lm = lapply(1:nrow(grid), function(i){
+coefs = c('dxAD', 'scale(Age)')
+
+res_lmz = lapply(1:nrow(grid), function(i){
   cat("\r", i, "   ")
 
-  idx = with(df_res, (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+  idx = with(df_res, (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
 
   data = droplevels(df_res[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
 
   # test chromsome loss using pmin
-  fit1 = lmer( pmin(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
+  fit1 = lmer( RankNorm(pmin(zScore, 0)) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
   
   # test chromsome gain using pmax
-  fit2 = lmer( pmax(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
+  fit2 = lmer( RankNorm(pmax(zScore, 0)) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
 
-  coefs = c('dxAD', 'scale(Age)')
   df1 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
                     Direction="loss", coef = coefs,
                     coef(summary(fit1))[coefs,])
@@ -233,23 +228,22 @@ res_lm = lapply(1:nrow(grid), function(i){
 
   rbind(df1, df2)
 })
-res_lm = do.call(rbind, res_lm)
+res_lmz = do.call(rbind, res_lmz)
 
-colnames(res_lm)[colnames(res_lm) == "Pr...t.."] = "pvalue"
-res_lm$FDR = p.adjust(res_lm$pvalue, "fdr")
-res_lm = res_lm[order(res_lm$FDR),]
+colnames(res_lmz)[colnames(res_lmz) == "Pr...t.."] = "pvalue"
+res_lmz$FDR = p.adjust(res_lmz$pvalue, "fdr")
+res_lmz = res_lmz[order(res_lmz$FDR),]
 
-res_lm$geneID = factor(res_lm$chrom, c(1:22, "X", "Y", "MT"))
+res_lmz$geneID = factor(res_lmz$chrom, c(1:22, "X", "Y", "MT"))
 
-ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
+ratio = with(res_lmz, nlevels(celltype) / nlevels(geneID))
 
-fig = ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
-
-ggsave("test.png", fig)
+ggplot(res_lmz[res_lmz$coef=="dxAD",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
 ```
 
 
 
+ggsave("test.png", fig)
 
 
 
