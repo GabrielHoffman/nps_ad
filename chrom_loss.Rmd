@@ -189,7 +189,7 @@ saveRDS(res_combine, file="/hpc/users/hoffmg01/work/nps_ad/outliers.RDS")
 
 
 # Plots from main analysis of all samples
-```{r plotExpressedGenes}
+```{r plotExpressedGenes, eval=FALSE}
 plotExpressedGenes(ods)
 ```
 

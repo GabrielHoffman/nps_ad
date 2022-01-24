@@ -93,159 +93,183 @@ knitr::opts_chunk$set(
 ```
 
 ```{r load.packages, cache=FALSE}
-# Use cache=FALSE so that package are fully loaded each time
-# This ensures that forks within mclapply() have these loaded
-# Othewise, mclapply() not have access to these libraries and will fail 
-#   unless the libraries are manually loaded within each fork
-library(SingleCellExperiment)
-library(zellkonverter)
-library(DelayedArray)
-library(DelayedMatrixStats)
-library(HDF5Array)
-library(dreamlet)
-library(scater)
+library(tidyverse)
+library(ggplot2)
 library(cowplot)
-library(kableExtra)
-library(GenomicRanges)
+library(lme4)
+library(lmerTest)
+library(SingleCellExperiment)
 ```
+
 
 
 ```{r load.data}
+# SingleCellExperiment 
 datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
-
 sceCombine = readRDS( datafile )
 
-chromExpr = rowsum(assay(sceCombine, "X"), rowData(sceCombine)$gene_chrom)
+# OUTRIDER results
+res_combine = readRDS("/hpc/users/hoffmg01/work/nps_ad/outliers.RDS")
 ```
 
-# OUTRIDER analysis
-```{r outrider.v2}
-library(OUTRIDER)
+```{r analysis}
+# get unique information for each Channel
+df_uniq = with(colData(sceCombine), unique(data.frame(Channel, SubID, dx, Sex, Age)))
 
-# Include everything
-ods.all = OutriderDataSet(countData=chromExpr, colData = colData(sceCombine))
+# allow grouping by Channel, geneID, and celltype
+# use data.table for faster merge
+df_data = data.frame(sampleID = colnames(sceCombine), colData(sceCombine))
 
-ods <- filterExpression(ods.all, minCounts=TRUE, filterGenes=TRUE)
+# total counts per chromosome
+df_chr_counts = res %>%
+                group_by(geneID) %>%
+                summarize(totalCounts = sum(rawcounts))
 
-# Without autoencoder
-ods = estimateSizeFactors(ods)
-ods = controlForConfounders(ods, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
-ods = fit(ods, BPPARAM=SnowParam(12, progressbar=TRUE))
-ods = computePvalues(ods, method="BH")
-ods = computeZscores(ods)
+df_res = left_join(res, df_data, by="sampleID") %>%
+  as_tibble %>% 
+  mutate(Channel = gsub('-.*$','', sampleID),
+         se = l2fc / zScore)  
 
-res = results(ods, all=TRUE)
+
+
+
+df_counts_aggr = df_res %>% 
+  group_by(Channel, geneID, celltype) %>% 
+  summarize(nAbb = sum(aberrant),
+            nObs = length(aberrant),
+            nAbb.up = sum(aberrant*(l2fc>1)),
+            nAbb.down = sum(aberrant*(l2fc>1)),
+            abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
+            abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) ) %>% 
+  left_join(df_uniq, by="Channel") %>%
+  left_join(df_chr_counts, by="geneID")
+
+
+fit = glmer(nAbb ~ offset(log(nObs)) + (1|Channel) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)) + dx, df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),], family="poisson")
+
+calcVarPart(fit)
+summary(fit)
+
+df_sub = df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),]
+
+grid = expand.grid(geneID = sort(unique(df_sub$geneID)),
+            celltype = sort(unique(df_sub$celltype)))
+
+# test outlier rate
+###################
+# note: outliers only called in Males
+rm(res_lm)
+res_lm = mclapply(1:nrow(grid), function(i){
+  cat("\r", i, "   ")
+
+  idx = with(df_sub, (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+  data = droplevels(df_sub[idx,])
+  data$dx = factor(data$dx, c("Control", "AD"))
+
+  if( sum(data$nAbb> 0) < 10){
+    df = NULL
+  }else{
+
+    fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age)*dx, data, family="poisson")
+
+    coefs = c('scale(Age)','dxAD', 'dxAD:scale(Age)')
+    df = data.frame( geneID = grid$geneID[i],
+                celltype = grid$celltype[i],
+                coef = coefs,
+                coef(summary(fit))[coefs,,drop=FALSE])
+  }
+  df
+  }, mc.cores=12)
+res_lm = do.call(rbind, res_lm)
+
+colnames(res_lm)[colnames(res_lm) == "Pr...z.."] = "pvalue"
+res_lm$FDR = p.adjust(res_lm$pvalue, "fdr")
+res_lm = res_lm[order(res_lm$FDR),]
+
+res_lm$geneID = factor(res_lm$geneID, c(1:22, "X", "Y", "MT"))
+
+ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
+
+fig = ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
+
+ggsave("test.png", fig)
 ```
 
-# find the optimal encoding dimension q
-ods <- findEncodingDim(ods, BPPARAM=SnowParam(12, progressbar=TRUE), implementation="pca")
-
-# visualize the hyper parameter optimization
-plotEncDimSearch(ods)
+```{r z.score}
+# Using z-score directly
+#########################
 
 
+# chr21 trisomy is Down syndrome
+# APP gene is on chr21
 
-```{r outrider.v2.males}
-# just males
-idx = which(ods.all$Sex == "Male")
+df_sub = df_res[df_res$dx %in% c("AD", "Control"),]
 
-ods_male <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
+grid = expand.grid(geneID = sort(unique(df_sub$geneID)),
+            celltype = sort(unique(df_sub$celltype)))
 
-# Without autoencoder
-ods_male = estimateSizeFactors(ods_male)
-ods_male = controlForConfounders(ods_male, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
-ods_male = fit(ods_male, BPPARAM=SnowParam(12, progressbar=TRUE))
-ods_male = computePvalues(ods_male, method="BH")
-ods_male = computeZscores(ods_male)
+res_lm = lapply(1:nrow(grid), function(i){
+  cat("\r", i, "   ")
 
-res_male = results(ods_male, all=TRUE)
+  idx = with(df_res, (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+
+  data = droplevels(df_res[idx,])
+  data$dx = factor(data$dx, c("Control", "AD"))
+
+  # test chromsome loss using pmin
+  fit1 = lmer( pmin(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
+  
+  # test chromsome gain using pmax
+  fit2 = lmer( pmax(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
+
+  coefs = c('dxAD', 'scale(Age)')
+  df1 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
+                    Direction="loss", coef = coefs,
+                    coef(summary(fit1))[coefs,])
+
+  df2 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
+                    Direction="gain", coef = coefs,
+                    coef(summary(fit2))[coefs,])
+
+  rbind(df1, df2)
+})
+res_lm = do.call(rbind, res_lm)
+
+colnames(res_lm)[colnames(res_lm) == "Pr...t.."] = "pvalue"
+res_lm$FDR = p.adjust(res_lm$pvalue, "fdr")
+res_lm = res_lm[order(res_lm$FDR),]
+
+res_lm$geneID = factor(res_lm$chrom, c(1:22, "X", "Y", "MT"))
+
+ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
+
+fig = ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
+
+ggsave("test.png", fig)
 ```
 
 
-```{r outrider.v2.females}
-# just males
-idx = which(ods.all$Sex == "Female")
 
-ods_female <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
 
-# Without autoencoder
-ods_female = estimateSizeFactors(ods_female)
-ods_female = controlForConfounders(ods_female, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
-ods_female = fit(ods_female, BPPARAM=SnowParam(12, progressbar=TRUE))
-ods_female = computePvalues(ods_female, method="BH")
-ods_female = computeZscores(ods_female)
 
-res_female = results(ods_female, all=TRUE)
-```
 
-```{r combine}
-# combine 3 analyses
-res_combine = rbind(res[res$geneID %in% c(1:22, "MT"),],
-                    res_male[res_male$geneID %in% c("X", "Y"),],
-                    res_female[res_female$geneID %in% c("X"),])
 
-saveRDS(res_combine, file="/hpc/users/hoffmg01/work/nps_ad/outliers.RDS")
-```
 
-```{r exit, cache=FALSE, eval=TRUE}
+
+
+
+
+
+
+
+
+
+
+
+
+```{r exit, cache=FALSE}
 knitr::knit_exit()
 ```
-
-
-```{r rm}
-rm("res_combine", "chromExpr", "sceCombine")
-gc()
-```
-
-# Plots from main analysis of all samples
-```{r plotExpressedGenes}
-plotExpressedGenes(ods)
-```
-
-
-```{r plotAberrantPerSample}
-plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
-```
-
-```{r plotQQ.Y, fig.width=5, fig.height=4}
-plotQQ(ods, geneID='Y') + theme_classic() + theme(aspect.ratio=1)
-plotQQ(ods, geneID='1') + theme_classic() + theme(aspect.ratio=1)
-```
-
-```{r plotQQ.global, fig.width=5, fig.height=4}
-plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
-```
-
-
-```{r plotVolcano, fig.width=8, fig.height=8, eval=FALSE}
-plotVolcano(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-```
-
-```{r plotExpressionRank, fig.width=8, fig.height=8, dev="png"}
-for( x in rownames(ods) ){
-  plotExpressionRank(ods, x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-}
-```
-
-```{r plotExpectedVsObservedCounts, fig.height=50, fig.width=14, dev="png"}
-source("./helper/plotExpObsCounts.R")
-figList = lapply(rownames(ods), function(x){
-  plotExpObsCounts(ods, x)  
-})
-plot_grid(plotlist=figList, ncol=3)
-rm(figList); gc()
-```
-
-
-```{r plotPowerAnalysis, fig.width=5, fig.height=4}
-plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
-```
-
-# make plots from ods here
-# process 
-
-
 # END
 
 
