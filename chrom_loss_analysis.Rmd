@@ -143,13 +143,15 @@ df_counts_aggr = df_res %>%
             abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) ) %>% 
   left_join(df_uniq, by="Channel") %>%
   left_join(df_chr_counts, by="geneID")
-
+```
 
 # fit = glmer(nAbb ~ offset(log(nObs)) + (1|Channel) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)) + dx, df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),], family="poisson")
 
 # calcVarPart(fit)
 # summary(fit)
 
+# Negative binomial model of aberrent counts
+```{r aberrant.nb}
 # only examine AD vs control
 grid = expand.grid(geneID = sort(unique(df_counts_aggr$geneID)),
             celltype = sort(unique(df_counts_aggr$celltype)))
@@ -160,7 +162,7 @@ coefs = c('scale(Age)','dxAD')
 ###################
 
 res_lm = lapply(1:nrow(grid), function(i){
-  cat("\r", i, "   ")
+  message("\r", i, "   ")
 
   idx = with(df_counts_aggr,  (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
   data = droplevels(df_counts_aggr[idx,])
