@@ -187,15 +187,6 @@ res_combine = rbind(res[res$geneID %in% c(1:22, "MT"),],
 saveRDS(res_combine, file="/hpc/users/hoffmg01/work/nps_ad/outliers.RDS")
 ```
 
-```{r exit, cache=FALSE, eval=TRUE}
-knitr::knit_exit()
-```
-
-
-```{r rm}
-rm("res_combine", "chromExpr", "sceCombine")
-gc()
-```
 
 # Plots from main analysis of all samples
 ```{r plotExpressedGenes}
@@ -207,9 +198,10 @@ plotExpressedGenes(ods)
 plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
 ```
 
-```{r plotQQ.Y, fig.width=5, fig.height=4}
-plotQQ(ods, geneID='Y') + theme_classic() + theme(aspect.ratio=1)
-plotQQ(ods, geneID='1') + theme_classic() + theme(aspect.ratio=1)
+```{r plotQQ.Y, fig.width=8, fig.height=8, dev="png"}
+for( x in rownames(ods) ){
+  plotQQ(ods, geneID=x) + theme_classic() + theme(aspect.ratio=1)
+}
 ```
 
 ```{r plotQQ.global, fig.width=5, fig.height=4}
@@ -218,8 +210,10 @@ plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
 
 
 ```{r plotVolcano, fig.width=8, fig.height=8, eval=FALSE}
-plotVolcano(ods, "Y", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
-plotVolcano(ods, "1", basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+for( x in rownames(ods) ){
+  plotVolcano(ods, geneID=x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
+}
+
 ```
 
 ```{r plotExpressionRank, fig.width=8, fig.height=8, dev="png"}
@@ -241,273 +235,6 @@ rm(figList); gc()
 ```{r plotPowerAnalysis, fig.width=5, fig.height=4}
 plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
 ```
-
-# make plots from ods here
-# process 
-
-
-# END
-
-
-```{r pi1, eval=FALSE}
-library(qvalue)
-library(ashr)
-library(lmerTest)
-library(data.table)
-library(tidyverse)
-
-# saveRDS(res, "/sc/arion/scratch/hoffmg01/res.RDS")
-# saveRDS(ods, "/sc/arion/scratch/hoffmg01/ods.RDS")
-# res = readRDS("/sc/arion/scratch/hoffmg01/res.RDS")
-# ods = readRDS("/sc/arion/scratch/hoffmg01/ods.RDS")
-
-pi1 = function(beta, se){
-  if( length(beta) < 10) return(NA)
-  # fit = ash(beta, se)
-  fit = ash(beta/se, rep(1, length(se)))
-  1 - get_pi0(fit)
-}
-
-# get unique information for each Channel
-df_uniq = with(colData(sceCombine), unique(data.frame(Channel, SubID, dx, Sex, Age)))
-
-# allow grouping by Channel, geneID, and celltype
-# use data.table for faster merge
-df_data = data.table(data.frame(sampleID = colnames(sceCombine), colData(sceCombine)))
-setkey(df_data, sampleID)
-setkey(res, sampleID)
-
-# total counts per chromosome
-df_chr_counts = res %>%
-                group_by(geneID) %>%
-                summarize(totalCounts = sum(rawcounts))
-
-df_res = left_join(res, df_data, by="sampleID") %>%
-  as_tibble %>% 
-  mutate(Channel = gsub('-.*$','', sampleID),
-         se = l2fc / zScore)  
-
-
-# Get outliers for aggregated across groups
-df_counts = df_res %>% 
-  group_by(Channel, geneID, celltype) %>% 
-  summarize(nAbb = sum(aberrant),
-            nObs = length(aberrant),
-            nAbb.up = sum(aberrant*(l2fc>1)),
-            nAbb.down = sum(aberrant*(l2fc>1)),
-            abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
-            abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) )
-
-
-df_counts = merge(df_counts, df_uniq, by="Channel")
-
-library(lme4)
-# fit = glmer.nb(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|celltype), df_counts[df_counts$geneID==2,])
-
-df_vp = lapply(1:22, function(x){
-  fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + (1|celltype) , df_counts[df_counts$geneID==x,], family="poisson")
-
-  data.frame(chrom = x, t(calcVarPart(fit)))
-})
-df_vp = do.call(rbind, df_vp)
-
-
-
-df_counts_aggr = df_res %>% 
-  group_by(Channel, geneID, celltype) %>% 
-  summarize(nAbb = sum(aberrant),
-            nObs = length(aberrant),
-            nAbb.up = sum(aberrant*(l2fc>1)),
-            nAbb.down = sum(aberrant*(l2fc>1)),
-            abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
-            abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant) ) %>% 
-  left_join(df_uniq, by="Channel") %>%
-  left_join(df_chr_counts, by="geneID")
-
-
-fit = glmer(nAbb ~ offset(log(nObs)) + (1|Channel) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)) + dx, df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),], family="poisson")
-
-calcVarPart(fit)
-summary(fit)
-
-df_sub = df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),]
-
-grid = expand.grid(geneID = sort(unique(df_sub$geneID)),
-            celltype = sort(unique(df_sub$celltype)))
-
-# test outlier rate
-###################
-# note: outliers only called in Males
-rm(res_lm)
-res_lm = mclapply(1:nrow(grid), function(i){
-  cat("\r", i, "   ")
-
-  idx = with(df_sub, (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
-  data = droplevels(df_sub[idx,])
-  data$dx = factor(data$dx, c("Control", "AD"))
-
-  if( sum(data$nAbb> 0) < 10){
-    df = NULL
-  }else{
-
-    fit = glmer(nAbb ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age)*dx, data, family="poisson")
-
-    coefs = c('scale(Age)','dxAD', 'dxAD:scale(Age)')
-    df = data.frame( geneID = grid$geneID[i],
-                celltype = grid$celltype[i],
-                coef = coefs,
-                coef(summary(fit))[coefs,,drop=FALSE])
-  }
-  df
-  }, mc.cores=12)
-res_lm = do.call(rbind, res_lm)
-
-colnames(res_lm)[colnames(res_lm) == "Pr...z.."] = "pvalue"
-res_lm$FDR = p.adjust(res_lm$pvalue, "fdr")
-res_lm = res_lm[order(res_lm$FDR),]
-
-res_lm$geneID = factor(res_lm$geneID, c(1:22, "X", "Y", "MT"))
-
-ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
-
-fig = ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
-
-ggsave("test.png", fig)
-
-
-
-# Using z-score directly
-#########################
-
-
-# chr21 trisomy is Down syndrome
-# APP gene is on chr21
-
-df_sub = df_res[df_res$dx %in% c("AD", "Control"),]
-
-grid = expand.grid(geneID = sort(unique(df_sub$geneID)),
-            celltype = sort(unique(df_sub$celltype)))
-
-res_lm = lapply(1:nrow(grid), function(i){
-  cat("\r", i, "   ")
-
-  idx = with(df_res, (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
-
-  data = droplevels(df_res[idx,])
-  data$dx = factor(data$dx, c("Control", "AD"))
-
-  # test chromsome loss using pmin
-  fit1 = lmer( pmin(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
-  
-  # test chromsome gain using pmax
-  fit2 = lmer( pmax(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
-
-  coefs = c('dxAD', 'scale(Age)')
-  df1 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
-                    Direction="loss", coef = coefs,
-                    coef(summary(fit1))[coefs,])
-
-  df2 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
-                    Direction="gain", coef = coefs,
-                    coef(summary(fit2))[coefs,])
-
-  rbind(df1, df2)
-})
-res_lm = do.call(rbind, res_lm)
-
-colnames(res_lm)[colnames(res_lm) == "Pr...t.."] = "pvalue"
-res_lm$FDR = p.adjust(res_lm$pvalue, "fdr")
-res_lm = res_lm[order(res_lm$FDR),]
-
-res_lm$geneID = factor(res_lm$chrom, c(1:22, "X", "Y", "MT"))
-
-ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
-
-fig = ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
-
-ggsave("test.png", fig)
-
-
-
-
-
-
-
-
-
-
-
-
-# Using z-score directly
-# lm() uses too much memory
-# test AD-control directly
-idx = with(df_res, (geneID=="21") & (dx %in% c('AD', 'Control')) & (celltype=='Glutamatergic neuron'))
-df_sub = df_res[idx,]
-df_sub = droplevels(df_sub)
-df_sub$dx = factor(df_sub$dx, c("Control", "AD"))
-fit = lmer( pmax(zScore, 0) ~ scale(rawcounts) + (1|Channel) + (1|SubID) + scale(Age) + dx, data = df_sub)
-
-summary(fit)
-
-
-
-
-df_ad = lapply( sort(unique(df_res$geneID)), function(chrom){
-  df_sub = df_res[(df_res$geneID=="Y") &(df_res$dx %in% c('AD', 'Control')),]
-  df_sub = droplevels(df_sub)
-
-  # test chromsome loss using pmin
-  fit1 = lmer( pmin(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|celltype) + (1|Channel) + (1|SubID) + as.numeric(dx), data = df_sub)
-  
-  # test chromsome gain using pmax
-  fit2 = lmer( pmax(zScore, 0) ~ scale(log10(rawcounts+1)) + (1|celltype) + (1|Channel) + (1|SubID) + as.numeric(dx), data = df_sub)
-
-  rbind(data.frame(chrom = chrom, Direction="loss", t(coef(summary(fit1))['as.numeric(dx)',])),
-        data.frame(chrom = chrom, Direction="gain", t(coef(summary(fit2))['as.numeric(dx)',])))
-})
-df_ad = do.call(rbind, df_ad)
-
-
-
-
-
-# pi1 = 1 - qvalue(pValue)$pi0
-df_pi1 = df_res %>% 
-  group_by(Channel, geneID, celltype) %>% 
-  summarize( pi1.ash = pi1(l2fc, se))
-
-
-idx = with(df_res, which(Channel == "H1004_1" & geneID == "10"))
-
-with(df_res[idx,], pi1(l2fc, se))
-```
-
-
-
-# need to exclude replicates
-
-
-
-
-# or should I use a negative binomial model directly and the produce residauls.
-```{r results}
-head(results(ods))
-
-nrow(results(ods,all=TRUE))
-
-table(results(ods,all=TRUE)$padjust < 0.05)
-```
-
-
-fit = MGLMreg(cbind(y1, y2, y3, y4) ~ 1, data=ydata, dist='DM')
-
-fit@coefficients / fit@SE
-
-
-
-
-
-
 
 
 
