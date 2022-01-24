@@ -27,7 +27,7 @@ system("ml git; git pull")
 rmarkdown::render("demo_dreamlet.Rmd");
 
 
-# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/demo_dreamlet.html
 
 
 ml git
@@ -149,12 +149,15 @@ ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_clas
 ```
 
 
-```{r combineData, message=TRUE}
+```{r combineData}
 # Specify how to collapse into pseudo-bulk
 sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
 
+# keep AD, SCZ, Control
+idx = with(colData(sceCombine), Dx2 %in% c("AD", "SCZ", "Control"))
+
 # Create pseudo-bulk SingleCellExperiment
-pbObj <- aggregateToPseudoBulk(sceCombine,
+pbObj <- aggregateToPseudoBulk(sceCombine[,idx],
     assay = "X", 
     fun = "sum",
     cluster_id = "celltype",
@@ -228,49 +231,6 @@ plotVoom( res.proc[7:9] )
 ```
 
 
-```{r plot.sex, eval=FALSE}
- 
-library(org.Hs.eg.db)
-
-# find genes on chrX
-# df_gene = select(org.Hs.eg.db, keys=rowData(sceCombine)$gene_id, keytype="ENSEMBL", columns=c("SYMBOL", "CHR"))
-# df_gene_chrx = df_gene[with(df_gene, CHR=="X" & !is.na(CHR)),]
-
-# res = DelayedArray::rowSums(assay(sceCombine, "counts")[df_gene_chrx$ENSEMBL,1:10000])
-
-
-df_gene = select(org.Hs.eg.db, keys=c("IL1RAPL1", "UTY"), keytype="SYMBOL", columns="ENSEMBL")
-
-df_sex = lapply( names(res.proc), function(CT){
-  geneExpr = res.proc[[CT]]
-  df = NULL
-  if( sum(df_gene$ENSEMBL %in% rownames(geneExpr)) == 2){  
-    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), IL1RAPL1 = geneExpr$E[df_gene$ENSEMBL[1],], UTY = geneExpr$E[df_gene$ENSEMBL[2],])
-  }
-  df
-})
-df_sex = do.call(rbind, df_sex)
-
-df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.names")
-
-ggplot(as.data.frame(df_sex), aes(IL1RAPL1, UTY, color=Sex)) + geom_point() + theme_classic() + facet_wrap(~cellType)
-```
-
-```{r knitr, cache=FALSE}
-knitr::knit_exit()
-```      
-
-
-
-```{r varPart.plain}
-form = ~ (1|SubID)
-
-res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
-```
-
-```{r vp.plot.plain, fig.height=15, fig.width=10, cache=FALSE}
-plotVarPart( sortCols(res.vp) )
-```
 
 ```{r varPart}
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
@@ -316,6 +276,11 @@ figList = lapply( df$gene[i], function(geneName){
 })
 plot_grid( plotlist=figList, nrow=2 )
 ```
+
+
+```{r knitr, cache=FALSE}
+knitr::knit_exit()
+```      
 
 ## Batch effects and gen sets
 ```{r DE.batch}
