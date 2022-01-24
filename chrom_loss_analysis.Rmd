@@ -145,10 +145,12 @@ df_counts_aggr = df_res %>%
   left_join(df_chr_counts, by="geneID")
 ```
 
+```{r test, eval=FALSE}
 # fit = glmer(nAbb ~ offset(log(nObs)) + (1|Channel) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)) + dx, df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),], family="poisson")
 
 # calcVarPart(fit)
 # summary(fit)
+```
 
 # Negative binomial model of aberrent counts
 ```{r aberrant.nb}
@@ -168,7 +170,7 @@ res_lm = lapply(1:nrow(grid), function(i){
   data = droplevels(df_counts_aggr[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
 
-  if( sum(data$nAbb> 0) < 10){
+  if( sum(data$nAbb> 0) < 100){
     df = NULL
   }else{
 
