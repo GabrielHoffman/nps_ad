@@ -110,7 +110,7 @@ datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
 sceCombine = readRDS( datafile )
 
 # OUTRIDER results
-res_combine = readRDS("/hpc/users/hoffmg01/work/nps_ad/outliers.RDS")
+res_combine = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/outliers.RDS")
 ```
 
 ```{r analysis}
@@ -168,20 +168,28 @@ res_lm = lapply(1:nrow(grid), function(i){
     df = NULL
   }else{
 
-    fit1 = glmer.nb(nAbb.down ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age), data)
-    fit2 = glmer.nb(nAbb.up ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age), data)
+    df1 = df2 = NULL
 
-    df1 = data.frame( geneID = grid$geneID[i],
-                celltype = grid$celltype[i],
-                Direction="loss",
-                coef = coefs,
-                coef(summary(fit1))[coefs,,drop=FALSE])
-    df2 = data.frame( geneID = grid$geneID[i],
-                celltype = grid$celltype[i],
-                Direction="gain",
-                coef = coefs,
-                coef(summary(fit2))[coefs,,drop=FALSE])
+    if( sum(data$nAbb.down > 1) > 10){
+      fit1 = glmer.nb(nAbb.down ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age), data)
+      df1 = data.frame( geneID = grid$geneID[i],
+                  celltype = grid$celltype[i],
+                  Direction="loss",
+                  coef = coefs,
+                  coef(summary(fit1))[coefs,,drop=FALSE])
+    }
 
+    if( sum(data$nAbb.up > 1) > 10){
+      fit2 = glmer.nb(nAbb.up ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age), data)
+
+      
+      df2 = data.frame( geneID = grid$geneID[i],
+                  celltype = grid$celltype[i],
+                  Direction="gain",
+                  coef = coefs,
+                  coef(summary(fit2))[coefs,,drop=FALSE])
+    }
+    
     rbind(df1, df2)
   }
   df
@@ -258,14 +266,50 @@ ggplot(res_lmz[res_lmz$coef=="dxAD",], aes(geneID, celltype, fill=z.value)) + ge
 ```
 
 
+# Predict AD
+```{r predict.AD}
+grid = expand.grid(geneID = sort(unique(df_res$geneID)),
+            celltype = sort(unique(df_res$celltype)))
 
+res_pred = lapply(1:nrow(grid), function(i){
+  cat("\r", i, "   ")
 
+  idx = with(df_res, (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
 
+  data = droplevels(df_res[idx,])
+  data$dx = factor(data$dx, c("Control", "AD"))
 
+  # predict at cell level
+  fit = glm(dx ~ zScore + I(zScore^2) + Age + Sex, data, family="binomial")
+  data$ad_pred = predict(fit, type="response")
 
+  # collapse by subject
+  data2 = data %>%
+            group_by(SubID) %>%
+            summarize(nAbb = sum(aberrant),
+            nObs = length(aberrant),
+            nAbb.up = sum(aberrant*(l2fc>1)),
+            nAbb.down = sum(aberrant*(l2fc<1)),
+            abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
+            abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant),
+            Age = Age[1],
+            Sex = Sex[1],
+            Institution = Institution[1],
+            dx = dx[1],
+            ad_pred_cells = sum(ad_pred > 0.9) / length(ad_pred) )
 
+  # predict AD at Subject-level using number of AD cells
+  # + abber.rate.down + abber.rate.up
+  fit = glm(dx ~ RankNorm(ad_pred_cells) + Age + Sex, data2, family="binomial")
 
+  # calcVarPart(fit)
+  # summary(fit)
 
+  data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
+    t(coef(summary(fit))['RankNorm(ad_pred_cells)',]))
+})
+res_pred = do.call(rbind, res_pred)
+```
 
 
 
