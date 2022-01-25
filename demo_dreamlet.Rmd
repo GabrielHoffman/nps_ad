@@ -468,235 +468,54 @@ fig = plotZenithResults(res.gsa[[2]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
 
 
+# Split data
+```{r split.data}
+pbList = list( A = pbObj[,pbObj$round_num %in% 1:2],
+               B = pbObj[,pbObj$round_num %in% 3:4])
 
-```{r knitr, cache=FALSE}
-knitr::knit_exit()
-```      
-
-
-# MASH
-```{r mash}
-mashList = lapply( coefs, function(coef){
-  run_mash( fit.dl, coef)
+# summarize disease status
+df = lapply( names(pbList), function(x){
+  pb = pbList[[x]]
+  unique(data.frame(Set =x, Dx2 = pb$Dx2, Donor = pb$SubID))
   })
-names(mashList) = coefs
-``` 
-
-```{r mash_downstream}
-library(mashr)
-
-lapply( coefs, function(coef){
-  table( apply(get_lfsr(mashList[[coef]]$model), 1, min, na.rm=TRUE) < 0.05)
-})
-
-df_lfsr = lapply( coefs, function(coef){
-  nDE = apply(get_lfsr(mashList[[coef]]$model), 2, function(x) sum(x < 0.05, na.rm=TRUE))
-  data.frame(Dx = coef, CellType = names(nDE), nDE)
-})
-df_lfsr = do.call(rbind, df_lfsr)
-
-ggplot(df_lfsr, aes(CellType, nDE, fill=CellType)) + geom_bar(stat="identity") + facet_wrap(~Dx) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
-```
-
-
-
-
-## Cross-disease signature analysis
-```{r compare.signatures.mashr, fig.width=9, fig.height=9}
-# get one data.frame with all differential expression scores
-df = lapply( coefs, function(coef){
-  beta = get_pm(mashList[[coef]]$model) / get_psd(mashList[[coef]]$model)
-  reshape2::melt(data.frame(coef=coef, ID = rownames(beta), beta), id.vars=c("coef", "ID"))
-})
 df = do.call(rbind, df)
 
-# dcast as wide matrix
-df2 = reshape2::dcast(df, ID ~ coef + variable , value.var="value")
-
-colnames(df2) = gsub("^Dx2", '', colnames(df2))
-C = cor(df2[,-1], use='pairwise.complete.obs')
-
-col = colorRampPalette(c("blue3", "white","red3"))(200)
-
-corrplot(C, col=col, tl.col="black")
-
-corrplot(C, order="hclust", col=col, tl.col="black")
+df %>% 
+  group_by(Set) %>% 
+  count(Dx2, Set, sort = TRUE) %>%
+  kbl() %>% kable_styling(full_width=FALSE)
 ```
 
-## zenith
-```{r zenith.mash}
-res_zenith = lapply( coefs, function(coef){
-  zenith_gsa(mashList[[coef]], go.gs)
+
+```{r voom.2}
+res.procList = lapply( pbList, function(pb){
+  # Normalize and apply voom
+  processAssays(pb, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort), 
+    min.cells = 5,
+    min.count = 10, 
+    BPPARAM = SnowParam(16, progressbar=TRUE))
+})   
+```
+
+
+```{r varPart.2}
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
+
+res.vpList = lapply( pbList, function(pb){
+  fitVarPart(pb, form, BPPARAM = SnowParam(12, progressbar=TRUE))
 })
-names(res_zenith) = coefs
 ```
 
-```{r zenith.heatmap.mash.1, fig.width=7, fig.height=12}
-fig = plotZenithResults(res_zenith[[1]], 3, 1) + ggtitle(names(res_zenith)[1])
-```
+# ```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
 
-```{r zenith.heatmap.mash.2, fig.width=7, fig.height=12}
-fig = plotZenithResults(res_zenith[[2]], 3, 1) + ggtitle(names(res_zenith)[3])
-```
+# colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
+# colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
+# colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
 
-```{r zenith.heatmap.mash.3, fig.width=7, fig.height=12}
-fig = plotZenithResults(res_zenith[[3]], 3, 1) + ggtitle(names(res_zenith)[3])
-```
+# plotVarPart( sortCols(res.vp), label.angle=45 )
+# ```
 
 
-
-
-
-# Cell type composition
-
-## Plot cell type composition
-```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
-tab = sort(table(pbObj$Dx2))
-tab = tab[tab<40][1:4]
-
-figLst = lapply(names(tab), function(lvl){
-
-  idx = which(pbObj$Dx2 == lvl)
-  idx = idx[!is.na(idx)]
-
-  fig = plotCellComposition(pbObj[,idx]) + ggtitle(lvl) 
-
-  if( lvl != names(tab)[which.max(tab)] ){
-    fig = fig + theme(legend.position="none")
-  }
-  fig
-})
-
-plot_grid(plotlist=figLst, rel_heights= tab[ids], ncol=1, align="hv", axis="tblr")
-```
-
-
-```{r plotCellComposition.summary, fig.height=1, fig.width=6}
-df_cellCount = do.call(rbind, int_colData(pbObj)$n_cells)
-
-plotCellComposition( t(colSums(df_cellCount)))
-```
-
-
-
-
-## Partition variation in cell type composition
-```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
-# Add dream here
-# deal with NA's here 
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
-
-i = with(colData(pbObj), !is.na(Dx2) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
-
-library(crumblr)
-cobj = crumblr(cellCounts(pbObj[,i]))
-df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
-
-# rownames(df_vp) = df_vp$assay
-colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
-
-plotPercentBars( df_vp )
-```
-
-
-
-## Perform statistical tests
-For each cell type
-```{r cellTypeCompositionTest}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
-
-fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
-fit = eBayes(fit)
-
-topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-
-topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-
-topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-```
-
-
-### Collapse neuronal subtypes
-```{r cellTypeCompositionVarPart.neuron, fig.height=4, fig.width=6}
-# Add dream here
-# deal with NA's here 
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Dx2) + (1|cohort) + scale(Age) + scale(PMI)
-
-i = with(colData(pbObj), !is.na(Dx2) & !is.na(Age) & !is.na(PMI) & !is.na(Sex))
-
-df_counts = as.data.frame(cellCounts(pbObj[,i]))
-idx = grep("GABA|Gluta", colnames(df_counts))
-
-# include summed neurons
-df_counts$Neurons = rowSums(df_counts[,idx])
-
-# drop split neurons
-df_counts = df_counts[,-idx]
-
-cobj = crumblr(as.matrix(df_counts))
-df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
-
-# rownames(df_vp) = df_vp$assay
-colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
-
-plotPercentBars( df_vp )
-```
-
-## Perform statistical tests
-For each cell type
-```{r cellTypeCompositionTest.neuron}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
-
-fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
-fit = eBayes(fit)
-
-topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-
-topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-
-topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-```
-
-
-
-
-
-
-
-# are too many genes being excluded?
-# what does voom look like from **complete** pseudobulk??
-# TODO get pH info?
-# Missing Sex
-# XIST genes and mito-rate
-# cellTypeCompositionTest is failing
-# create contrasts
-# df_meta$Age[1500:1800] ages are fractions
-# is there are difference between number of reads per cell type?
-# + PMI and brain bank (Institution) and Ethnicity
-# mvIC
-# write data for QTL analysis
-
-
-
-```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
 
 
 
