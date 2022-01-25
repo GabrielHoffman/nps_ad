@@ -28,7 +28,7 @@ rmarkdown::render('chrom_loss_analysis.Rmd');
 
 
 
-# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/chrom_loss_analysis_files
 
 
 # submit as job
@@ -208,7 +208,9 @@ res_lm$geneID = factor(res_lm$geneID, c(1:22, "X", "Y", "MT"))
 
 ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
 
-ggplot(res_lm[res_lm$coef=="dxAD",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
+zmax = log10(max(abs(res_lm[res_lm$coef=="dxAD",]$z.value)))
+
+ggplot(res_lm[res_lm$coef=="dxAD",], aes(geneID, celltype, fill=sign(z.value)*log10(abs(z.value)))) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(name=expression(sign~log[10]~z), low = "blue", mid="white", high="red", limits=c(-zmax, zmax))
 ```
 
 
@@ -224,7 +226,7 @@ grid = expand.grid(geneID = sort(unique(df_res$geneID)),
 coefs = c('dxAD', 'scale(Age)')
 
 res_lmz = lapply(1:nrow(grid), function(i){
-  cat("\r", i, "   ")
+  message("\r", i, "   ")
 
   idx = with(df_res, (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
 
