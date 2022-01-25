@@ -205,12 +205,16 @@ res_lm$FDR = p.adjust(res_lm$pvalue, "fdr")
 res_lm = res_lm[order(res_lm$FDR),]
 
 res_lm$geneID = factor(res_lm$geneID, c(1:22, "X", "Y", "MT"))
+```
 
+```{r plot1}
 ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
 
 zmax = log10(max(abs(res_lm[res_lm$coef=="dxAD",]$z.value)))
 
-ggplot(res_lm[res_lm$coef=="dxAD",], aes(geneID, celltype, fill=sign(z.value)*log10(abs(z.value)))) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(name=expression(sign~log[10]~z), low = "blue", mid="white", high="red", limits=c(-zmax, zmax))
+ggplot(res_lm[res_lm$coef=="dxAD",], aes(geneID, celltype, fill=sign(z.value)*log10(abs(z.value)))) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(name=expression(sign~log[10]~z), low = "blue", mid="white", high="red", limits=c(-zmax, zmax))  + facet_wrap(~ Direction, ncol=1) + ggtitle("dxAD")
+
+ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=sign(z.value)*log10(abs(z.value)))) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(name=expression(sign~log[10]~z), low = "blue", mid="white", high="red", limits=c(-zmax, zmax))  + facet_wrap(~ Direction, ncol=1) + ggtitle("Age")
 ```
 
 
@@ -256,10 +260,14 @@ res_lmz$FDR = p.adjust(res_lmz$pvalue, "fdr")
 res_lmz = res_lmz[order(res_lmz$FDR),]
 
 res_lmz$geneID = factor(res_lmz$chrom, c(1:22, "X", "Y", "MT"))
+```
 
+```{r plot}
 ratio = with(res_lmz, nlevels(celltype) / nlevels(geneID))
 
-ggplot(res_lmz[res_lmz$coef=="dxAD",], aes(geneID, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red")
+ggplot(res_lmz[res_lmz$coef=="dxAD",], aes(geneID, celltype, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red") + facet_wrap(~ Direction, ncol=1) + ggtitle("dxAd")
+
+ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red") + facet_wrap(~ Direction, ncol=1) + ggtitle("Age")
 ```
 
 
