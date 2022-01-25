@@ -194,7 +194,7 @@ res_lm = lapply(1:nrow(grid), function(i){
                   coef(summary(fit2))[coefs,,drop=FALSE])
     }
 
-    rbind(df1, df2)
+    df = rbind(df1, df2)
   }
   df
   })
