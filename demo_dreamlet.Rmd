@@ -420,20 +420,17 @@ plotVarPart(df_vp)
 gene = rownames(df_vp)[which.max(df_vp$Dx)]
 fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
 fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
-fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
-plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+plot_grid(fig1, fig2, ncol=1, align="hv", axis="tblr")
 
 gene = rownames(df_vp)[which.max(df_vp$CellType)]
 fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
 fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
-fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
-plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+plot_grid(fig1, fig2, ncol=1, align="hv", axis="tblr")
 
 gene = rownames(df_vp)[which.max(df_vp$Residuals)]
 fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
 fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
-fig3 = plotForest( fit.dl, gene, coef = coefs[3]) + ggtitle('')
-plot_grid(fig1, fig2, fig3, ncol=1, align="hv", axis="tblr")
+plot_grid(fig1, fig2, ncol=1, align="hv", axis="tblr")
 ```
 
 
@@ -447,7 +444,7 @@ go.gs = get_GeneOntology()
 ngenes = sapply(go.gs, function(gs) length(geneIds(gs)))
 go.gs = go.gs[(ngenes > 20) & (ngenes < 2000)]
 
-coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
+coefs = c('Dx2AD', 'Dx2SCZ')
 
 res.gsa = lapply( coefs, function(key){
 
@@ -467,7 +464,7 @@ fig = plotZenithResults(res.gsa[[2]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
 
 ```{r zenith.heatmap.3, fig.width=7, fig.height=12}
-fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
+# fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
 
 
