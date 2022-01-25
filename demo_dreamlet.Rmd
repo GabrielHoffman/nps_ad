@@ -272,11 +272,6 @@ figList = lapply( df$gene[i], function(geneName){
 plot_grid( plotlist=figList, nrow=2 )
 ```
 
-
-```{r knitr, cache=FALSE}
-knitr::knit_exit()
-```      
-
 ## Batch effects and gen sets
 ```{r DE.batch}
 library(zenith)
@@ -337,50 +332,10 @@ fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
 ```
 
-```{r write.residuals}
-form = ~ Sex + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
-
-fit.for.resid = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
-
-# extract residuals for each assay
-resMatList = lapply( assayNames(fit.for.resid), function(CT){
-
-  # get residuals for assay CT
-  resMat = residuals(assay(fit.for.resid, CT))
-
-  # extra colData for there samples
-  idx = match(colnames(resMat), rownames(colData(res.proc)))
-  info = droplevels(colData(res.proc)[idx,])
-  # identical(colnames(resMat), rownames(info))
-
-  # for each Donor, report mean expression
-  resMatCollapse = lapply( unique(info$SubID), function(grpid){
-    idx = which(info$SubID == grpid)
-
-    rowMeans(resMat[,idx,drop=FALSE])
-    })
-  resMatCollapse = do.call(cbind, resMatCollapse)
-  colnames(resMatCollapse) = unique(info$SubID)
-
-  resMatCollapse
-})
-names(resMatList) = assayNames(fit.for.resid)
-
-outPath = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/residuals"
-for( CT in names(resMatList) ){
-  file = paste0(outPath, "/", gsub(' ', '_',CT), '.tsv')
-  write.table( resMatList[[CT]], file=file, quote=FALSE, sep="\t")
-}
-```
-
 
 
 ```{r de.summary}
-# library(dreamlet)
-# fit.dl = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
-# pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_v2.RDS")
-
-coefs = c('Dx2AD', 'Dx2BP', 'Dx2SCZ')
+coefs = c('Dx2AD', 'Dx2SCZ')
 
 tabLst = lapply( coefs, function(key){
   tab = topTable(fit.dl, coef=key, number=Inf)
@@ -518,6 +473,12 @@ fig = plotZenithResults(res.gsa[[2]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```{r zenith.heatmap.3, fig.width=7, fig.height=12}
 fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
+
+
+
+```{r knitr, cache=FALSE}
+knitr::knit_exit()
+```      
 
 
 # MASH
