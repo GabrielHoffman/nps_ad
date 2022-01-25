@@ -204,7 +204,7 @@ for( x in rownames(ods) ){
 }
 ```
 
-```{r plotQQ.global, fig.width=5, fig.height=4}
+```{r plotQQ.global, fig.width=5, fig.height=4, eval=FALSE}
 plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
