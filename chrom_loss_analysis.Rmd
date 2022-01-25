@@ -111,6 +111,10 @@ sceCombine = readRDS( datafile )
 
 # OUTRIDER results
 res_combine = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/outliers.RDS")
+
+# adjust p-value due to merging
+res_combine$padjust = p.adjust(res_combine$pValue, "fdr")
+res_combine$aberrant = res_combine$padjust < 0.05
 ```
 
 ```{r analysis}
@@ -189,7 +193,7 @@ res_lm = lapply(1:nrow(grid), function(i){
                   coef = coefs,
                   coef(summary(fit2))[coefs,,drop=FALSE])
     }
-    
+
     rbind(df1, df2)
   }
   df
