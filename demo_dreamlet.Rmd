@@ -318,7 +318,7 @@ res$FDR = p.adjust(res$PValue, "fdr")
 
 # Correlation with and between donors
 ```{r within_btw, fig.height=10, fig.width=10}
-source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
+source("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/common_analyses.R")
 
 eval_within_across_donor( res.proc, "SubID" )
 ```
