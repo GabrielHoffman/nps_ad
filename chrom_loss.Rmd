@@ -184,7 +184,7 @@ res_combine = rbind(res[res$geneID %in% c(1:22, "MT"),],
                     res_male[res_male$geneID %in% c("X", "Y"),],
                     res_female[res_female$geneID %in% c("X"),])
 
-saveRDS(res_combine, file="/hpc/users/hoffmg01/work/nps_ad/outliers.RDS")
+saveRDS(res_combine, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/outliers.RDS")
 ```
 
 
