@@ -579,7 +579,7 @@ b = paste0(key, '.y')
 
 df$density <- get_density(df[[a]], df[[b]], n = 100)
 
-ggplot(df, aes_string(a,b)) + geom_point(aes(color=density), size=.02) + facet_wrap(~assay.y, ncol=3) + theme_classic() + theme(aspect.ratio=1) + geom_abline(color="grey50", linetype="dashed", width=.3)  + scale_color_viridis()
+ggplot(df, aes_string(a,b)) + geom_point(aes(color=density), size=.02) + facet_wrap(~assay.y, ncol=3) + theme_classic() + theme(aspect.ratio=1) + geom_abline(color="grey50", linetype="dashed", width=.3)  + scale_color_viridis() + xlab("Freeze A") + ylab("Freeze B")
 ```
 
 ```{r barplot}
@@ -597,11 +597,10 @@ df %>%
     scale_y_continuous(limits=c(0,NA), expand=c(0,0))
 ```
 
-
+```{r corr}
 library(broom)
 
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
-
 
 df_res = lapply(colnames(df)[5:14], function(key){
   res = df2 %>% 
@@ -614,14 +613,15 @@ df_res = lapply(colnames(df)[5:14], function(key){
 df_res = do.call(rbind, df_res)
 df_res$fdr = p.adjust(df_res$p.value, 'fdr')
 
-
-
-fig = ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=subset(df_res, fdr < 0.05), aes(assay.y, key,label='*')) + scale_fill_gradient2(low="blue", mid="white", high="red", limits=c(-1, 1))
-
+fig = ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=subset(df_res, fdr < 0.05), aes(assay.y, key,label='*')) + scale_fill_gradient2(low="blue", mid="white", high="red", limits=c(-1, 1)) 
 
 ggsave("test.png", fig)
 
 
+
+
+
+```
 
 
 
