@@ -264,10 +264,11 @@ res_lmz$geneID = factor(res_lmz$chrom, c(1:22, "X", "Y", "MT"))
 
 ```{r plot}
 ratio = with(res_lmz, nlevels(celltype) / nlevels(geneID))
+zlim = max(abs(res_lmz$t.value))
 
-ggplot(res_lmz[res_lmz$coef=="dxAD",], aes(geneID, celltype, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red") + facet_wrap(~ Direction, ncol=1) + ggtitle("dxAd")
+ggplot(res_lmz[res_lmz$coef=="dxAD",], aes(geneID, celltype, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + facet_wrap(~ Direction, ncol=1) + ggtitle("dxAd")
 
-ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red") + facet_wrap(~ Direction, ncol=1) + ggtitle("Age")
+ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + facet_wrap(~ Direction, ncol=1) + ggtitle("Age")
 ```
 
 
@@ -281,7 +282,7 @@ ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)
 
 
 # Predict AD
-```{r predict.AD}
+```{r predict.AD, eval=FALSE}
 grid = expand.grid(geneID = sort(unique(df_res$geneID)),
             celltype = sort(unique(df_res$celltype)))
 
