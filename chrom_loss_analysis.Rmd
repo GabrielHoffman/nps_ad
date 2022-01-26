@@ -282,7 +282,7 @@ ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)
 
 
 # Predict AD
-```{r predict.AD, eval=FALSE}
+```{r predict.AD}
 grid = expand.grid(geneID = sort(unique(df_res$geneID)),
             celltype = sort(unique(df_res$celltype)))
 
