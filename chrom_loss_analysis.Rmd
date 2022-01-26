@@ -297,13 +297,10 @@ res_pred = lapply(1:nrow(grid), function(i){
   data$zScore.loss = -pmin(data$zScore, 0)
   data$zScore.gain = pmax(data$zScore, 0)
 
-  if(grid$geneID[i] == "Y"){
-    # form1 = dx ~ zScore + I(zScore^2) + Age 
-    form1 = dx ~ zScore.loss + zScore.gain + Age
+  form1 = dx ~ zScore.loss
+  if(grid$geneID[i] == "Y"){ 
     form2 = dx ~ RankNorm(ad_pred_cells) + Age 
   }else{
-    # form1 = dx ~ zScore + I(zScore^2) + Age + Sex
-    form1 = dx ~ zScore.loss + zScore.gain + Age + Sex
     form2 = dx ~ RankNorm(ad_pred_cells) + Age + Sex
   }
 
@@ -324,13 +321,16 @@ res_pred = lapply(1:nrow(grid), function(i){
             Sex = Sex[1],
             Institution = Institution[1],
             dx = dx[1],
-            ad_pred_cells = sum(ad_pred > 0.9) / length(ad_pred) )
+            # ad_pred_cells = sum(ad_pred > 0.7) / length(ad_pred),
+            ad_pred_cells = median(ad_pred) )
 
+  data2 %>% group_by(dx) %>% summarize(a = mean(ad_pred_cells))
 
   # predict AD at Subject-level using number of AD cells
   # + abber.rate.down + abber.rate.up
   fit = glm(form2, data2, family="binomial")
 
+  # training vs testing
   # testing = c(sample(which(data2$dx=="AD"), 50), 
   #              sample(which(data2$dx=="Control"), 50))
 
@@ -338,9 +338,6 @@ res_pred = lapply(1:nrow(grid), function(i){
   # y_pred = predict(fit, data2[testing,])
 
   # lm(y_pred ~ data2$dx[testing])
-
-  # calcVarPart(fit)
-  # summary(fit)
 
   data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
     t(coef(summary(fit))['RankNorm(ad_pred_cells)',]))
