@@ -602,29 +602,46 @@ library(broom)
 
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
 
-df_res = lapply(colnames(df)[5:14], function(key){
+df_res = lapply(colnames(df)[5:13], function(key){
+
   res = df2 %>% 
     as_tibble %>% 
     group_by(assay.y) %>%  
-    group_modify(~ tidy(cor.test(.x[[key]], .x$GC, method="spearman"))) 
+    group_modify(~ tidy(cor.test(.x[[key]], .x$GC, method="spearman"))) %>%
+    left_join(df2 %>% group_by(assay.y) %>% tally, by="assay.y" ) %>%
+    mutate(se = sqrt((1-estimate^2)/(n-2)))
+
   res$key = key
   res
 })
 df_res = do.call(rbind, df_res)
 df_res$fdr = p.adjust(df_res$p.value, 'fdr')
 
-fig = ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=subset(df_res, fdr < 0.05), aes(assay.y, key,label='*')) + scale_fill_gradient2(low="blue", mid="white", high="red", limits=c(-1, 1)) 
+df_res$key = gsub("scale", "", df_res$key)
+df_res$key = gsub("\\.x", "", df_res$key)
 
-ggsave("test.png", fig)
-
-
-
-
-
+ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=subset(df_res, fdr < 0.05), aes(assay.y, key,label='*')) + scale_fill_gradient2(low="blue", mid="white", high="red", limits=c(-1, 1)) + theme_classic() + theme(axis.text.x = element_text(angle = 75, vjust = 1, hjust=1))
 ```
 
 
 
+```{r barplot2}
+fig = df_res %>%
+  filter(key == "batch") %>%
+  mutate(fdr = p.adjust(p.value, "BH")) %>%
+  group_by(assay.y) %>%
+  ggplot(aes(assay.y, estimate, fill=assay.y)) + 
+    geom_bar(stat="identity") +
+    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0) +
+    theme_classic() +
+    theme(aspect.ratio=1, legend.position="none") +
+    coord_flip() +
+    ylab("Correlation in batch effect and GC content per gene") +
+    xlab("Cell type") +  
+    scale_fill_discrete(name = "Cell type") +
+    scale_y_continuous(limits=c(0,.26), expand=c(0,0)) +
+    geom_text(aes(y=0.23, label=ifelse(fdr < 0.05, "            #", '')))
+```
 
 
 
