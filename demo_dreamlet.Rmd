@@ -506,7 +506,7 @@ res.vpList = lapply( res.procList, function(x){
 })
 ```
 
-```{r examine}
+```{r examine, fig.width=8, fig.height=20}
 library(viridis)
 
 figList = lapply(res.vpList, function(vp){
@@ -517,7 +517,7 @@ figList[[1]] + ggtitle("Freeze 1")
 figList[[2]] + ggtitle("Freeze 2")
 ```
 
-```{r compare}
+```{r compare, fig.width=7, fig.height=12}
 df = lapply(names(res.vpList), function(id){
   df = data.frame(Set = id, res.vpList[[id]])  
   df$key = with(df, paste(gene, assay))
@@ -540,7 +540,9 @@ b = paste0(key, '.y')
 df$density <- get_density(df[[a]], df[[b]], n = 100)
 
 ggplot(df, aes_string(a,b)) + geom_point(aes(color=density), size=.02) + facet_wrap(~assay.y, ncol=3) + theme_classic() + theme(aspect.ratio=1) + geom_abline(color="grey50", linetype="dashed", width=.3)  + scale_color_viridis()
+```
 
+```{r barplot}
 df %>%
   group_by(assay.y) %>%
   summarize(Corr = cor(batch.x, batch.y, method="spearman"))  %>%
