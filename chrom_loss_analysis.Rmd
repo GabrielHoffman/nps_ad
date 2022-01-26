@@ -299,7 +299,7 @@ res_pred = lapply(1:nrow(grid), function(i){
 
   if(grid$geneID[i] == "Y"){
     # form1 = dx ~ zScore + I(zScore^2) + Age 
-    form1 = dx ~ zScore.loss + zScore.gain + Age + Sex
+    form1 = dx ~ zScore.loss + zScore.gain + Age
     form2 = dx ~ RankNorm(ad_pred_cells) + Age 
   }else{
     # form1 = dx ~ zScore + I(zScore^2) + Age + Sex
