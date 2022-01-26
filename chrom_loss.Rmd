@@ -194,11 +194,11 @@ plotExpressedGenes(ods)
 ```
 
 
-```{r plotAberrantPerSample}
+```{r plotAberrantPerSample, eval=FALSE}
 plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
 ```
 
-```{r plotQQ.Y, fig.width=8, fig.height=8, dev="png"}
+```{r plotQQ.Y, fig.width=8, fig.height=8, dev="png", eval=FALSE}
 for( x in rownames(ods) ){
   plotQQ(ods, geneID=x) + theme_classic() + theme(aspect.ratio=1)
 }
@@ -213,7 +213,6 @@ plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
 for( x in rownames(ods) ){
   plotVolcano(ods, geneID=x, basePlot=TRUE) + theme_classic() + theme(aspect.ratio=1)
 }
-
 ```
 
 ```{r plotExpressionRank, fig.width=8, fig.height=8, dev="png"}
