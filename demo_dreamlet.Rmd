@@ -490,7 +490,7 @@ df %>%
 ```{r voom.2}
 res.procList = lapply( pbList, function(pb){
   # Normalize and apply voom
-  processAssays(pb, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort), 
+  processAssays(pb, ~ (1|SubID) + (1|batch) + (1|HTO) + (1|cohort),  # + (1|round_num)
     min.cells = 5,
     min.count = 10, 
     BPPARAM = SnowParam(16, progressbar=TRUE))
@@ -499,7 +499,7 @@ res.procList = lapply( pbList, function(pb){
 
 
 ```{r varPart.2}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
+form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI)  #  + (1|round_num)
 
 res.vpList = lapply( res.procList, function(x){
   fitVarPart(x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
@@ -545,7 +545,7 @@ ggplot(df, aes_string(a,b)) + geom_point(aes(color=density), size=.02) + facet_w
 ```{r barplot}
 df %>%
   group_by(assay.y) %>%
-  summarize(Corr = cor(batch.x, batch.y, method="spearman"))  %>%
+  summarize(Corr = cor(batch.x, batch.y, method="spearman")) %>%
   ggplot(aes(assay.y, Corr, fill=assay.y)) + 
     geom_bar(stat="identity") +
     theme_classic() +
@@ -592,12 +592,32 @@ calc_GC_length <- function(x) {
 }
 df_GC <- t(sapply(split(reducedGTF, elementMetadata(reducedGTF)$gene_id), calc_GC_length))
 colnames(df_GC) <- c("Length", "GC")
+df_GC = as.data.frame(df_GC)
 ```
 
 
+library(broom)
+
+df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
+
+
+df_res = lapply(colnames(df)[5:14], function(key){
+  res = df2 %>% 
+    as_tibble %>% 
+    group_by(assay.y) %>%  
+    group_modify(~ tidy(cor.test(.x[[key]], .x$GC, method="spearman"))) 
+  res$key = key
+  res
+})
+df_res = do.call(rbind, df_res)
+df_res$fdr = p.adjust(df_res$p.value, 'fdr')
 
 
 
+fig = ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=subset(df_res, fdr < 0.05), aes(assay.y, key,label='*')) + scale_fill_gradient2(low="blue", mid="white", high="red", limits=c(-1, 1))
+
+
+ggsave("test.png", fig)
 
 
 
