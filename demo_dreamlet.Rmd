@@ -557,19 +557,22 @@ df %>%
     scale_y_continuous(limits=c(0,NA), expand=c(0,0))
 ```
 
+```{r gc.content}
 # Compute GC content
+# adapted from https://github.com/dpryan79/Answers/blob/master/SEQanswers_42420/GTF2LengthGC.R
+library(GenomicRanges)
+library(rtracklayer)
+library(Rsamtools)
 
 # CellRanger
 # GTFfile = "/hpc/packages/minerva-centos7/cellranger/5.0.0/refdata-cellranger/refdata-gex-GRCh38-2020-A/genes/genes.gtf"
 # FASTAfile = "/hpc/packages/minerva-centos7/cellranger/5.0.0/refdata-cellranger/refdata-gex-GRCh38-2020-A/fasta/genome.fa"
 
-
 GTFfile = "/sc/arion/projects/psychAD/ref_GRCh38/Homo_sapiens.GRCh38.104.gtf"
 FASTAfile = "/sc/arion/projects/psychAD/ref_GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
 
-
 GTF <- import.gff(GTFfile, format="gtf", genome="GRCh38.104", feature.type="exon")
-grl <- reduce(split(GTF, elementMetadata(GTF)$gene_id))
+grl <- GenomicRanges::reduce(split(GTF, elementMetadata(GTF)$gene_id))
 reducedGTF <- unlist(grl, use.names=T)
 elementMetadata(reducedGTF)$gene_id <- rep(names(grl), elementNROWS(grl))
 
@@ -587,14 +590,9 @@ calc_GC_length <- function(x) {
     width = sum(elementMetadata(x)$widths)
     c(width, nGCs/width)
 }
-output <- t(sapply(split(reducedGTF, elementMetadata(reducedGTF)$gene_id), calc_GC_length))
-colnames(output) <- c("Length", "GC")
-
-write.table(output, file="GC_lengths.tsv", sep="\t")
-
-
-
-
+df_GC <- t(sapply(split(reducedGTF, elementMetadata(reducedGTF)$gene_id), calc_GC_length))
+colnames(df_GC) <- c("Length", "GC")
+```
 
 
 
