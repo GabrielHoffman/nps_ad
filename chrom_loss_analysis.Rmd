@@ -294,16 +294,21 @@ res_pred = lapply(1:nrow(grid), function(i){
   data = droplevels(df_res[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
 
+  data$zScore.loss = -pmin(data$zScore, 0)
+  data$zScore.gain = pmax(data$zScore, 0)
+
   if(grid$geneID[i] == "Y"){
-    form1 = dx ~ zScore + I(zScore^2) + Age 
+    # form1 = dx ~ zScore + I(zScore^2) + Age 
+    form1 = dx ~ zScore.loss + zScore.gain + Age + Sex
     form2 = dx ~ RankNorm(ad_pred_cells) + Age 
   }else{
-    form1 = dx ~ zScore + I(zScore^2) + Age + Sex
+    # form1 = dx ~ zScore + I(zScore^2) + Age + Sex
+    form1 = dx ~ zScore.loss + zScore.gain + Age + Sex
     form2 = dx ~ RankNorm(ad_pred_cells) + Age + Sex
   }
 
   # predict at cell level
-  fit = glm(form, data, family="binomial")
+  fit = glm(form1, data, family="binomial")
   data$ad_pred = predict(fit, type="response")
 
   # collapse by subject
@@ -321,9 +326,18 @@ res_pred = lapply(1:nrow(grid), function(i){
             dx = dx[1],
             ad_pred_cells = sum(ad_pred > 0.9) / length(ad_pred) )
 
+
   # predict AD at Subject-level using number of AD cells
   # + abber.rate.down + abber.rate.up
   fit = glm(form2, data2, family="binomial")
+
+  # testing = c(sample(which(data2$dx=="AD"), 50), 
+  #              sample(which(data2$dx=="Control"), 50))
+
+  # fit = glm(form2, data2[-testing,], family="binomial")
+  # y_pred = predict(fit, data2[testing,])
+
+  # lm(y_pred ~ data2$dx[testing])
 
   # calcVarPart(fit)
   # summary(fit)
@@ -334,7 +348,14 @@ res_pred = lapply(1:nrow(grid), function(i){
 res_pred = do.call(rbind, res_pred)
 ```
 
+```{r plot.res_pred, cache=FALSE}
+ratio = with(res_pred, nlevels(celltype) / nlevels(chrom))
+zlim = max(abs(res_pred$z.value))
 
+res_pred$chrom = factor(res_pred$chrom, c(1:22, "X", "Y", "MT"))
+
+ggplot(res_pred, aes(chrom, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim))
+```
 
 
 
