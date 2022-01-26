@@ -295,9 +295,11 @@ res_pred = lapply(1:nrow(grid), function(i){
   data$dx = factor(data$dx, c("Control", "AD"))
 
   if(grid$geneID[i] == "Y"){
-    form = dx ~ zScore + I(zScore^2) + Age 
+    form1 = dx ~ zScore + I(zScore^2) + Age 
+    form2 = dx ~ RankNorm(ad_pred_cells) + Age 
   }else{
-    form = dx ~ zScore + I(zScore^2) + Age + Sex
+    form1 = dx ~ zScore + I(zScore^2) + Age + Sex
+    form2 = dx ~ RankNorm(ad_pred_cells) + Age + Sex
   }
 
   # predict at cell level
@@ -321,7 +323,7 @@ res_pred = lapply(1:nrow(grid), function(i){
 
   # predict AD at Subject-level using number of AD cells
   # + abber.rate.down + abber.rate.up
-  fit = glm(dx ~ RankNorm(ad_pred_cells) + Age + Sex, data2, family="binomial")
+  fit = glm(form2, data2, family="binomial")
 
   # calcVarPart(fit)
   # summary(fit)
