@@ -219,8 +219,8 @@ ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=sign(z.val
 
 
 
-# chr21 trisomy is Down syndrome
-# APP gene is on chr21
+chr21 trisomy is Down syndrome
+ APP gene is on chr21
 
 # Using z-score directly
 ```{r z.score}
@@ -294,8 +294,14 @@ res_pred = lapply(1:nrow(grid), function(i){
   data = droplevels(df_res[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
 
+  if(grid$geneID[i] == "Y"){
+    form = dx ~ zScore + I(zScore^2) + Age 
+  }else{
+    form = dx ~ zScore + I(zScore^2) + Age + Sex
+  }
+
   # predict at cell level
-  fit = glm(dx ~ zScore + I(zScore^2) + Age + Sex, data, family="binomial")
+  fit = glm(form, data, family="binomial")
   data$ad_pred = predict(fit, type="response")
 
   # collapse by subject
@@ -467,9 +473,8 @@ ggsave("test.png", fig)
 # Using z-score directly
 #########################
 
-
-# chr21 trisomy is Down syndrome
-# APP gene is on chr21
+chr21 trisomy is Down syndrome
+APP gene is on chr21
 
 df_sub = df_res[df_res$dx %in% c("AD", "Control"),]
 
