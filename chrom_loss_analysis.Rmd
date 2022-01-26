@@ -286,7 +286,7 @@ grid = expand.grid(geneID = sort(unique(df_res$geneID)),
             celltype = sort(unique(df_res$celltype)))
 
 res_pred = lapply(1:nrow(grid), function(i){
-  cat("\r", i, "   ")
+  message("\r", i, "   ")
 
   idx = with(df_res, (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
 
