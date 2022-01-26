@@ -506,9 +506,49 @@ res.vpList = lapply( res.procList, function(x){
 })
 ```
 
+
+```{r gc.content}
+# Compute GC content
+# adapted from https://github.com/dpryan79/Answers/blob/master/SEQanswers_42420/GTF2LengthGC.R
+library(GenomicRanges)
+library(rtracklayer)
+library(Rsamtools)
+
+# CellRanger
+# GTFfile = "/hpc/packages/minerva-centos7/cellranger/5.0.0/refdata-cellranger/refdata-gex-GRCh38-2020-A/genes/genes.gtf"
+# FASTAfile = "/hpc/packages/minerva-centos7/cellranger/5.0.0/refdata-cellranger/refdata-gex-GRCh38-2020-A/fasta/genome.fa"
+
+GTFfile = "/sc/arion/projects/psychAD/ref_GRCh38/Homo_sapiens.GRCh38.104.gtf"
+FASTAfile = "/sc/arion/projects/psychAD/ref_GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+
+GTF <- import.gff(GTFfile, format="gtf", genome="GRCh38.104", feature.type="exon")
+grl <- GenomicRanges::reduce(split(GTF, elementMetadata(GTF)$gene_id))
+reducedGTF <- unlist(grl, use.names=T)
+elementMetadata(reducedGTF)$gene_id <- rep(names(grl), elementNROWS(grl))
+
+# Open the fasta file
+FASTA <- FaFile(FASTAfile)
+open(FASTA)
+
+#Add the GC numbers
+elementMetadata(reducedGTF)$nGCs <- letterFrequency(getSeq(FASTA, reducedGTF), "GC")[,1]
+elementMetadata(reducedGTF)$widths <- width(reducedGTF)
+
+#Create a list of the ensembl_id/GC/length
+calc_GC_length <- function(x) {
+    nGCs = sum(elementMetadata(x)$nGCs)
+    width = sum(elementMetadata(x)$widths)
+    c(width, nGCs/width)
+}
+df_GC <- t(sapply(split(reducedGTF, elementMetadata(reducedGTF)$gene_id), calc_GC_length))
+colnames(df_GC) <- c("Length", "GC")
+df_GC = as.data.frame(df_GC)
+```
+
+
 ```{r examine, fig.width=8, fig.height=20}
 library(viridis)
-
+  
 figList = lapply(res.vpList, function(vp){
   plotVarPart(sortCols(vp), label.angle=45)
   })
@@ -552,47 +592,9 @@ df %>%
     theme(aspect.ratio=1, legend.position="none") +
     coord_flip() +
     ylab("Correlation in batch effect across freezes") +
-    xlab("Cell type") +
+    xlab("Cell type") +  
     scale_fill_discrete(name = "Cell type") +
     scale_y_continuous(limits=c(0,NA), expand=c(0,0))
-```
-
-```{r gc.content}
-# Compute GC content
-# adapted from https://github.com/dpryan79/Answers/blob/master/SEQanswers_42420/GTF2LengthGC.R
-library(GenomicRanges)
-library(rtracklayer)
-library(Rsamtools)
-
-# CellRanger
-# GTFfile = "/hpc/packages/minerva-centos7/cellranger/5.0.0/refdata-cellranger/refdata-gex-GRCh38-2020-A/genes/genes.gtf"
-# FASTAfile = "/hpc/packages/minerva-centos7/cellranger/5.0.0/refdata-cellranger/refdata-gex-GRCh38-2020-A/fasta/genome.fa"
-
-GTFfile = "/sc/arion/projects/psychAD/ref_GRCh38/Homo_sapiens.GRCh38.104.gtf"
-FASTAfile = "/sc/arion/projects/psychAD/ref_GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
-
-GTF <- import.gff(GTFfile, format="gtf", genome="GRCh38.104", feature.type="exon")
-grl <- GenomicRanges::reduce(split(GTF, elementMetadata(GTF)$gene_id))
-reducedGTF <- unlist(grl, use.names=T)
-elementMetadata(reducedGTF)$gene_id <- rep(names(grl), elementNROWS(grl))
-
-# Open the fasta file
-FASTA <- FaFile(FASTAfile)
-open(FASTA)
-
-#Add the GC numbers
-elementMetadata(reducedGTF)$nGCs <- letterFrequency(getSeq(FASTA, reducedGTF), "GC")[,1]
-elementMetadata(reducedGTF)$widths <- width(reducedGTF)
-
-#Create a list of the ensembl_id/GC/length
-calc_GC_length <- function(x) {
-    nGCs = sum(elementMetadata(x)$nGCs)
-    width = sum(elementMetadata(x)$widths)
-    c(width, nGCs/width)
-}
-df_GC <- t(sapply(split(reducedGTF, elementMetadata(reducedGTF)$gene_id), calc_GC_length))
-colnames(df_GC) <- c("Length", "GC")
-df_GC = as.data.frame(df_GC)
 ```
 
 
