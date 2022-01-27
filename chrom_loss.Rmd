@@ -77,6 +77,9 @@ Donor level
   loss with age
   relate to phenotype
 
+Collapse GABA neurons
+  out-of-sample prediction
+
 
 
 ```{r setup, include=FALSE}
@@ -194,7 +197,7 @@ plotExpressedGenes(ods)
 ```
 
 
-```{r plotAberrantPerSample, eval=FALSE}, dev="png"
+```{r plotAberrantPerSample, eval=FALSE, dev="png"}
 plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
 ```
 
@@ -221,9 +224,10 @@ for( x in rownames(ods) ){
 }
 ```
 
-```{r plotExpectedVsObservedCounts, fig.height=8, fig.width=8, dev="png"}
+```{r plotExpectedVsObservedCounts, fig.height=12, fig.width=8, dev="png"}
 source("./helper/plotExpObsCounts.R")
 plotExpObsCounts(ods, "21")
+plotExpObsCounts(ods, "Y")
 # figList = lapply(rownames(ods), function(x){
 #   plotExpObsCounts(ods, x)  
 # })
@@ -235,6 +239,11 @@ plotExpObsCounts(ods, "21")
 ```{r plotPowerAnalysis, fig.width=5, fig.height=4}
 plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
 ```
+
+
+
+
+
 
 
 
