@@ -298,7 +298,7 @@ ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)
 
 
 ```{r save}
-outfile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/sce_mosaic_aneuploidy_AD.tsv"
+outfile = paste0("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/sce_mosaic_aneuploidy_AD", gsub("-", "_", Sys.Date()), ".tsv")
 write.table(df_res, file=outfile, row.names=FALSE, quote=FALSE, sep="\t")
 R.utils::gzip(outfile, overwrite=TRUE)
 ```
