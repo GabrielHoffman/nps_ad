@@ -516,7 +516,7 @@ res.dlList = lapply( res.procList, function(x){
 ```
 
 
-```{r de.summary}
+```{r de.summary.2}
 coefs = c('Dx2AD', 'Dx2SCZ')
 
 tabLst = lapply( coefs, function(key){
