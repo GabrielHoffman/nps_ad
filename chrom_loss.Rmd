@@ -201,7 +201,7 @@ plotExpressedGenes(ods)
 plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
 ```
 
-```{r plotQQ.Y, fig.width=10, fig.height=35, dev="png", eval=FALSE}
+```{r plotQQ, fig.width=10, fig.height=35, dev="png"}
 figList = lapply( c(1:22, "MT", "X", "Y"), function(x){
    
   i = which(res_combine$geneID == x)
@@ -209,7 +209,6 @@ figList = lapply( c(1:22, "MT", "X", "Y"), function(x){
  })
 plot_grid(plotlist=figList, ncol=3)
 ```
-
 
 
 ```{r plotVolcano, fig.width=8, fig.height=8, eval=FALSE}
