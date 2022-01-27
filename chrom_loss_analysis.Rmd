@@ -110,6 +110,10 @@ df_res = left_join(res_combine, df_data, by="sampleID") %>%
   mutate(Channel = gsub('-.*$','', sampleID),
          se = l2fc / zScore)  
 
+# Transformation scores 
+df_res$zScore.loss = -pmin(df_res$zScore, 0)
+df_res$zScore.gain = pmax(df_res$zScore, 0)
+
 # group and summarize
 df_counts_aggr = df_res %>% 
   group_by(Channel, geneID, celltype) %>% 
@@ -123,6 +127,52 @@ df_counts_aggr = df_res %>%
   left_join(df_chr_counts, by="geneID")
 ```
 
+
+# Correlation in gain/loss scores across chromosomes
+```{r dependence}
+library(broom)
+
+chrs = c(1:22, "MT", "X", "Y")
+chrs = factor(chrs, chrs)
+
+grid = expand.grid( chrA = chrs, 
+                    chrB = chrs)
+
+df_dependence = lapply( 1:nrow(grid), function(i){
+  message(i)
+
+  chrA = grid$chrA[i]
+  chrB = grid$chrB[i]
+
+  a_join = df_res %>%
+    select(geneID, sampleID, zScore, zScore.loss, zScore.gain) %>% 
+    filter(., geneID == chrA)
+
+  b_join = df_res %>%
+    select(geneID, sampleID, zScore, zScore.loss, zScore.gain) %>% 
+    filter(., geneID == chrB)
+
+  ab = left_join( a_join, b_join, by='sampleID') 
+
+  res1 = ab %>%
+    group_modify(~ tidy(cor.test(.x$zScore.loss.x, .x$zScore.loss.y, 
+      method="spearman"))) %>%
+    mutate(chrA = chrA, chrB = chrB, Direction="loss")
+
+  res2 = ab %>%
+    group_modify(~ tidy(cor.test(.x$zScore.gain.x, .x$zScore.gain.y, 
+      method="spearman"))) %>%
+    mutate(chrA = chrA, chrB = chrB, Direction="gain")
+
+  res3 = ab %>%
+    group_modify(~ tidy(cor.test(.x$zScore.gain.x, .x$zScore.loss.y, 
+      method="spearman"))) %>%
+    mutate(chrA = chrA, chrB = chrB, Direction="mixed")
+
+    rbind(res1, res2, res3)
+})
+df_dependence = do.call(rbind, df_dependence)
+```
 
 # Negative binomial model of aberrent counts
 ```{r aberrant.nb}
@@ -248,10 +298,6 @@ ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)
 
 
 ```{r save}
-# Transformation scores 
-df_res$zScore.loss = -pmin(df_res$zScore, 0)
-df_res$zScore.gain = pmax(df_res$zScore, 0)
-
 outfile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/sce_mosaic_aneuploidy_AD.tsv"
 write.table(df_res, file=outfile, row.names=FALSE, quote=FALSE, sep="\t")
 R.utils::gzip(outfile, overwrite=TRUE)
