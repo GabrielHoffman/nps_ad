@@ -507,6 +507,38 @@ res.vpList = lapply( res.procList, function(x){
 ```
 
 
+```{r dreamlet.2}
+form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) + Dx2
+
+res.dlList = lapply( res.procList, function(x){
+  dreamlet(x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
+})
+```
+
+
+```{r de.summary}
+coefs = c('Dx2AD', 'Dx2SCZ')
+
+tabLst = lapply( coefs, function(key){
+  tab = topTable(fit.dl, coef=key, number=Inf)
+
+  tab %>% 
+    as_tibble %>% 
+    group_by(assay) %>% 
+    summarise( coef = key, 
+      nGenes = length(adj.P.Val), 
+      nDE = sum(adj.P.Val < 0.05),
+      pi1 = 1 - qvalue(P.Value)$pi0)
+  })
+tab = do.call(rbind, tabLst)
+
+as.data.frame(tab)
+```
+
+
+
+
+
 ```{r gc.content}
 # Compute GC content
 # adapted from https://github.com/dpryan79/Answers/blob/master/SEQanswers_42420/GTF2LengthGC.R
@@ -545,7 +577,7 @@ colnames(df_GC) <- c("Length", "GC")
 df_GC = as.data.frame(df_GC)
 ```
 
-
+# Concordance with batch effect in each freeze
 ```{r examine, fig.width=8, fig.height=20}
 library(viridis)
   
@@ -626,7 +658,7 @@ ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=
 
 
 ```{r barplot2}
-fig = df_res %>%
+df_res %>%
   filter(key == "batch") %>%
   mutate(fdr = p.adjust(p.value, "BH")) %>%
   group_by(assay.y) %>%
@@ -645,6 +677,7 @@ fig = df_res %>%
 
 
 
+ggsave("test.png", fig)
 
 
 
