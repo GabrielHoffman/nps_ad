@@ -29,7 +29,7 @@ plotExpObsCounts = function(ods, geneID, log=TRUE){
   df_null$density <- with(df_null, get_density(log10(expected), log10(observed), n = 160))
 
   # Scatter plot colored by density
-  fig = ggplot(df_null, aes(log10(expected), log10(observed), color=density)) + geom_point(size=.03) + theme_classic(16) + theme(aspect.ratio=1, legend.position="bottom", plot.title = element_text(hjust = 0.5)) + scale_x_continuous(limits=c(1, log10(lim)), breaks=0:5, labels=10^c(0:5)) + scale_y_continuous(limits=c(1, log10(lim)), breaks=0:5, labels=10^c(0:5) ) + scale_color_viridis() + xlab(paste('Expected counts', ifelse(isTRUE(log), '+ 1', ''))) + ylab(paste('Observed counts', ifelse(isTRUE(log), '+ 1', ''))) + ggtitle(geneID)
+  fig = ggplot(df_null, aes(log10(expected), log10(observed), color=density)) + geom_point(size=.03) + theme_classic(16) + theme(aspect.ratio=1, legend.position="bottom", plot.title = element_text(hjust = 0.5)) + scale_x_continuous(limits=c(0, log10(lim)), breaks=0:5, labels=10^c(0:5)) + scale_y_continuous(limits=c(0, log10(lim)), breaks=0:5, labels=10^c(0:5) ) + scale_color_viridis() + xlab(paste('Expected counts', ifelse(isTRUE(log), '+ 1', ''))) + ylab(paste('Observed counts', ifelse(isTRUE(log), '+ 1', ''))) + ggtitle(geneID)
 
   down = with(df, which(aberrant & observed < expected))
   fig2 = fig + geom_point(aes(log10(expected), log10(observed)), data=df[down,], color="dodgerblue", size=.3, stroke=.3)
@@ -37,7 +37,7 @@ plotExpObsCounts = function(ods, geneID, log=TRUE){
   up = with(df, which(aberrant & observed > expected))
   fig3 = fig2 + geom_point(aes(log10(expected), log10(observed)), data=df[up,], color="#ff1e20", size=.3, stroke=.3)
 
-  fig4 = fig3 + annotate("text", x = c(1.12), y=c(log10(lim)*.9), label=c(paste("Up:", length(up), "\nDown:", length(down))), hjust = 0)  
+  fig4 = fig3 + annotate("text", x = c(0.12), y=c(log10(lim)*.9), label=c(paste("Up:", length(up), "\nDown:", length(down))), hjust = 0)  
 
   fig4
 }
