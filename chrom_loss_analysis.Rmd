@@ -282,6 +282,8 @@ ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)
 
 
 # Predict AD
+Association with AD and number of cells with chromosome *loss*.
+
 ```{r predict.AD}
 grid = expand.grid(geneID = sort(unique(df_res$geneID)),
             celltype = sort(unique(df_res$celltype)))
@@ -350,11 +352,25 @@ ratio = with(res_pred, nlevels(celltype) / nlevels(chrom))
 zlim = max(abs(res_pred$z.value))
 
 res_pred$chrom = factor(res_pred$chrom, c(1:22, "X", "Y", "MT"))
+colnames(res_pred)[colnames(res_pred) == "Pr...z.."] = "pvalue"
+res_pred$fdr = p.adjust(res_pred$pvalue, "fdr")
 
-ggplot(res_pred, aes(chrom, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim))
+ggplot(res_pred, aes(chrom, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + geom_text(aes(label=ifelse(fdr < 0.05, '*', '')))
 ```
 
+```{r across.chrom}
 
+
+idx = with(df_res, (dx %in% c("AD", "Control")))
+data = droplevels(df_res[idx,])
+data$dx = factor(data$dx, c("Control", "AD"))
+
+data$zScore.loss = -pmin(data$zScore, 0)
+data$zScore.gain = pmax(data$zScore, 0)
+
+
+
+```
 
 
 ```{r exit, cache=FALSE}
