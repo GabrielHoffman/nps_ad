@@ -201,15 +201,15 @@ plotExpressedGenes(ods)
 plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
 ```
 
-```{r plotQQ.Y, fig.width=8, fig.height=8, dev="png", eval=FALSE}
-for( x in rownames(ods) ){
-  plotQQ(ods, geneID=x) + theme_classic() + theme(aspect.ratio=1)
-}
+```{r plotQQ.Y, fig.width=10, fig.height=35, dev="png", eval=FALSE}
+figList = lapply( c(1:22, "MT", "X", "Y"), function(x){
+   
+  i = which(res_combine$geneID == x)
+  qqplot(res_combine$pValue[i], pmin=1e-100) + ggtitle(x)
+ })
+plot_grid(plotlist=figList, ncol=3)
 ```
 
-```{r plotQQ.global, fig.width=5, fig.height=4, dev="png", eval=FALSE}
-plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
-```
 
 
 ```{r plotVolcano, fig.width=8, fig.height=8, eval=FALSE}
