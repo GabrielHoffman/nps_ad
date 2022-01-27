@@ -189,12 +189,12 @@ saveRDS(res_combine, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps
 
 
 # Plots from main analysis of all samples
-```{r plotExpressedGenes, eval=FALSE}
+```{r plotExpressedGenes, eval=FALSE, dev="png"}
 plotExpressedGenes(ods)
 ```
 
 
-```{r plotAberrantPerSample, eval=FALSE}
+```{r plotAberrantPerSample, eval=FALSE}, dev="png"
 plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
 ```
 
@@ -204,7 +204,7 @@ for( x in rownames(ods) ){
 }
 ```
 
-```{r plotQQ.global, fig.width=5, fig.height=4, eval=FALSE}
+```{r plotQQ.global, fig.width=5, fig.height=4, dev="png", eval=FALSE}
 plotQQ(ods, global=TRUE) + theme_classic() + theme(aspect.ratio=1)
 ```
 
@@ -221,13 +221,14 @@ for( x in rownames(ods) ){
 }
 ```
 
-```{r plotExpectedVsObservedCounts, fig.height=50, fig.width=14, dev="png"}
+```{r plotExpectedVsObservedCounts, fig.height=8, fig.width=8, dev="png"}
 source("./helper/plotExpObsCounts.R")
-figList = lapply(rownames(ods), function(x){
-  plotExpObsCounts(ods, x)  
-})
-plot_grid(plotlist=figList, ncol=3)
-rm(figList); gc()
+plotExpObsCounts(ods, "21")
+# figList = lapply(rownames(ods), function(x){
+#   plotExpObsCounts(ods, x)  
+# })
+# plot_grid(plotlist=figList, ncol=3)
+# rm(figList); gc()
 ```
 
 
