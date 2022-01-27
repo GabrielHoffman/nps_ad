@@ -273,7 +273,7 @@ ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)
 
 
 
-```{r save, eval=FALSE}
+```{r save}
 # Transformation scores 
 df_res$zScore.loss = -pmin(df_res$zScore, 0)
 df_res$zScore.gain = pmax(df_res$zScore, 0)
