@@ -174,6 +174,13 @@ df_dependence = lapply( 1:nrow(grid), function(i){
 df_dependence = do.call(rbind, df_dependence)
 ```
 
+
+
+```{r exit, cache=FALSE}
+knitr::knit_exit()
+```
+
+
 # Negative binomial model of aberrent counts
 ```{r aberrant.nb}
 # only examine AD vs control
@@ -385,11 +392,6 @@ ggplot(res_pred, aes(chrom, celltype, fill=z.value)) + geom_tile() + theme_class
 idx = with(df_res, (dx %in% c("AD", "Control")))
 data = droplevels(df_res[idx,])
 data$dx = factor(data$dx, c("Control", "AD"))
-
-data$zScore.loss = -pmin(data$zScore, 0)
-data$zScore.gain = pmax(data$zScore, 0)
-
-
 
 ```
 
