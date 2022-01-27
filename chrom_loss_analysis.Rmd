@@ -273,11 +273,14 @@ ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)
 
 
 
-```{r test, eval=FALSE}
-# fit = glmer(nAbb ~ offset(log(nObs)) + (1|Channel) + (1|SubID) + (1|geneID) + (1|celltype) + scale(log(totalCounts)) + dx, df_counts_aggr[df_counts_aggr$dx %in% c("AD", "Control"),], family="poisson")
+```{r save, eval=FALSE}
+# Transformation scores 
+df_res$zScore.loss = -pmin(df_res$zScore, 0)
+df_res$zScore.gain = pmax(df_res$zScore, 0)
 
-# calcVarPart(fit)
-# summary(fit)
+outfile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/sce_mosaic_aneuploidy_AD.tsv"
+write.table(df_res, file=outfile, row.names=FALSE, quote=FALSE, sep="\t")
+R.utils::gzip(outfile, overwrite=TRUE)
 ```
 
 
@@ -295,9 +298,6 @@ res_pred = lapply(1:nrow(grid), function(i){
 
   data = droplevels(df_res[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
-
-  data$zScore.loss = -pmin(data$zScore, 0)
-  data$zScore.gain = pmax(data$zScore, 0)
 
   form1 = dx ~ zScore.loss
   if(grid$geneID[i] == "Y"){ 
@@ -358,7 +358,7 @@ res_pred$fdr = p.adjust(res_pred$pvalue, "fdr")
 ggplot(res_pred, aes(chrom, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + geom_text(aes(label=ifelse(fdr < 0.05, '*', '')))
 ```
 
-```{r across.chrom}
+```{r across.chrom, eval=FALSE}
 
 
 idx = with(df_res, (dx %in% c("AD", "Control")))
