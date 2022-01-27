@@ -288,6 +288,7 @@ R.utils::gzip(outfile, overwrite=TRUE)
 Association with AD and number of cells with chromosome *loss*.
 
 ```{r predict.AD}
+# df_res = fread(outfile)
 grid = expand.grid(geneID = sort(unique(df_res$geneID)),
             celltype = sort(unique(df_res$celltype)))
 
