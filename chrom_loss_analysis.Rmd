@@ -174,9 +174,16 @@ df_dependence = lapply( 1:nrow(grid), function(i){
 df_dependence = do.call(rbind, df_dependence)
 ```
 
+```{r show.dep}
+library(Matrix)
+library(corrplot)
+
+C = with(df_dependence, sparseMatrix(chrA, chrB, x=estimate))
 
 
-```{r exit, cache=FALSE}
+```
+
+```{r exit.dep, cache=FALSE}
 knitr::knit_exit()
 ```
 
