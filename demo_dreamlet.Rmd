@@ -489,8 +489,11 @@ df %>%
 
 ```{r voom.2}
 res.procList = lapply( pbList, function(pb){
+ 
+  idx = which(pb$Dx2 %in% c("AD", "Control", "SCZ"))
+
   # Normalize and apply voom
-  processAssays(pb, ~ (1|SubID) + (1|batch) + (1|HTO) + (1|cohort),  # + (1|round_num)
+  processAssays(pb[,idx], ~ (1|SubID) + (1|batch) + (1|HTO) + (1|cohort), 
     min.cells = 5,
     min.count = 10, 
     BPPARAM = SnowParam(16, progressbar=TRUE))
@@ -499,7 +502,7 @@ res.procList = lapply( pbList, function(pb){
 
 
 ```{r varPart.2}
-form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI)  #  + (1|round_num)
+form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI)      
 
 res.vpList = lapply( res.procList, function(x){
   fitVarPart(x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
@@ -508,40 +511,49 @@ res.vpList = lapply( res.procList, function(x){
 
 # Differential expression in each batch 
 Compare 1) fixed effects collapsing model, 2) full pwLMM, 3) no batch correction
-f(res.dlList) to evaluate concordance
+f(res.dlList) to evaluate concordance.  Correlation of Dx signal with GC content
 
 ```{r dreamlet.2}
 form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) + Dx2
-
+   
 res.dlList = lapply( res.procList, function(x){
   dreamlet(x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
-})
+}) 
 ```
+
+
+# make sure res.dlList contains
 
 
 ```{r de.summary.2}
 coefs = c('Dx2AD', 'Dx2SCZ')
 
-lapply(res.dlList, )
+resTab = lapply( coefs, function(key){
 
-tabLst = lapply( coefs, function(key){
-  tab = lapply( names(res.dlList), function(x){
-    tab = topTable(res.dlList[[x]], coef=key, number=Inf)
-    data.frame(Set = x, tab)
+  tab = lapply( res.dlList, function(fit){
+    tab = topTable(fit, coef=key, number=Inf)
+    tab$key = with(tab, paste(assay, ID, key))
+    data.frame(coef=key, tab)
   })
-  tab = do.call(rbind, tab)
+  tab = inner_join(tab[[1]], tab[[2]], by='key')
 
-  tab %>% 
+  tab %>%  
     as_tibble %>% 
-    group_by(assay) %>% 
-    summarise( coef = key, 
-      nGenes = length(adj.P.Val), 
-      nDE = sum(adj.P.Val < 0.05),
-      pi1 = 1 - qvalue(P.Value)$pi0)
+    group_by(assay.x) %>% 
+    group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="spearman"))) %>% 
+    mutate(coef = key)
   })
-tab = do.call(rbind, tabLst)
+resTab = do.call(rbind, resTab)
 
-as.data.frame(tab)
+
+fig = ggplot(resTab, aes(assay.x, estimate, fill=assay.x)) + geom_bar(stat="identity") + theme_classic() + theme(aspect.ratio=1, legend.position="none") + facet_wrap(~coef) + coord_flip()
+
+ggsave("test.png", fig)
+
+
+
+
+
 ```
 
 
