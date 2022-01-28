@@ -174,19 +174,28 @@ df_dependence = lapply( 1:nrow(grid), function(i){
 df_dependence = do.call(rbind, df_dependence)
 ```
 
-```{r show.dep}
+```{r show.dep, height=15}
 library(Matrix)
 library(corrplot)
 
-C = with(df_dependence, sparseMatrix(chrA, chrB, x=estimate))
+col = rev(COL2('RdBu', 200))
 
+C.list =lapply( c("loss", "gain", "mixed"), function(x){
 
+  C = df_dependence %>%
+      filter(Direction == x)  %>%
+      with(sparseMatrix(i=as.numeric(chrA), j=as.numeric(chrB), x=estimate))
+  rownames(C) = levels(df_dependence$chrA)
+  colnames(C) = levels(df_dependence$chrA)
+  as.matrix(C)
+  })
+names(C.list) = c("loss", "gain", "mixed")
+
+par(mfrow=c(3,1))
+corrplot(C.list[['loss']], col=col, tl.col="black", title="zScore.loss")
+corrplot(C.list[['gain']], col=col, tl.col="black", title="zScore.gain")
+corrplot(C.list[['mixed']], col=col, tl.col="black", title="zScore.mixed")
 ```
-
-```{r exit.dep, cache=FALSE}
-knitr::knit_exit()
-```
-
 
 # Negative binomial model of aberrent counts
 ```{r aberrant.nb}
