@@ -18,7 +18,8 @@ vignette: >
 
 <!--- 
 
-
+# results 
+# /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
 ml python
 R
@@ -72,6 +73,7 @@ library(SingleCellExperiment)
 library(zellkonverter)
 library(DelayedArray)
 library(HDF5Array)
+library(GSEABase)
 library(dreamlet)
 library(muscat)
 library(cowplot)
@@ -84,18 +86,14 @@ library(kableExtra)
 library(qvalue)
 library(corrplot)
 library(org.Hs.eg.db)
-library(GSEABase)
 })
-
-vsn = packageVersion("zellkonverter")
-if( compareVersion(as.character(vsn), "1.3.3") == -1){
-  stop("zellkonverter version must be >=1.3.3  Currently: ", as.character(vsn))
-}
 ```
 
 
 ```{r load.data, cache=FALSE}
-datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_sce.RDS"
+outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/'
+
+datafile = paste(outfolder, "demo_dreamlet_sce.RDS")
 
 if( file.exists(datafile) ){
   # reading data from RDS is much faster:
@@ -117,6 +115,15 @@ if( file.exists(datafile) ){
   # set metadata to empty to reduce size and speep up development time
   metadata(sceCombine) = list()
 
+  # collapse GABAergic neurons
+  sceCombine$celltype8 = sceCombine$celltype %>%
+    as.character %>% 
+    recode( 
+    "GABAergic SST interneuron" = 'GABAergic neuron',
+    "GABAergic VIP interneuron" = 'GABAergic neuron',
+    "GABAergic PVALB interneuron" = 'GABAergic neuron') %>% 
+    as.factor
+
   saveRDS(sceCombine, file=datafile)
 }
 ```
@@ -124,14 +131,6 @@ if( file.exists(datafile) ){
 Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
 # Joint UMAP
-```{r umap, dev="png"}
-# extract UMAP coordinates and annotations
-df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "celltype", "class", "subtype", "leiden_labels")])
-df = data.frame(df)
-
-ggplot(df, aes(V1, V2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
-```
-
 ```{r umap2, dev="png"}
 ggplot(df, aes(V1, V2, color=celltype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
@@ -140,14 +139,9 @@ ggplot(df, aes(V1, V2, color=celltype)) + geom_point(size=.05) + theme_classic()
 ggplot(df, aes(V1, V2, color=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
-```{r umap4, dev="png"}
-ggplot(df, aes(V1, V2, color=subtype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```{r umap3, dev="png"}
+ggplot(df, aes(V1, V2, color=celltype8)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
-
-```{r umap5, dev="png"}
-ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
-```
-
 
 ```{r combineData}
 # Specify how to collapse into pseudo-bulk
@@ -195,10 +189,13 @@ lvls = lvls[-which(lvls=="Control")]
 colData(pbObj)$Dx2 = factor(colData(pbObj)$Dx2, c("Control", lvls))
 
 saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS" )
-
-pbObj
 ```
 
+# Analysis of joint dataset
+
+```{r round_num.summary}
+table(pbObj$round_num)
+```
 
 ```{r Dx.summary}
 df = unique(data.frame(Dx2 = pbObj$Dx2, Donor = pbObj$SubID))
@@ -236,7 +233,6 @@ res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
 
 ```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
-
 colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
 colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
 colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
@@ -244,7 +240,7 @@ colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
 plotVarPart( sortCols(res.vp), label.angle=45 )
 ```
 
-```{r vp.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
+```{r vp.plot_sub, fig.height=4, fig.width=10, cache=TRUE, eval=FALSE}
 idx = res.vp$assay %in% c('GABAergic neuron', 'Glutamatergic neuron', 'Microglia')
 plotVarPart( sortCols(res.vp[idx,]), label.angle=70 )
 ```
@@ -312,18 +308,14 @@ res$FDR = p.adjust(res$PValue, "fdr")
 ```
 
 
-
-
-
-
-# Correlation with and between donors
+## Correlation with and between donors
 ```{r within_btw, fig.height=10, fig.width=10}
 source("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/common_analyses.R")
 
 eval_within_across_donor( res.proc, "SubID" )
 ```
 
-
+## dreamlet analysis
 ```{r dreamlet.fit}
 form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
 
@@ -463,10 +455,6 @@ fig = plotZenithResults(res.gsa[[1]], 3, 1) + ggtitle(names(res.gsa)[1])
 fig = plotZenithResults(res.gsa[[2]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
 
-```{r zenith.heatmap.3, fig.width=7, fig.height=12}
-# fig = plotZenithResults(res.gsa[[3]], 3, 1) + ggtitle(names(res.gsa)[3])
-```
-
 
 # Split data
 ```{r split.data}
@@ -509,7 +497,7 @@ res.vpList = lapply( res.procList, function(x){
 })
 ```
 
-# Differential expression in each batch 
+### Differential expression in each batch 
 Compare 1) fixed effects collapsing model, 2) full pwLMM, 3) no batch correction
 f(res.dlList) to evaluate concordance.  Correlation of Dx signal with GC content
 
@@ -521,11 +509,9 @@ res.dlList = lapply( res.procList, function(x){
 }) 
 ```
 
-
-# make sure res.dlList contains
-
-
+### Concordance between sets
 ```{r de.summary.2}
+library(broom)
 coefs = c('Dx2AD', 'Dx2SCZ')
 
 resTab = lapply( coefs, function(key){
@@ -545,21 +531,13 @@ resTab = lapply( coefs, function(key){
   })
 resTab = do.call(rbind, resTab)
 
-
-fig = ggplot(resTab, aes(assay.x, estimate, fill=assay.x)) + geom_bar(stat="identity") + theme_classic() + theme(aspect.ratio=1, legend.position="none") + facet_wrap(~coef) + coord_flip()
-
-ggsave("test.png", fig)
-
-
-
-
-
+ggplot(resTab, aes(assay.x, estimate, fill=assay.x)) + geom_bar(stat="identity") + theme_classic() + theme(aspect.ratio=1, legend.position="none") + facet_wrap(~coef) + coord_flip()
 ```
 
 
 
 
-
+### GC content and batch effects
 ```{r gc.content}
 # Compute GC content
 # adapted from https://github.com/dpryan79/Answers/blob/master/SEQanswers_42420/GTF2LengthGC.R
@@ -598,8 +576,8 @@ colnames(df_GC) <- c("Length", "GC")
 df_GC = as.data.frame(df_GC)
 ```
 
-# Concordance with batch effect in each freeze
-```{r examine, fig.width=8, fig.height=20}
+### Concordance with batch effect in each freeze
+```{r examine, fig.width=8, fig.height=14}
 library(viridis)
   
 figList = lapply(res.vpList, function(vp){
@@ -610,7 +588,8 @@ figList[[1]] + ggtitle("Freeze 1")
 figList[[2]] + ggtitle("Freeze 2")
 ```
 
-```{r compare, fig.width=7, fig.height=12}
+## Batch effects in freezes A and B
+```{r compare, fig.width=7, fig.height=10}
 df = lapply(names(res.vpList), function(id){
   df = data.frame(Set = id, res.vpList[[id]])  
   df$key = with(df, paste(gene, assay))
@@ -650,7 +629,7 @@ df %>%
     scale_y_continuous(limits=c(0,NA), expand=c(0,0))
 ```
 
-```{r corr}
+```{r corr, eval=FALSE}
 library(broom)
 
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
@@ -695,14 +674,6 @@ df_res %>%
     scale_y_continuous(limits=c(0,.26), expand=c(0,0)) +
     geom_text(aes(y=0.23, label=ifelse(fdr < 0.05, "            #", '')))
 ```
-
-
-
-ggsave("test.png", fig)
-
-
-
-
 
 
 
