@@ -20,6 +20,7 @@ vignette: >
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
 ml python git
+git pull
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
 R
 
@@ -87,7 +88,8 @@ library(org.Hs.eg.db)
 
 
 ```{r load.data, cache=FALSE}
-datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
+datafile = paste0(outfolder, "sceCombine_f1.RDS")
 
 if( file.exists(datafile) ){
   # reading data from RDS is much faster:
