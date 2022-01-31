@@ -21,10 +21,10 @@ vignette: >
 # results 
 # /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
-ml python
+ml python git
 R
 
-system("ml git; git pull")
+system("git pull")
 rmarkdown::render("demo_dreamlet.Rmd");
 
 
@@ -139,7 +139,7 @@ ggplot(df, aes(V1, V2, color=celltype)) + geom_point(size=.05) + theme_classic()
 ggplot(df, aes(V1, V2, color=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
-```{r umap3, dev="png"}
+```{r umap8, dev="png"}
 ggplot(df, aes(V1, V2, color=celltype8)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
