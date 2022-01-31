@@ -18,12 +18,12 @@ vignette: >
 
 <!--- 
 
-cd /hpc/users/hoffmg01/work/nps_ad
-ml python
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
+ml python git
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
 R
 
-system("ml git; git pull")
+system("git pull")
 rmarkdown::render("analysis_freeze1.Rmd");
 
 
@@ -70,6 +70,7 @@ library(zellkonverter)
 library(DelayedArray)
 library(DelayedMatrixStats)
 library(HDF5Array)
+library(GSEABase)
 library(dreamlet)
 library(muscat)
 library(cowplot)
@@ -82,12 +83,6 @@ library(kableExtra)
 library(qvalue)
 library(corrplot)
 library(org.Hs.eg.db)
-library(GSEABase)
-
-vsn = packageVersion("zellkonverter")
-if( compareVersion(as.character(vsn), "1.3.3") == -1){
-  stop("zellkonverter version must be >=1.3.3  Currently: ", as.character(vsn))
-}
 ```
 
 
@@ -116,6 +111,15 @@ if( file.exists(datafile) ){
   rownames(sceCombine) <- rownames(sce_in)
   rowData(sceCombine) <- rowData(sce_in)
 
+  # collapse GABAergic neurons
+  sceCombine$celltype8 = sceCombine$celltype %>%
+      as.character %>% 
+      recode( 
+      "GABAergic SST interneuron" = 'GABAergic neuron',
+      "GABAergic VIP interneuron" = 'GABAergic neuron',
+      "GABAergic PVALB interneuron" = 'GABAergic neuron') %>% 
+      as.factor
+
   saveRDS(sceCombine, file=datafile)
 }
 ```
@@ -141,6 +145,10 @@ ggplot(df, aes(V1, V2, color=anno)) + geom_point(size=.05) + theme_classic() + t
 ggplot(df, aes(V1, V2, color=celltype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
+```{r umap8, dev="png"}
+ggplot(df, aes(V1, V2, color=celltype8)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+```
+
 ```{r umap3, dev="png"}
 ggplot(df, aes(V1, V2, color=class)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
@@ -153,30 +161,132 @@ ggplot(df, aes(V1, V2, color=subtype)) + geom_point(size=.05) + theme_classic() 
 ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
+## Summarize cell counts
+```{r summarize.cell.counts}
+# cells per Channel
+colData(sceCombine)$Channel %>% 
+  table %>% 
+  hist(main=paste0("Cell counts per Channel: mean=", format(mean(.), digits=2), ", median = ", format(median(.), digits=2)))
+
+colData(sceCombine)$SubID %>% 
+  table %>% 
+  hist(main=paste0("Cell counts per SubID: mean=", format(mean(.), digits=2), ", median = ", format(median(.), digits=2)))
+
+# Number of cells observed per Channel
+colData(sceCombine) %>%
+  xtabs( ~ Channel + celltype8,.) %>%
+  as_tibble %>%
+  pivot_longer(cols=SubID) %>%
+  ggplot(aes(celltype8, n, fill=celltype8)) + 
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab("Number of cells observed per Channel") +
+    xlab('')
+
+# Number of cells observed per Subject
+colData(sceCombine) %>%
+  xtabs( ~ SubID + celltype8,.) %>%
+  as_tibble %>%
+  pivot_longer(cols=SubID) %>%
+  ggplot(aes(celltype8, n, fill=celltype8)) + 
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab("Number of cells observed per Subject") +
+    xlab('')
+```
+
+
 ```{r combineData, message=TRUE}
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
+
 # update block size for reading h5ad file from disk
 setAutoBlockSize(1e9)
 
-# Create pseudo-bulk SingleCellExperiment
-pbObj <- aggregateToPseudoBulk(sceCombine,
-    assay = "X", 
-    fun = "sum",
-    cluster_id = "celltype",
-    sample_id  = "Channel")
+annotation = c("celltype", 'celltype8', "subtype")
 
-# Set levels for Dx2
-lvls = sort(unique(as.character(colData(pbObj)$dx)))
-lvls = lvls[-which(lvls=="Control")]
-colData(pbObj)$dx = factor(colData(pbObj)$dx, c("Control", lvls))
+for( i in annotation){
+  # Create pseudo-bulk SingleCellExperiment
+  pb <- aggregateToPseudoBulk(sceCombine,
+      assay = "X", 
+      fun = "sum",
+      cluster_id = annotation[i],
+      sample_id  = "Channel")
 
-saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_f1.RDS" )
+  # Set levels for Dx2
+  lvls = sort(unique(as.character(colData(pb)$dx)))
+  lvls = lvls[-which(lvls=="Control")]
+  colData(pb)$dx = factor(colData(pb)$dx, c("Control", lvls))
 
-pbObj
+  file = paste0(outfolder, 'pbObj_', annotation[i], '.RDS')
+  saveRDS(pb, file=file)
+}
+rm(pb)
 ```
 
-<!---
-pbObj = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/pbObj_f1.RDS")
---->
+```{r read.pb}
+annot = "celltype8"
+file = paste0(outfolder, 'pbObj_', annot, '.RDS')
+pbObj = readRDS(file)
+```
+
+
+## Summarize read counts
+```{r summarize.read.counts}
+# extract read counts for each Channel
+df_counts = lapply( assayNames(pbObj), function(x){
+  data = assay(pbObj, x)
+
+  data.frame(celltype = x, ID = colnames(data), readCounts = colSums(data))
+
+})
+df_counts = do.call(rbind, df_counts)
+
+ggplot(df_counts, aes(celltype, readCounts, fill=celltype)) +  
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab("Number of reads observed for each Channel") +
+    xlab('') +
+    ggtitle('Reads per cell cluster for each Channel')
+
+# extract cell counts
+df_rate = cellCounts(pbObj) %>%
+            as.data.frame %>%
+            mutate(ID = rownames(.))  %>% 
+            pivot_longer(cols=-ID, values_to="ncells", names_to="celltype")
+
+# plot reads per cell
+inner_join(df_counts, df_rate, by=c("celltype", "ID")) %>%
+  ggplot(aes(celltype, readCounts/ncells, fill=celltype)) +  
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab('Reads per cell') +
+    xlab('') +
+    ggtitle('Reads per cell for each Channel')
+```
+
+
+
+
 
 ## Cell type specificity
 ```{r cellTypeSpecificity}
