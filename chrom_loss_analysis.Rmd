@@ -285,10 +285,10 @@ res_lmz = lapply(1:nrow(grid), function(i){
   data$dx = factor(data$dx, c("Control", "AD"))
 
   # test chromsome loss using pmin
-  fit1 = lmer( RankNorm(pmin(zScore, 0)) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
+  fit1 = lmer( RankNorm(zScore.loss) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
   
   # test chromsome gain using pmax
-  fit2 = lmer( RankNorm(pmax(zScore, 0)) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
+  fit2 = lmer( RankNorm(zScore.gain) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
 
   df1 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
                     Direction="loss", coef = coefs,
@@ -402,12 +402,285 @@ res_pred$fdr = p.adjust(res_pred$pvalue, "fdr")
 ggplot(res_pred, aes(chrom, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + geom_text(aes(label=ifelse(fdr < 0.05, '*', '')))
 ```
 
-```{r across.chrom, eval=FALSE}
+```{r across.chrom}
+library(PRROC)
+library(glmnet)
+
+data = df_res %>%
+        filter(dx %in% c("AD", "Control", "SCZ", "BP", "NA")) %>%
+        select(geneID, celltype, SubID, Channel, zScore, zScore.loss, zScore.gain, Age, Sex, dx)  %>%
+        # mutate(dx = factor(dx, c("Control", "AD"))) %>%
+        group_by(SubID, geneID, celltype) %>%
+        summarize( zScore = mean(zScore),
+                   zScore.loss = mean(zScore.loss),
+                   zScore.gain = mean(zScore.gain),
+                   SubID = SubID[1],
+                   Sex = Sex[1],
+                   Age = Age[1],
+                   dx = dx[1])
+
+df = data %>%
+      pivot_wider( names_from = c(celltype, geneID), values_from=c(zScore, zScore.loss, zScore.gain)) %>%
+      droplevels
 
 
-idx = with(df_res, (dx %in% c("AD", "Control")))
-data = droplevels(df_res[idx,])
-data$dx = factor(data$dx, c("Control", "AD"))
+keep = grep("loss|gain", colnames(df))
+
+X = as.data.frame(df[,c(2,3,keep)])
+X$Sex = as.numeric(X$Sex)
+X[is.na(X)] = 0
+X = scale(as.matrix(X))
+
+set.seed(1)
+training = sample.int(nrow(X), 0.7*nrow(X))
+
+# Training
+keys = c("Sex", "Age", "Sex + Age", "Sex + Age + MA")
+df_pred = lapply( keys, function(x){
+
+  if( x == "Sex" | x == "Age"){
+    idx = c(100, which(colnames(X) == x))
+  }else if(x == "Sex + Age"){
+    idx = which(colnames(X) %in% c("Sex", "Age"))
+  }else if( x == 'Sex + Age + MA'){
+    idx = 1:ncol(X)
+  }
+
+  if( x == 'Sex + Age + MA' ){
+    pf = rep(1, length(idx))
+    pf[1:2] = 0
+    fitcv = cv.glmnet(X[training,idx], df$dx[training], family="multinomial", type.multinomial = "grouped", penalty.factor=pf)
+
+    png("test.png")
+    plot(fitcv)
+    dev.off()
+
+  }else{    
+    fitcv = glmnet(X[training,idx,drop=FALSE], df$dx[training], family="multinomial", type.multinomial = "grouped", lambda=0)
+  }
+
+  # same coef image
+  if( x == "Sex + Age + MA"){
+    beta = coef(fitcv, s = "lambda.1se")
+
+    df_beta = lapply( names(beta), function(x){
+      value = as.matrix(beta[[x]][-c(1:3),])
+      data.frame(coef=rownames(value), key=x, value = c( value))
+      })
+    df_beta = do.call(rbind, df_beta)
+
+    df_beta = cbind(df_beta, df_beta$coef %>% 
+                strsplit("_") %>% 
+                do.call(rbind, .))
+    colnames(df_beta)[-c(1:3)] = c("score", "celltype", "chrom")
+
+    df_beta$chrom = factor(df_beta$chrom, c(1:22, "X", "Y", "MT")) 
+
+    ratio = with(df_beta, length(unique(celltype)) / nlevels(chrom))
+
+    fig = ggplot(df_beta, aes(chrom, celltype, fill=value)) + 
+              geom_tile() +
+              theme_classic() +
+              theme(aspect.ratio=ratio) +
+              facet_wrap(~ key + score, ncol=2) +
+              scale_fill_gradient2(low="blue", mid="white", high="red")
+    ggsave("test.png", fig, width=16, height=12)
+  }
+
+  # Performance on testing set
+  y_pred = predict(fitcv, newx = X[-training,idx], s = "lambda.1se", type="response")
+  y_pred = as.data.frame(y_pred[,,])
+
+  # plotCorrMatrix(cor(y_pred))
+
+  # evaluate performance
+  df_pred = lapply(levels(df$dx), function(status){
+    message(status)
+    y_pred_case = y_pred[df$dx[-training]==status, status]
+    y_pred_not = y_pred[df$dx[-training]!=status, status]
+
+    y_pred_case = y_pred_case[!is.na(y_pred_case)]
+    y_pred_not = y_pred_not[!is.na(y_pred_not)]
+
+    pr <- pr.curve(scores.class0 = y_pred_case, 
+                   scores.class1 = y_pred_not, 
+                   rand.compute=TRUE, 
+                   curve=TRUE)
+
+    data.frame(Class = status,
+                Set = x,
+               AUPR = pr$auc.integral,
+               AUPR.rand = pr$rand$auc.integral,
+               n.class = length(y_pred_case))
+  })
+  do.call(rbind, df_pred)
+})
+df_pred = do.call(rbind, df_pred)
+
+df_pred$Set = factor(df_pred$Set, keys)
+
+
+fig = ggplot(df_pred, aes(Set, AUPR, fill=Set)) + 
+        facet_wrap(~ Class) +
+        geom_bar(stat="identity") +
+        theme_classic() +
+        theme(aspect.ratio=1, axis.text.x = element_text(angle = 75, vjust = 1, hjust=1), legend.position="none") +
+        scale_fill_brewer(palette="Set1") +
+        geom_hline(aes(yintercept=AUPR.rand), linetype="dashed", color="grey50") +
+        scale_y_continuous(limits=c(0, .85), expand=c(0,0)) +
+        geom_text(aes(y=AUPR+.01, label=format(AUPR, digits=3)), size=2, vjust=0)
+fig
+# ggsave("test.png", fig)
+
+
+
+
+
+
+
+
+
+
+
+# status = c("Control", "SCZ")
+# df_sub = df[-training,]
+# df_sub$y_pred = y_pred[,status[2],1]
+# idx = df_sub$dx %in% status
+# df_sub = droplevels(df_sub[idx,])
+# df_sub$dx = factor(df_sub$dx, status)
+
+# fit = glm(dx ~ Sex + Age, df_sub, family="binomial")
+# calcVarPart(fit)
+
+# fit = glm(dx ~ y_pred + Sex + Age, df_sub, family="binomial")
+# summary(fit)
+# calcVarPart(fit)
+
+
+
+
+# Evaluate AUPR
+################
+
+# train 
+fit.train = glm(dx ~  Age, df[training,], family="binomial")
+
+# test
+X_new = model.matrix(~ Sex + Age, df[-training,])
+y_pred = predict(fit.train, newx=X_new)
+y_pred_ad = y_pred[df$dx[-training]=="AD"]
+y_pred_ctrl = y_pred[df$dx[-training]=="Control"]
+
+y_pred_ad = y_pred_ad[!is.na(y_pred_ad)]
+y_pred_ctrl = y_pred_ctrl[!is.na(y_pred_ctrl)]
+
+pr <- pr.curve(scores.class0 = y_pred_ad, 
+               scores.class1 = y_pred_ctrl, 
+               rand.compute=TRUE, 
+               curve=TRUE)
+
+pr
+
+
+# lasso
+#####
+
+idx = 1:ncol(X)
+# train 
+fit.train = cv.glmnet(X[training,idx], df$dx[training], family="binomial", dfmax=5 )
+
+# test
+y_pred = predict(fit.train, newx = X[-training,idx], s = "lambda.1se")
+y_pred_ad = y_pred[df$dx[-training]=="AD"]
+y_pred_ctrl = y_pred[df$dx[-training]=="Control"]
+
+y_pred_ad = y_pred_ad[!is.na(y_pred_ad)]
+y_pred_ctrl = y_pred_ctrl[!is.na(y_pred_ctrl)]
+
+pr <- pr.curve(scores.class0 = y_pred_ad, 
+               scores.class1 = y_pred_ctrl, 
+               rand.compute=TRUE, 
+               curve=TRUE)
+
+pr$auc.integral
+
+Sex + Age predictor: 0.86
+Sex + Age + chrom aneuploidy predictor: 0.88
+
+
+
+
+
+
+# png("test.png")
+# plot(pr)
+# dev.off()
+
+
+
+
+
+
+
+
+```
+
+
+# Fraction of cells
+```{r cell.frac}
+get_pi1 = function(p){
+
+  res <- tryCatch( pi0est(p), error = function(e) NULL)
+
+  pi1 = NA
+  if( ! is.null(res)){
+    pi1 = 1 - res$pi0
+  }
+  pi1
+}
+
+ data2 = df_res %>%
+            filter(celltype == 'Glutamatergic neuron', dx %in% c("AD", "Control")) %>%
+            group_by(SubID, geneID, celltype) %>%
+            summarize(nAbb = sum(aberrant),
+              nObs = length(aberrant),
+              nAbb.up = sum(aberrant*(l2fc>1)),
+              nAbb.down = sum(aberrant*(l2fc<1)),
+              abber.rate.up = sum(aberrant*(l2fc>1)) / length(aberrant),
+              abber.rate.down = sum(aberrant*(l2fc<1)) / length(aberrant),
+              mu.z.loss = mean(zScore.loss),
+              mu.z.gain = mean(zScore.gain),
+              pi.loss = get_pi1(2*pnorm(zScore.loss, lower.tail=FALSE)),
+              pi.gain = get_pi1(2*pnorm(zScore.gain, lower.tail=FALSE)),
+              Age = Age[1],
+              Sex = Sex[1],
+              Institution = Institution[1],
+              dx = dx[1])
+
+
+idx = with(data2, (dx %in% c("AD", "Control", "SCZ") ))
+
+fig = ggplot(data2[idx,], aes(dx, mu.z.loss)) + geom_violin() + geom_boxplot(width=0.1) + facet_wrap(~ geneID + celltype, ncol=4) + theme_classic() + theme(aspect.ratio=1)
+
+ggsave("test.png", fig, height=12)
+
+
+fig = ggplot(data2[idx,], aes(dx, abber.rate.down)) + geom_violin() + geom_boxplot(width=0.1) + facet_wrap(~ geneID + celltype, ncol=4) + theme_classic() + theme(aspect.ratio=1)
+
+ggsave("test.png", fig, height=12)
+
+fig = ggplot(data2[idx,], aes(dx, pi.loss)) + geom_violin() + geom_boxplot(width=0.1) + facet_wrap(~ geneID + celltype, ncol=4) + theme_classic() + theme(aspect.ratio=1)
+
+ggsave("test.png", fig, height=12)
+
+
+
+data2$dx = factor(data2$dx, c("Control", "AD"))
+fit = lm(mu.z.loss ~ dx + Age + Institution + Sex, data2 %>% filter(geneID == "21") )
+summary(fit)
+
+fit = glm(dx ~ mu.z.loss + Age + Institution + Sex, data2 %>% filter(geneID == "21"), family="binomial" )
+summary(fit)
 
 ```
 
