@@ -19,10 +19,10 @@ vignette: >
 <!--- 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
-ml python
+ml python git
 R
 
-system("ml git; git pull")
+system("git pull")
 rmarkdown::render('chrom_loss_analysis.Rmd');
 
 
@@ -83,8 +83,19 @@ library(RNOmni)
 datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
 sceCombine = readRDS( datafile )
 
+# collapse GABAergic neurons
+sceCombine$celltype8 = sceCombine$celltype %>%
+    as.character %>% 
+    recode( 
+    "GABAergic SST interneuron" = 'GABAergic neuron',
+    "GABAergic VIP interneuron" = 'GABAergic neuron',
+    "GABAergic PVALB interneuron" = 'GABAergic neuron') %>% 
+    as.factor
+
 # OUTRIDER results
-res_combine = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/outliers.RDS")
+outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/chrom_loss_results/'
+file = paste0(outfolder, "outliers.RDS")
+res_combine = readRDS(file)
 
 # adjust p-value due to merging
 res_combine$padjust = p.adjust(res_combine$pValue, "fdr")
@@ -95,7 +106,7 @@ res_combine$aberrant = res_combine$padjust < 0.05
 # get unique information for each Channel
 df_uniq = with(colData(sceCombine), unique(data.frame(Channel, SubID, dx, Sex, Age)))
 
-# allow grouping by Channel, geneID, and celltype
+# allow grouping by Channel, geneID, and celltype8
 # use data.table for faster merge
 df_data = data.frame(sampleID = colnames(sceCombine), colData(sceCombine))
 
@@ -112,11 +123,13 @@ df_res = left_join(res_combine, df_data, by="sampleID") %>%
 
 # Transformation scores 
 df_res$zScore.loss = -pmin(df_res$zScore, 0)
+df_res$pValue.loss = pnorm(df_res$zScore, lower.tail=TRUE)
 df_res$zScore.gain = pmax(df_res$zScore, 0)
+df_res$pValue.gain = pnorm(df_res$zScore, lower.tail=FALSE)
 
 # group and summarize
 df_counts_aggr = df_res %>% 
-  group_by(Channel, geneID, celltype) %>% 
+  group_by(Channel, geneID, celltype8) %>% 
   summarize(nAbb = sum(aberrant),
             nObs = length(aberrant),
             nAbb.up = sum(aberrant*(l2fc>1)),
@@ -201,7 +214,7 @@ corrplot(C.list[['mixed']], col=col, tl.col="black", title="zScore.mixed")
 ```{r aberrant.nb}
 # only examine AD vs control
 grid = expand.grid(geneID = sort(unique(df_counts_aggr$geneID)),
-            celltype = sort(unique(df_counts_aggr$celltype)))
+            celltype8 = sort(unique(df_counts_aggr$celltype8)))
 
 coefs = c('scale(Age)','dxAD')
 
@@ -211,7 +224,7 @@ coefs = c('scale(Age)','dxAD')
 res_lm = lapply(1:nrow(grid), function(i){
   message("\r", i, "   ")
 
-  idx = with(df_counts_aggr,  (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+  idx = with(df_counts_aggr,  (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype8==grid$celltype8[i]))
   data = droplevels(df_counts_aggr[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
 
@@ -224,7 +237,7 @@ res_lm = lapply(1:nrow(grid), function(i){
     if( sum(data$nAbb.down > 1) > 10){
       fit1 = glmer.nb(nAbb.down ~ offset(log(nObs)) + (1|SubID) + dx + scale(Age), data)
       df1 = data.frame( geneID = grid$geneID[i],
-                  celltype = grid$celltype[i],
+                  celltype8 = grid$celltype8[i],
                   Direction="loss",
                   coef = coefs,
                   coef(summary(fit1))[coefs,,drop=FALSE])
@@ -235,7 +248,7 @@ res_lm = lapply(1:nrow(grid), function(i){
 
       
       df2 = data.frame( geneID = grid$geneID[i],
-                  celltype = grid$celltype[i],
+                  celltype8 = grid$celltype8[i],
                   Direction="gain",
                   coef = coefs,
                   coef(summary(fit2))[coefs,,drop=FALSE])
@@ -255,13 +268,13 @@ res_lm$geneID = factor(res_lm$geneID, c(1:22, "X", "Y", "MT"))
 ```
 
 ```{r plot1}
-ratio = with(res_lm, nlevels(celltype) / nlevels(geneID))
+ratio = with(res_lm, nlevels(celltype8) / nlevels(geneID))
 
 zmax = log10(max(abs(res_lm[res_lm$coef=="dxAD",]$z.value)))
 
-ggplot(res_lm[res_lm$coef=="dxAD",], aes(geneID, celltype, fill=sign(z.value)*log10(abs(z.value)))) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(name=expression(sign~log[10]~z), low = "blue", mid="white", high="red", limits=c(-zmax, zmax))  + facet_wrap(~ Direction, ncol=1) + ggtitle("dxAD")
+ggplot(res_lm[res_lm$coef=="dxAD",], aes(geneID, celltype8, fill=sign(z.value)*log10(abs(z.value)))) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(name=expression(sign~log[10]~z), low = "blue", mid="white", high="red", limits=c(-zmax, zmax))  + facet_wrap(~ Direction, ncol=1) + ggtitle("dxAD")
 
-ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype, fill=sign(z.value)*log10(abs(z.value)))) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(name=expression(sign~log[10]~z), low = "blue", mid="white", high="red", limits=c(-zmax, zmax))  + facet_wrap(~ Direction, ncol=1) + ggtitle("Age")
+ggplot(res_lm[res_lm$coef=="scale(Age)",], aes(geneID, celltype8, fill=sign(z.value)*log10(abs(z.value)))) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(name=expression(sign~log[10]~z), low = "blue", mid="white", high="red", limits=c(-zmax, zmax))  + facet_wrap(~ Direction, ncol=1) + ggtitle("Age")
 ```
 
 
@@ -272,14 +285,14 @@ chr21 trisomy is Down syndrome
 # Using z-score directly
 ```{r z.score}
 grid = expand.grid(geneID = sort(unique(df_res$geneID)),
-            celltype = sort(unique(df_res$celltype)))
+            celltype8 = sort(unique(df_res$celltype8)))
 
 coefs = c('dxAD', 'scale(Age)')
 
 res_lmz = lapply(1:nrow(grid), function(i){
   message("\r", i, "   ")
 
-  idx = with(df_res, (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+  idx = with(df_res, (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype8==grid$celltype8[i]))
 
   data = droplevels(df_res[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
@@ -290,11 +303,11 @@ res_lmz = lapply(1:nrow(grid), function(i){
   # test chromsome gain using pmax
   fit2 = lmer( RankNorm(zScore.gain) ~ scale(log10(rawcounts+1)) + (1|batch) + (1|Channel) + (1|SubID) + dx + scale(Age), data = data)
 
-  df1 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
+  df1 = data.frame(chrom = grid$geneID[i], celltype8 = grid$celltype8[i],
                     Direction="loss", coef = coefs,
                     coef(summary(fit1))[coefs,])
 
-  df2 = data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
+  df2 = data.frame(chrom = grid$geneID[i], celltype8 = grid$celltype8[i],
                     Direction="gain", coef = coefs,
                     coef(summary(fit2))[coefs,])
 
@@ -310,12 +323,12 @@ res_lmz$geneID = factor(res_lmz$chrom, c(1:22, "X", "Y", "MT"))
 ```
 
 ```{r plot}
-ratio = with(res_lmz, nlevels(celltype) / nlevels(geneID))
+ratio = with(res_lmz, nlevels(celltype8) / nlevels(geneID))
 zlim = max(abs(res_lmz$t.value))
 
-ggplot(res_lmz[res_lmz$coef=="dxAD",], aes(geneID, celltype, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + facet_wrap(~ Direction, ncol=1) + ggtitle("dxAd")
+ggplot(res_lmz[res_lmz$coef=="dxAD",], aes(geneID, celltype8, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + facet_wrap(~ Direction, ncol=1) + ggtitle("dxAd")
 
-ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + facet_wrap(~ Direction, ncol=1) + ggtitle("Age")
+ggplot(res_lmz[res_lmz$coef=="scale(Age)",], aes(geneID, celltype8, fill=t.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio, plot.title = element_text(hjust = 0.5)) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + facet_wrap(~ Direction, ncol=1) + ggtitle("Age")
 ```
 
 
@@ -333,12 +346,12 @@ Association with AD and number of cells with chromosome *loss*.
 ```{r predict.AD}
 # df_res = fread(outfile)
 grid = expand.grid(geneID = sort(unique(df_res$geneID)),
-            celltype = sort(unique(df_res$celltype)))
+            celltype8 = sort(unique(df_res$celltype8)))
 
 res_pred = lapply(1:nrow(grid), function(i){
   message("\r", i, "   ")
 
-  idx = with(df_res, (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype==grid$celltype[i]))
+  idx = with(df_res, (dx %in% c("AD", "Control")) & (geneID==grid$geneID[i]) & (celltype8==grid$celltype8[i]))
 
   data = droplevels(df_res[idx,])
   data$dx = factor(data$dx, c("Control", "AD"))
@@ -385,21 +398,21 @@ res_pred = lapply(1:nrow(grid), function(i){
 
   # lm(y_pred ~ data2$dx[testing])
 
-  data.frame(chrom = grid$geneID[i], celltype = grid$celltype[i],
+  data.frame(chrom = grid$geneID[i], celltype8 = grid$celltype8[i],
     t(coef(summary(fit))['RankNorm(ad_pred_cells)',]))
 })
 res_pred = do.call(rbind, res_pred)
 ```
 
 ```{r plot.res_pred, cache=FALSE}
-ratio = with(res_pred, nlevels(celltype) / nlevels(chrom))
+ratio = with(res_pred, nlevels(celltype8) / nlevels(chrom))
 zlim = max(abs(res_pred$z.value))
 
 res_pred$chrom = factor(res_pred$chrom, c(1:22, "X", "Y", "MT"))
 colnames(res_pred)[colnames(res_pred) == "Pr...z.."] = "pvalue"
 res_pred$fdr = p.adjust(res_pred$pvalue, "fdr")
 
-ggplot(res_pred, aes(chrom, celltype, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + geom_text(aes(label=ifelse(fdr < 0.05, '*', '')))
+ggplot(res_pred, aes(chrom, celltype8, fill=z.value)) + geom_tile() + theme_classic() + theme(aspect.ratio=ratio) + scale_fill_gradient2(low = "blue", mid="white", high="red", limits=c(-zlim, zlim)) + geom_text(aes(label=ifelse(fdr < 0.05, '*', '')))
 ```
 
 ```{r across.chrom}
@@ -408,9 +421,9 @@ library(glmnet)
 
 data = df_res %>%
         filter(dx %in% c("AD", "Control", "SCZ", "BP", "NA")) %>%
-        select(geneID, celltype, SubID, Channel, zScore, zScore.loss, zScore.gain, Age, Sex, dx)  %>%
+        select(geneID, celltype8, SubID, Channel, zScore, zScore.loss, zScore.gain, Age, Sex, dx)  %>%
         # mutate(dx = factor(dx, c("Control", "AD"))) %>%
-        group_by(SubID, geneID, celltype) %>%
+        group_by(SubID, geneID, celltype8) %>%
         summarize( zScore = mean(zScore),
                    zScore.loss = mean(zScore.loss),
                    zScore.gain = mean(zScore.gain),
@@ -420,7 +433,7 @@ data = df_res %>%
                    dx = dx[1])
 
 df = data %>%
-      pivot_wider( names_from = c(celltype, geneID), values_from=c(zScore, zScore.loss, zScore.gain)) %>%
+      pivot_wider( names_from = c(celltype8, geneID), values_from=c(zScore, zScore.loss, zScore.gain)) %>%
       droplevels
 
 
@@ -472,13 +485,13 @@ df_pred = lapply( keys, function(x){
     df_beta = cbind(df_beta, df_beta$coef %>% 
                 strsplit("_") %>% 
                 do.call(rbind, .))
-    colnames(df_beta)[-c(1:3)] = c("score", "celltype", "chrom")
+    colnames(df_beta)[-c(1:3)] = c("score", "celltype8", "chrom")
 
     df_beta$chrom = factor(df_beta$chrom, c(1:22, "X", "Y", "MT")) 
 
-    ratio = with(df_beta, length(unique(celltype)) / nlevels(chrom))
+    ratio = with(df_beta, length(unique(celltype8)) / nlevels(chrom))
 
-    fig = ggplot(df_beta, aes(chrom, celltype, fill=value)) + 
+    fig = ggplot(df_beta, aes(chrom, celltype8, fill=value)) + 
               geom_tile() +
               theme_classic() +
               theme(aspect.ratio=ratio) +
@@ -603,26 +616,6 @@ pr <- pr.curve(scores.class0 = y_pred_ad,
                curve=TRUE)
 
 pr$auc.integral
-
-Sex + Age predictor: 0.86
-Sex + Age + chrom aneuploidy predictor: 0.88
-
-
-
-
-
-
-# png("test.png")
-# plot(pr)
-# dev.off()
-
-
-
-
-
-
-
-
 ```
 
 
@@ -689,6 +682,17 @@ summary(fit)
 knitr::knit_exit()
 ```
 # END
+
+
+
+
+
+
+
+
+
+
+
 
 
 ```{r pi1, eval=FALSE}
