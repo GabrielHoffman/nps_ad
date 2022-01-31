@@ -121,7 +121,6 @@ datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
 
 sceCombine = readRDS( datafile )
 
-
 # collapse GABAergic neurons
 sceCombine$celltype8 = sceCombine$celltype %>%
     as.character %>% 
