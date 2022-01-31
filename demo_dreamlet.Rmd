@@ -128,12 +128,12 @@ if( file.exists(datafile) ){
 }
 ```
 
-Data freeze includes 4 rounds, `r length(table(sceCombine$batch))` batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
+Data freeze includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
 # Joint UMAP
 ```{r umap2, dev="png"}
 # extract UMAP coordinates and annotations
-df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "celltype", "class", "subtype", "leiden_labels")])
+df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "celltype", 'celltype8', "class", "subtype", "leiden_labels")])
 df = data.frame(df)
 
 ggplot(df, aes(V1, V2, color=celltype)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
