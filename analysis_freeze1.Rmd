@@ -178,7 +178,7 @@ colData(sceCombine)$SubID %>%
 colData(sceCombine) %>%
   xtabs( ~ Channel + celltype8,.) %>%
   as_tibble %>%
-  pivot_longer(cols=SubID) %>%
+  pivot_longer(cols=Channel) %>%
   ggplot(aes(celltype8, n, fill=celltype8)) + 
     geom_violin(color = NA) + 
     geom_boxplot(width=.1, outlier.size=.1) +
