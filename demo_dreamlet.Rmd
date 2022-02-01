@@ -155,7 +155,7 @@ sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
 pbObj <- aggregateToPseudoBulk(sceCombine,
     assay = "X", 
     fun = "sum",
-    cluster_id = "celltype",
+    cluster_id = "celltype8",
     sample_id  = "id")
 
 # Combine with phenotype data at the Donor level
