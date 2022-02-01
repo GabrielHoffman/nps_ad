@@ -633,7 +633,7 @@ df %>%
     scale_y_continuous(limits=c(0,NA), expand=c(0,0))
 ```
 
-```{r corr, eval=FALSE}
+```{r corr}
 library(broom)
 
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
