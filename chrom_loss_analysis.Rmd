@@ -78,9 +78,11 @@ library(RNOmni)
 
 
 
+
 ```{r load.data}
 # SingleCellExperiment 
-datafile = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/sceCombine_f1.RDS"
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
+datafile = paste0(outfolder, "sceCombine_f1.RDS")
 sceCombine = readRDS( datafile )
 
 # collapse GABAergic neurons
