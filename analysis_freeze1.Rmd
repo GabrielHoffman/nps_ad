@@ -287,6 +287,8 @@ inner_join(df_counts, df_rate, by=c("celltype", "ID")) %>%
     ggtitle('Reads per cell for each Channel')
 ```
 
+## examine total reads and reads per cluster
+
 
 
 
@@ -520,7 +522,7 @@ res$FDR = p.adjust(res$PValue, "fdr")
 
 # Correlation with and between donors
 ```{r within_btw, fig.height=10, fig.width=10}
-source("/sc/arion/work/hoffmg01/nps_ad/common_analyses.R")
+source("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/common_analyses.R")
 
 eval_within_across_donor( res.proc, "SubID" )
 ```
@@ -531,7 +533,8 @@ form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution)
 
 fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(6))
 
-saveRDS( fit.dl, "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/fit.dl.RDS")
+file = paste0(outfolder, "fit.dl.RDS")
+saveRDS( fit.dl, file=file)
 ```
 
 ```{r write.residuals, eval=TRUE}
@@ -836,7 +839,7 @@ plotCellComposition( t(colSums(df_cellCount)))
 # deal with NA's here 
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|Institution) + scale(Age) 
 
-i = with(colData(pbObj), !is.na(dx) & !is.na(Age) & !is.na(Sex))
+i = with(as.data.frame(colData(pbObj)), !is.na(dx) & !is.na(Age) & !is.na(Sex))
 
 library(crumblr)
 cobj = crumblr(cellCounts(pbObj[,i]))
@@ -850,7 +853,73 @@ colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
 plotPercentBars( df_vp )
 ```
 
+```{r pca}
 
+
+pca = function(cobj, useWeights=TRUE){
+  if(useWeights ){
+      res = prcomp( t(with(cobj, E * (weights))), scale.=FALSE, center=FALSE )
+  }else{    
+      res = prcomp( t(cobj$E), scale.=FALSE )
+  }
+  res
+}
+
+cobj = crumblr(cellCounts(pbObj[,i])[,-c(6,9)])
+
+res = pca(cobj, TRUE)
+
+df_pca = merge(as.data.frame(res$x), colData(pbObj[,i]), by="row.names")
+
+fractions = t(apply(cellCounts(pbObj[,i]), 1, function(x){
+  x = x+1
+  x / sum(x)
+}))
+
+df_pca = merge(df_pca, fractions, by.x="Row.names", by.y="row.names")
+
+
+fig = df_pca %>% filter(dx %in% c("AD", "Control")) %>%
+      ggplot(aes(PC1, PC2, color=`Glutamatergic neuron`)) + 
+        geom_point() +
+        theme_classic() +
+        theme(aspect.ratio=1, legend.position="right")
+
+ggsave("test.png", fig)
+
+
+cor(df_pca[,2:3], df_pca[,c( 25:30)], method="sp")
+
+
+res = prcomp(logit(fractions))
+
+df_pca = merge(as.data.frame(res$x), colData(pbObj[,i]), by="row.names")
+
+df_pca = merge(df_pca, fractions, by.x="Row.names", by.y="row.names")
+
+
+fig = df_pca %>% filter(dx %in% c("AD", "Control")) %>%
+      ggplot(aes(PC1, PC2, color=dx)) + 
+        geom_point() +
+        theme_classic() +
+        theme(aspect.ratio=1, legend.position="right")
+
+
+ggsave("test.png", fig)
+
+
+Y = with(cobj, E*sqrt(weights))
+df = apply(Y, 2, sd)
+ plot(sort(df))
+
+plot(Y[,c(1,3)])
+abline(0, 1, col="red")
+
+
+plot( cobj$E, with(cobj, E))
+
+
+```
 
 ## Perform statistical tests
 For each cell type
