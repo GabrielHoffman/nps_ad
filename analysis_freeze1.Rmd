@@ -359,7 +359,7 @@ plotVoom( res.proc[7:9] )
 
 
 ```{r plot.sex} 
-df_gene = select(org.Hs.eg.db, keys=c("XIST", "UTY"), keytype="SYMBOL", columns="ENSEMBL")
+df_gene =  AnnotationDbi::select(org.Hs.eg.db, keys=c("XIST", "UTY"), keytype="SYMBOL", columns="ENSEMBL")
 
 df_sex = lapply( names(res.proc), function(CT){
   geneExpr = res.proc[[CT]]
