@@ -300,6 +300,7 @@ plotViolin(df)
 
 ### Show cell markers
 ```{r cellMarkers}
+library(org.Hs.eg.db)
 # /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_brain_cell_markers.json
 # /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_brain_immune_cell_markers.json
 # /sc/arion/projects/CommonMind/leed62/app/leetools/pegasus/human_immune_cell_markers.json
@@ -315,7 +316,7 @@ genes = c('RBFOX3', 'MEG3', 'SLC17A7',
 'PDGFRB',
 'TGFBR1', 'DOCK8', 'CD74', 'CSF1R', 'MS4A6A', 'PLXDC2')
  
-df_genes = select(org.Hs.eg.db, genes,  "ENSEMBL", "SYMBOL")
+df_genes = AnnotationDbi::select(org.Hs.eg.db, genes, "ENSEMBL", "SYMBOL")
 
 df_sub = df[rownames(df) %in% df_genes$ENSEMBL,]
 idx = match(rownames(df_sub), df_genes$ENSEMBL)
