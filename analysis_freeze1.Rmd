@@ -216,13 +216,13 @@ setAutoBlockSize(1e9)
 
 annotation = c("celltype", 'celltype8', "subtype")
 
-for( i in annotation){
-  message(annotation[i])
+for( annot in annotation){
+  message(annot)
   # Create pseudo-bulk SingleCellExperiment
   pb <- aggregateToPseudoBulk(sceCombine,
       assay = "X", 
       fun = "sum",
-      cluster_id = annotation[i],
+      cluster_id = annot,
       sample_id  = "Channel")
 
   # Set levels for Dx2
@@ -230,7 +230,7 @@ for( i in annotation){
   lvls = lvls[-which(lvls=="Control")]
   colData(pb)$dx = factor(colData(pb)$dx, c("Control", lvls))
 
-  file = paste0(outfolder, 'pbObj_', annotation[i], '.RDS')
+  file = paste0(outfolder, 'pbObj_', annot, '.RDS')
   saveRDS(pb, file=file)
 }
 rm(pb)
