@@ -22,6 +22,7 @@ vignette: >
 # /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
 ml python git
+git pull
 R
 
 system("git pull")
@@ -386,49 +387,6 @@ corrplot(C, col=col, tl.col="black")
 
 corrplot(C, order="hclust", col=col, tl.col="black")
 ```
-
-### Decompose differential expression: cell type by disease
-```{r vp.z.std}
-df_ids = lapply(strsplit(colnames(df2)[-1], "_"), function(x){
-  data.frame(Dx = x[1], CellType = x[2])
-  })
-df_ids = do.call(rbind, df_ids)
-
-df2_zeros = df2
-
-df2_elist = list(E = df2[,-1], weights = matrix(1, nrow(df2), ncol(df2)-1))
-rownames(df2_elist$E) = df2[,1]
-df2_elist = new("EList", df2_elist)
-
-keep = apply(df2, 1, function(x) sum(!is.na(x)) > 22)
-df2_elist = df2_elist[keep,]
-idx = is.na(df2_elist$E)
-df2_elist$E[idx] = 0
-df2_elist$weights[idx] = 1/1e4
-
-df_vp = fitExtractVarPartModel( df2_elist, ~ Dx + CellType, df_ids, colinearityCutoff=1)
-
-plotVarPart(df_vp)
-```
-
-# show top examples
-```{r forest.summary}
-gene = rownames(df_vp)[which.max(df_vp$Dx)]
-fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
-fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
-plot_grid(fig1, fig2, ncol=1, align="hv", axis="tblr")
-
-gene = rownames(df_vp)[which.max(df_vp$CellType)]
-fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
-fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
-plot_grid(fig1, fig2, ncol=1, align="hv", axis="tblr")
-
-gene = rownames(df_vp)[which.max(df_vp$Residuals)]
-fig1 = plotForest( fit.dl, gene, coef = coefs[1]) 
-fig2 = plotForest( fit.dl, gene, coef = coefs[2]) + ggtitle('')
-plot_grid(fig1, fig2, ncol=1, align="hv", axis="tblr")
-```
-
 
 
 
