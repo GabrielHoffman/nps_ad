@@ -217,6 +217,7 @@ setAutoBlockSize(1e9)
 annotation = c("celltype", 'celltype8', "subtype")
 
 for( i in annotation){
+  message(annotation[i])
   # Create pseudo-bulk SingleCellExperiment
   pb <- aggregateToPseudoBulk(sceCombine,
       assay = "X", 
