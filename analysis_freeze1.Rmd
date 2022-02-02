@@ -22,7 +22,7 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
 ml python git
 git pull
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
-R
+R --vanilla
 
 system("git pull")
 rmarkdown::render("analysis_freeze1.Rmd");
@@ -852,6 +852,18 @@ colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
 
 plotPercentBars( df_vp )
 ```
+
+
+
+
+```{r exit3, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
+```
+
+
+
+
+
 
 ```{r pca}
 
