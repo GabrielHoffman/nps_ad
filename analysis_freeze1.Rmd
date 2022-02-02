@@ -842,7 +842,11 @@ form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1
 i = with(as.data.frame(colData(pbObj)), !is.na(dx) & !is.na(Age) & !is.na(Sex))
 
 library(crumblr)
+
+# crumblr transform cell counts
 cobj = crumblr(cellCounts(pbObj[,i]))
+
+# variance partitioning analysis
 df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
 
 # rownames(df_vp) = df_vp$assay
@@ -853,84 +857,42 @@ colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
 plotPercentBars( df_vp )
 ```
 
-
-
-
-```{r exit3, cache=FALSE, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
-
-
-
-
-
-
 ```{r pca}
-
-
-pca = function(cobj, useWeights=TRUE){
-  if(useWeights ){
-      res = prcomp( t(with(cobj, E * (weights))), scale.=FALSE, center=FALSE )
-  }else{    
-      res = prcomp( t(cobj$E), scale.=FALSE )
-  }
-  res
-}
-
-cobj = crumblr(cellCounts(pbObj[,i])[,-c(6,9)])
-
-res = pca(cobj, TRUE)
-
-df_pca = merge(as.data.frame(res$x), colData(pbObj[,i]), by="row.names")
-
+# compute cell fractions
 fractions = t(apply(cellCounts(pbObj[,i]), 1, function(x){
   x = x+1
   x / sum(x)
 }))
 
-df_pca = merge(df_pca, fractions, by.x="Row.names", by.y="row.names")
+# correlation between cell types
+plotCorrMatrix( cor(t(vst(cobj))) )
 
+# PCA on VST
+res = prcomp( t(vst(cobj)), scale.=FALSE )
 
-fig = df_pca %>% filter(dx %in% c("AD", "Control")) %>%
-      ggplot(aes(PC1, PC2, color=`Glutamatergic neuron`)) + 
-        geom_point() +
-        theme_classic() +
-        theme(aspect.ratio=1, legend.position="right")
-
-ggsave("test.png", fig)
-
-
-cor(df_pca[,2:3], df_pca[,c( 25:30)], method="sp")
-
-
-res = prcomp(logit(fractions))
-
+# merge with subject metadata
 df_pca = merge(as.data.frame(res$x), colData(pbObj[,i]), by="row.names")
-
 df_pca = merge(df_pca, fractions, by.x="Row.names", by.y="row.names")
 
-
-fig = df_pca %>% filter(dx %in% c("AD", "Control")) %>%
+fig = df_pca %>%
       ggplot(aes(PC1, PC2, color=dx)) + 
         geom_point() +
         theme_classic() +
         theme(aspect.ratio=1, legend.position="right")
 
-
 ggsave("test.png", fig)
 
 
-Y = with(cobj, E*sqrt(weights))
-df = apply(Y, 2, sd)
- plot(sort(df))
+df = cor(df_pca[,2:3], df_pca[,c( 'Age', colnames(fractions))], method="sp")
+df = data.frame(variable = colnames(df), t(df))
 
-plot(Y[,c(1,3)])
-abline(0, 1, col="red")
-
-
-plot( cobj$E, with(cobj, E))
-
-
+df %>%
+  pivot_longer(cols=-"variable", names_to="PC") %>%
+  ggplot(aes(PC, variable, fill=value)) +
+      geom_tile() +
+      theme_classic() +
+      theme(aspect.ratio=5) +
+      scale_fill_gradient2(name = "Correlation", low="blue", mid="white", high="red", limits=c(-1, 1))
 ```
 
 ## Perform statistical tests
