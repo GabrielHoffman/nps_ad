@@ -512,7 +512,7 @@ df_pred = lapply( keys, function(x){
   df_pred = lapply(levels(df$dx), function(status){
     message(status)
     y_pred_case = y_pred[df$dx[-training]==status, status]
-    y_pred_not = y_pred[df$dx[-training]!=status, status]
+    y_pred_not = y_pred[df$dx[-training]=='Control', status]
 
     y_pred_case = y_pred_case[!is.na(y_pred_case)]
     y_pred_not = y_pred_not[!is.na(y_pred_not)]
@@ -534,28 +534,18 @@ df_pred = do.call(rbind, df_pred)
 
 df_pred$Set = factor(df_pred$Set, keys)
 
+ggplot(df_pred, aes(Set, AUPR, fill=Set)) + 
+  facet_wrap(~ Class) +
+  geom_bar(stat="identity") +
+  theme_classic() +
+  theme(aspect.ratio=1, axis.text.x = element_text(angle = 75, vjust = 1, hjust=1), legend.position="none") +
+  scale_fill_brewer(palette="Set1") +
+  geom_hline(aes(yintercept=AUPR.rand), linetype="dashed", color="grey50") +
+  scale_y_continuous(limits=c(0, .85), expand=c(0,0)) +
+  geom_text(aes(y=AUPR+.01, label=format(AUPR, digits=3)), size=2, vjust=0)
+```
 
-fig = ggplot(df_pred, aes(Set, AUPR, fill=Set)) + 
-        facet_wrap(~ Class) +
-        geom_bar(stat="identity") +
-        theme_classic() +
-        theme(aspect.ratio=1, axis.text.x = element_text(angle = 75, vjust = 1, hjust=1), legend.position="none") +
-        scale_fill_brewer(palette="Set1") +
-        geom_hline(aes(yintercept=AUPR.rand), linetype="dashed", color="grey50") +
-        scale_y_continuous(limits=c(0, .85), expand=c(0,0)) +
-        geom_text(aes(y=AUPR+.01, label=format(AUPR, digits=3)), size=2, vjust=0)
-fig
-# ggsave("test.png", fig)
-
-
-
-
-
-
-
-
-
-
+```{r temp, eval=FALSE}
 
 # status = c("Control", "SCZ")
 # df_sub = df[-training,]
@@ -570,10 +560,9 @@ fig
 # fit = glm(dx ~ y_pred + Sex + Age, df_sub, family="binomial")
 # summary(fit)
 # calcVarPart(fit)
+```
 
-
-
-
+```{r test, eval=FALSE}
 # Evaluate AUPR
 ################
 
