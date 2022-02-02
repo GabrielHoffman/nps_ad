@@ -541,7 +541,7 @@ ggplot(df_pred, aes(Set, AUPR, fill=Set)) +
   theme(aspect.ratio=1, axis.text.x = element_text(angle = 75, vjust = 1, hjust=1), legend.position="none") +
   scale_fill_brewer(palette="Set1") +
   geom_hline(aes(yintercept=AUPR.rand), linetype="dashed", color="grey50") +
-  scale_y_continuous(limits=c(0, .85), expand=c(0,0)) +
+  scale_y_continuous(limits=c(0, 1), expand=c(0,0)) +
   geom_text(aes(y=AUPR+.01, label=format(AUPR, digits=3)), size=2, vjust=0)
 ```
 
