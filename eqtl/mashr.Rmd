@@ -74,7 +74,8 @@ Spearman correlation between posterior beta values
 ```{r beta.post, fig.height=8, fig.width=8}
 C = cor(beta.post, use='pairwise.complete.obs', method="sp")
 
-heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr")
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr", 
+          keysize=1)
 ```
  
 
