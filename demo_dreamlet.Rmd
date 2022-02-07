@@ -637,7 +637,7 @@ df_res = lapply( c("batch.x", "batch.y"), function(key){
 df_res = do.call(rbind, df_res)
 df_res$fdr = p.adjust(df_res$p.value, 'fdr')
 
-fig = df_res %>%
+df_res %>%
   # filter(key == "batch") %>%
   mutate(fdr = p.adjust(p.value, "BH")) %>%
   group_by(assay.y) %>%
