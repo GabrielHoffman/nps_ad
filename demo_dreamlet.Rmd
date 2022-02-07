@@ -585,7 +585,7 @@ df %>%
     theme_classic() +
     theme(aspect.ratio=1, legend.position="none") +
     coord_flip() +
-    ylab("Correlation in batch effect across freezes") +
+    ylab("Spearman Correlation in batch effect across freezes") +
     xlab("Cell type") +  
     scale_fill_discrete(name = "Cell type") +
     scale_y_continuous(limits=c(0,NA), expand=c(0,0))
@@ -596,7 +596,7 @@ library(broom)
 
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
 
-df_res = lapply(colnames(df)[5:13], function(key){
+df_res = lapply(colnames(df)[c(5:13, 17)], function(key){
 
   res = df2 %>% 
     as_tibble %>% 
@@ -620,23 +620,63 @@ ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=
 
 
 ```{r barplot2}
-df_res %>%
-  filter(key == "batch") %>%
+df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
+
+df_res = lapply( c("batch.x", "batch.y"), function(key){
+
+  res = df2 %>% 
+    as_tibble %>% 
+    group_by(assay.y) %>%  
+    group_modify(~ tidy(cor.test(.x[[key]], .x$GC, method="spearman"))) %>%
+    left_join(df2 %>% group_by(assay.y) %>% tally, by="assay.y" ) %>%
+    mutate(se = sqrt((1-estimate^2)/(n-2)))
+
+  res$key = key
+  res
+})
+df_res = do.call(rbind, df_res)
+df_res$fdr = p.adjust(df_res$p.value, 'fdr')
+
+fig = df_res %>%
+  # filter(key == "batch") %>%
   mutate(fdr = p.adjust(p.value, "BH")) %>%
   group_by(assay.y) %>%
-  ggplot(aes(assay.y, estimate, fill=assay.y)) + 
-    geom_bar(stat="identity") +
-    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0) +
+  ggplot(aes(assay.y, estimate, fill=assay.y, alpha=key)) + 
+    geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0, position = position_dodge(width = 0.9)) +
     theme_classic() +
     theme(aspect.ratio=1, legend.position="none") +
     coord_flip() +
-    ylab("Correlation in batch effect and GC content per gene") +
+    ylab("Spearman correlation in batch effect and GC content per gene") +
     xlab("Cell type") +  
     scale_fill_discrete(name = "Cell type") +
-    scale_y_continuous(limits=c(0,.26), expand=c(0,0)) +
-    geom_text(aes(y=0.23, label=ifelse(fdr < 0.05, "            #", '')))
+    scale_y_continuous(limits=c(0,.31), expand=c(0,0)) +
+    geom_text(aes(y=0.28, label=ifelse(fdr < 0.05, "            #", '')), 
+      , position = position_dodge(width = 0.9)) +
+    scale_alpha_discrete(range=c(1, .5))
 ```
 
+```{r GC.batch, eval=FALSE}
+
+fig = df2 %>% 
+    as_tibble %>% 
+    group_by(assay.y) %>%  
+    filter(assay.y == "Glutamatergic neuron") %>%  
+    ggplot(aes(GC, batch.y)) +
+      geom_point()
+
+df3 = df2 %>% 
+    as_tibble %>% 
+    group_by(assay.y) %>%  
+    filter(assay.y == "Glutamatergic neuron")
+
+fig = plotScatterDensity(df3$GC, rank(df3$batch.x)      )
+
+with(df3, cor(GC, batch.x, method="sp"))
+
+# ggsave("test.png", fig)
+
+```
 
 
 
