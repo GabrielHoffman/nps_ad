@@ -58,6 +58,7 @@ Spearman correlation between original beta values
 ```{r analysis, fig.height=7, fig.width=7}
 library(mashr)
 library(variancePartition)
+library(gplots)
 
 # posterior coefficients
 #   replacing missing with Na
@@ -65,14 +66,26 @@ beta.post = get_pm(m2)
 beta.post[is.na(beta)] = NA
 
 C = cor(beta, use='pairwise.complete.obs', method="sp")
-plotCorrMatrix( C, main="Original" )
+
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="Original")
 ```
 
 Spearman correlation between posterior beta values
 ```{r, fig.height=7, fig.width=7}
 C = cor(beta.post, use='pairwise.complete.obs', method="sp")
-plotCorrMatrix(C, main="mashr" )
+
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr")
 ```
+ 
+
+
+
+
+
+
+
+
+
 
 Sharing based on sign
 ```{r fig.height=7, fig.width=7}
