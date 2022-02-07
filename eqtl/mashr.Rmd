@@ -55,7 +55,7 @@ load(synGet('syn26969627')$path)
 ```
 
 Spearman correlation between original beta values
-```{r analysis, fig.height=7, fig.width=7}
+```{r analysis, fig.height=7, fig.width=6}
 library(mashr)
 library(variancePartition)
 library(gplots)
@@ -71,7 +71,7 @@ heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100
 ```
 
 Spearman correlation between posterior beta values
-```{r beta.post, fig.height=8, fig.width=8}
+```{r beta.post, fig.height=7, fig.width=6.5}
 C = cor(beta.post, use='pairwise.complete.obs', method="sp")
 
 par(mar=c(7,4,4,2)+0.1) 
