@@ -52,7 +52,7 @@ synLogin()
 load(synGet('syn26969627')$path)
 ```
 
-```{r analysis}
+```{r analysis, fig.height=7, fig.width=7}
 library(mashr)
 library(variancePartition)
 
@@ -65,7 +65,7 @@ C = cor(beta, use='pairwise.complete.obs')
 plotCorrMatrix( C, main="Original" )
 ```
 
-```{r}
+```{r, fig.height=8, fig.width=7}
 C = cor(beta.post, use='pairwise.complete.obs')
 plotCorrMatrix(C, main="mashr" )
 ```
