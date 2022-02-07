@@ -127,7 +127,7 @@ ggplot(df, aes(Var1, Freq)) +
   ggtitle("Frequency of eQTL sharing")
 ```
 
-```{r UpSetR, fig.height=7, fig.width=6}
+```{r UpSetR, fig.height=7, fig.width=9}
 # UpsetR plot
 library(UpSetR)
 
