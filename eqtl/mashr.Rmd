@@ -67,16 +67,17 @@ beta.post[is.na(beta)] = NA
 
 C = cor(beta, use='pairwise.complete.obs', method="sp")
 
-heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="Original", 
-          key.title="Correlation")
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="Original", key.xlab="Correlation", key.title='', keysize=1)
 ```
 
 Spearman correlation between posterior beta values
 ```{r beta.post, fig.height=8, fig.width=8}
 C = cor(beta.post, use='pairwise.complete.obs', method="sp")
 
-heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr", 
-          key.title="Correlation")
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr", key.xlab="Correlation", key.title='', keysize=1)
+
+
+
 ```
  
 
@@ -94,8 +95,7 @@ Sharing based on sign
 # sharing based on sigh
 C = get_pairwise_sharing(m2, factor=0)
 
-heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="Sign sharing", 
-          key.title="Correlation" )
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="Sign sharing", key.xlab="Correlation", key.title='', keysize=1)
 ```
 
 Pi values from sharing components
