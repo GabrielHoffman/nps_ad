@@ -71,7 +71,7 @@ heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100
 ```
 
 Spearman correlation between posterior beta values
-```{r beta.post, fig.height=7, fig.width=7}
+```{r beta.post, fig.height=8, fig.width=8}
 C = cor(beta.post, use='pairwise.complete.obs', method="sp")
 
 heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr")
@@ -88,7 +88,7 @@ heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100
 
 
 Sharing based on sign
-```{r sign.share, fig.height=7, fig.width=7}
+```{r sign.share, fig.height=9, fig.width=9}
 # sharing based on sigh
 C = get_pairwise_sharing(m2, factor=0)
 
