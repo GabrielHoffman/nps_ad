@@ -29,8 +29,10 @@ rmarkdown::render("mashr.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/eqtl/mashr.html
-
 --->
+
+
+Code is on [GitHub](https://github.com/GabrielHoffman/nps_ad/blob/master/eqtl/mashr.Rmd)
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
