@@ -18,7 +18,7 @@ vignette: >
 
 <!--- 
 
-cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/eqtl/
 ml python git
 git pull
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
@@ -28,7 +28,7 @@ system("git pull")
 rmarkdown::render("mashr.Rmd");
 
 
-# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/eqtl/mashr.html
 
 --->
 
@@ -45,7 +45,7 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-```{r load.data}
+```{r load.data, message=TRUE}
 library(synapser)
 synLogin()
 
@@ -63,14 +63,18 @@ beta.post[is.na(beta)] = NA
 
 C = cor(beta, use='pairwise.complete.obs')
 plotCorrMatrix( C, main="Original" )
+```
 
+```{r}
 C = cor(beta.post, use='pairwise.complete.obs')
 plotCorrMatrix(C, main="mashr" )
+```
 
+```{r}
 # sharing based on sigh
 get_pairwise_sharing(m2, factor=0)
 
-
+```{r}
 # pi1 values
 df = get_estimated_pi(m2)
 df = data.frame(Component = names(df), pi = df)
@@ -83,8 +87,9 @@ ggplot(df, aes(Component, pi)) +
   scale_y_continuous(limits=c(0, 1), expand=c(0,0)) +
   ylab("Posterior probability") +
   ggtitle("eQTL sharing from mashr")
+```
 
-
+```{r}
 # Frequency
 df = table(get_n_significant_conditions(m2))
 df = as.data.frame(df)
@@ -97,7 +102,9 @@ ggplot(df, aes(Var1, Freq)) +
   ylab("Number of genes") +
   xlab("Number of cell types")  +
   ggtitle("Frequency of eQTL sharing")
+```
 
+```{r}
 # UpsetR plot
 library(UpSetR)
 
