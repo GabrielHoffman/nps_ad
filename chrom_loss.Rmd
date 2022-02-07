@@ -142,7 +142,7 @@ ods <- filterExpression(ods.all, minCounts=TRUE, filterGenes=TRUE)
 
 # Without autoencoder
 ods = estimateSizeFactors(ods)
-ods = controlForConfounders(ods, q=2, BPPARAM=SnowParam(12, progressbar=TRUE))
+ods = controlForConfounders(ods, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
 ods = fit(ods, BPPARAM=SnowParam(1, progressbar=TRUE))
 ods = computePvalues(ods, method="BH")
 ods = computeZscores(ods)
@@ -161,7 +161,7 @@ ods_male <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
 
 # Without autoencoder
 ods_male = estimateSizeFactors(ods_male)
-ods_male = controlForConfounders(ods_male, q=2, BPPARAM=SnowParam(12, progressbar=TRUE))
+ods_male = controlForConfounders(ods_male, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
 ods_male = fit(ods_male, BPPARAM=SnowParam(1, progressbar=TRUE))
 ods_male = computePvalues(ods_male, method="BH")
 ods_male = computeZscores(ods_male)
@@ -178,7 +178,7 @@ ods_female <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
 
 # Without autoencoder
 ods_female = estimateSizeFactors(ods_female)
-ods_female = controlForConfounders(ods_female, q=2, BPPARAM=SnowParam(12, progressbar=TRUE))
+ods_female = controlForConfounders(ods_female, q=2, implementation="pca", BPPARAM=SnowParam(12, progressbar=TRUE))
 ods_female = fit(ods_female, BPPARAM=SnowParam(12, progressbar=TRUE))
 ods_female = computePvalues(ods_female, method="BH")
 ods_female = computeZscores(ods_female)
@@ -191,6 +191,10 @@ res_female = results(ods_female, all=TRUE)
 res_combine = rbind(res[res$geneID %in% c(1:22, "MT"),],
                     res_male[res_male$geneID %in% c("X", "Y"),],
                     res_female[res_female$geneID %in% c("X"),])
+
+res_combine$padjust = p.adjust(res_combine$pValue, "fdr")
+res_combine$aberrant[] = FALSE
+res_combine$aberrant[res_combine$padjust < 0.05] = TRUE
 
 outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/chrom_loss_results/'
 file = paste0(outfolder, "outliers.RDS")
@@ -247,8 +251,56 @@ plotPowerAnalysis(ods) + theme_classic() + theme(aspect.ratio=1)
 ```
 
 
+# Analysis per cell type
+```{r per celltype}
 
+run_by_celltype = function(chromExprObj, sce){
 
+  res_CT = lapply( levels(colData(sce)$celltype8), function(CT){
+
+    message(CT)
+    idx = colData(sce)$celltype8 == CT
+
+    ods = OutriderDataSet(countData=chromExprObj[,idx], 
+                          colData = colData(sce)[idx,])
+
+    ods <- filterExpression(ods, minCounts=TRUE, filterGenes=TRUE)
+
+    # Without autoencoder
+    ods = estimateSizeFactors(ods)
+    ods = controlForConfounders(ods, q=2, implementation="pca", BPPARAM=SnowParam(1))
+    ods = fit(ods, BPPARAM=SnowParam(6))
+    ods = computePvalues(ods, method="BH")
+    ods = computeZscores(ods)
+
+    res = results(ods, all=TRUE)
+    res$celltype = CT
+    res
+  })
+  do.call(rbind, res_CT)
+}
+
+resAll = run_by_celltype(chromExpr, sceCombine)
+
+idx = colData(sceCombine)$Sex == "Male"
+resMale = run_by_celltype(chromExpr[,idx], sceCombine[,idx])
+
+idx = colData(sceCombine)$Sex == "Female"
+resFemale = run_by_celltype(chromExpr[,idx], sceCombine[,idx])
+
+# combine 3 analyses
+res_combine = rbind(resAll[res$geneID %in% c(1:22, "MT"),],
+                    resMale[resMale$geneID %in% c("X", "Y"),],
+                    resFemale[resFemale$geneID %in% c("X"),])
+
+res_combine$padjust = p.adjust(res_combine$pValue, "fdr")
+res_combine$aberrant[] = FALSE
+res_combine$aberrant[res_combine$padjust < 0.05] = TRUE
+
+outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/chrom_loss_results/'
+file = paste0(outfolder, "outliers_by_celltype8.RDS")
+saveRDS(res_combine, file=file)
+```
 
 
 
