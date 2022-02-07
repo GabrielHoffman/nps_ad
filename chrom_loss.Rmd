@@ -213,7 +213,7 @@ plotExpressedGenes(ods)
 plotAberrantPerSample(ods, padjCutoff=0.05) + theme_classic() + theme(aspect.ratio=1)
 ```
 
-```{r plotQQ, fig.width=10, fig.height=35, dev="png"}
+```{r plotQQ, fig.width=10, fig.height=35, dev="png", eval=FALSE}
 figList = lapply( c(1:22, "MT", "X", "Y"), function(x){
    
   i = which(res_combine$geneID == x)
