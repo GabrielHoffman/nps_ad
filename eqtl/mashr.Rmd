@@ -47,7 +47,7 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-```{r load.data, message=TRUE}
+```{r load.data, message=TRUE, cache=FALSE}
 library(synapser)
 synLogin()
 
