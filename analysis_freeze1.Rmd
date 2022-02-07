@@ -43,6 +43,7 @@ cd ~/build2/dreamlet
 git pull
 R CMD INSTALL .
 
+npsad:roussoslab
 
 --->
 
@@ -751,8 +752,83 @@ df_lfsr = do.call(rbind, df_lfsr)
 ggplot(df_lfsr, aes(CellType, nDE, fill=CellType)) + geom_bar(stat="identity") + facet_wrap(~Dx) + theme_classic() + theme(aspect.ratio=1, legend.position="none", axis.text.x = element_text(angle = 45, vjust=1, hjust=1) )
 ```
 
+```{r pi1}
+df_pi = lapply( coefs, function(coef){
+  df = get_estimated_pi(mashList[[coef]]$model)
+  data.frame(Component = names(df), pi = df, coef=coef)
+})
+df_pi = do.call(rbind, df_pi)
+
+ggplot(df_pi, aes(Component, pi, fill=coef)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  theme_classic() +
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  coord_flip() +
+  scale_y_continuous(limits=c(0, 1), expand=c(0,0)) +
+  ylab("Posterior probability") +
+  ggtitle("Sharing from mashr") +
+  scale_fill_brewer(palette="Set1")
+# m =  mashList[[3]]$model
+
+# pi1 = get_estimated_pi(m)[-1]
+# C = lapply( 1:length(pi1), function(i){
+#   m$fitted_g$Ulist[[i]] * pi1[i]
+# })
+
+# Reduce("+", C)
+```
+
+```{r sharing.freq}
+# allow NA values
+get_n_significant_conditions_na = function (m, thresh = 0.05, conditions = NULL, sig_fn = get_lfsr){
+    if (is.null(conditions)) {
+        conditions = 1:mashr:::get_ncond(m)
+    }
+    return(apply(sig_fn(m)[, conditions, drop = FALSE] < thresh, 
+        1, sum, na.rm=TRUE))
+}
+
+df_sharing = lapply( coefs, function(coef){
+  df = get_n_significant_conditions_na(mashList[[coef]]$model)
+  data.frame(table(df), coef=coef)
+})
+df_sharing = do.call(rbind, df_sharing)
+
+ggplot(df_sharing, aes(df, Freq, fill=coef)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  theme_classic() +
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(limits=c(0, NA), expand=c(0,0)) +
+  ylab("Number of genes") +
+  xlab("Number of cell types")  +
+  ggtitle("Frequency of eQTL sharing") +
+  scale_fill_brewer(palette="Set1")
+```
 
 
+```{r upsetr}
+
+# UpsetR plot
+library(UpSetR)
+
+res.upset = lapply( coefs, function(coef){
+
+  m = mashList[[coef]]$model
+
+  listInput = lapply( colnames(m$result$PosteriorMean), function(cond)
+                  get_significant_results(m, conditions=cond))
+  names(listInput) = colnames(m$result$PosteriorMean)
+
+  fromList(listInput)
+})
+names(res.upset) = coefs
+
+nsets = max(sapply(res.upset, ncol))
+
+upset(res.upset[[1]], order.by = "freq", nsets=nsets)
+upset(res.upset[[2]], order.by = "freq", nsets=nsets)
+upset(res.upset[[3]], order.by = "freq", nsets=nsets)
+```
 
 ## Cross-disease signature analysis
 ```{r compare.signatures.mashr, fig.width=9, fig.height=9}
@@ -775,6 +851,17 @@ corrplot(C, col=col, tl.col="black")
 
 corrplot(C, order="hclust", col=col, tl.col="black")
 ```
+
+### Mashr joint analysis
+```{r mashr.joint}
+# run mashr combining across models
+res.joint = run_mash( fit.dl, coefs)
+```
+
+Make more plots here
+```{r mashr.joint.plots}
+```
+
 
 ## zenith
 ```{r zenith.mash}
