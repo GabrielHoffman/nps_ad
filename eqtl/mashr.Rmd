@@ -52,6 +52,7 @@ synLogin()
 load(synGet('syn26969627')$path)
 ```
 
+Spearman correlation between original beta values
 ```{r analysis, fig.height=7, fig.width=7}
 library(mashr)
 library(variancePartition)
@@ -61,19 +62,24 @@ library(variancePartition)
 beta.post = get_pm(m2)
 beta.post[is.na(beta)] = NA
 
-C = cor(beta, use='pairwise.complete.obs')
+C = cor(beta, use='pairwise.complete.obs', method="sp")
 plotCorrMatrix( C, main="Original" )
 ```
 
-```{r, fig.height=8, fig.width=7}
-C = cor(beta.post, use='pairwise.complete.obs')
+Spearman correlation between posterior beta values
+```{r, fig.height=7, fig.width=7}
+C = cor(beta.post, use='pairwise.complete.obs', method="sp")
 plotCorrMatrix(C, main="mashr" )
 ```
 
-```{r}
+Sharing based on sign
+```{r fig.height=7, fig.width=7}
 # sharing based on sigh
-get_pairwise_sharing(m2, factor=0)
+C = get_pairwise_sharing(m2, factor=0)
+plotCorrMatrix(C, main="Sign sharing" )
+```
 
+Pi values from sharing components
 ```{r}
 # pi1 values
 df = get_estimated_pi(m2)
