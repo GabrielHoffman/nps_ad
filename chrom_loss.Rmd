@@ -142,10 +142,7 @@ ods <- filterExpression(ods.all, minCounts=TRUE, filterGenes=TRUE)
 
 # Without autoencoder
 ods = estimateSizeFactors(ods)
-ods = controlForConfounders(ods, q=10, BPPARAM=SnowParam(12, progressbar=TRUE))
-# ods <- findEncodingDim(ods, BPPARAM=SnowParam(1, progressbar=TRUE))
-# visualize the hyper parameter optimization
-# plotEncDimSearch(ods)
+ods = controlForConfounders(ods, q=2, BPPARAM=SnowParam(12, progressbar=TRUE))
 ods = fit(ods, BPPARAM=SnowParam(1, progressbar=TRUE))
 ods = computePvalues(ods, method="BH")
 ods = computeZscores(ods)
@@ -164,10 +161,7 @@ ods_male <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
 
 # Without autoencoder
 ods_male = estimateSizeFactors(ods_male)
-ods_male = controlForConfounders(ods_male, q=10, BPPARAM=SnowParam(12, progressbar=TRUE))
-# ods_male <- findEncodingDim(ods_male, BPPARAM=SnowParam(1, progressbar=TRUE))
-# visualize the hyper parameter optimization
-# plotEncDimSearch(ods_male)
+ods_male = controlForConfounders(ods_male, q=2, BPPARAM=SnowParam(12, progressbar=TRUE))
 ods_male = fit(ods_male, BPPARAM=SnowParam(1, progressbar=TRUE))
 ods_male = computePvalues(ods_male, method="BH")
 ods_male = computeZscores(ods_male)
@@ -184,10 +178,7 @@ ods_female <- filterExpression(ods.all[,idx], minCounts=TRUE, filterGenes=TRUE)
 
 # Without autoencoder
 ods_female = estimateSizeFactors(ods_female)
-ods_female = controlForConfounders(ods_female, q=10, BPPARAM=SnowParam(12, progressbar=TRUE))
-# ods_female <- findEncodingDim(ods_female, BPPARAM=SnowParam(12, progressbar=TRUE))
-# visualize the hyper parameter optimization
-# plotEncDimSearch(ods_female)
+ods_female = controlForConfounders(ods_female, q=2, BPPARAM=SnowParam(12, progressbar=TRUE))
 ods_female = fit(ods_female, BPPARAM=SnowParam(12, progressbar=TRUE))
 ods_female = computePvalues(ods_female, method="BH")
 ods_female = computeZscores(ods_female)
