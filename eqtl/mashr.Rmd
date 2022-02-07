@@ -71,7 +71,7 @@ heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100
 ```
 
 Spearman correlation between posterior beta values
-```{r, fig.height=7, fig.width=7}
+```{r beta.post, fig.height=7, fig.width=7}
 C = cor(beta.post, use='pairwise.complete.obs', method="sp")
 
 heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr")
@@ -88,14 +88,15 @@ heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100
 
 
 Sharing based on sign
-```{r fig.height=7, fig.width=7}
+```{r sign.share, fig.height=7, fig.width=7}
 # sharing based on sigh
 C = get_pairwise_sharing(m2, factor=0)
-plotCorrMatrix(C, main="Sign sharing" )
+
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="Sign sharing" )
 ```
 
 Pi values from sharing components
-```{r}
+```{r pi1}
 # pi1 values
 df = get_estimated_pi(m2)
 df = data.frame(Component = names(df), pi = df)
@@ -110,7 +111,7 @@ ggplot(df, aes(Component, pi)) +
   ggtitle("eQTL sharing from mashr")
 ```
 
-```{r}
+```{r freq}
 # Frequency
 df = table(get_n_significant_conditions(m2))
 df = as.data.frame(df)
@@ -125,7 +126,7 @@ ggplot(df, aes(Var1, Freq)) +
   ggtitle("Frequency of eQTL sharing")
 ```
 
-```{r}
+```{r UpSetR}
 # UpsetR plot
 library(UpSetR)
 
