@@ -612,6 +612,7 @@ pr$auc.integral
 
 # Fraction of cells
 ```{r cell.frac}
+library(qvalue)
 get_pi1 = function(p){
 
   res <- tryCatch( pi0est(p), error = function(e) NULL)
@@ -639,26 +640,47 @@ get_pi1 = function(p){
               Age = Age[1],
               Sex = Sex[1],
               Institution = Institution[1],
-              dx = dx[1])
+              dx = dx[1]) %>% 
+           mutate( geneID = factor(geneID, c(1:22, "MT", "X", "Y")))
+               
 
+```            
 
+```{r mu.z.loss, fig.height=12}
 idx = with(data2, (dx %in% c("AD", "Control", "SCZ") ))
 
-fig = ggplot(data2[idx,], aes(dx, mu.z.loss)) + geom_violin() + geom_boxplot(width=0.1) + facet_wrap(~ geneID + celltype, ncol=4) + theme_classic() + theme(aspect.ratio=1)
+ggplot(data2[idx,], aes(dx, mu.z.loss, fill=Sex)) + geom_violin(color=NA) + geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.size=1) + facet_wrap(~ geneID, ncol=4) + theme_classic() + theme(aspect.ratio=1) + scale_fill_manual(values=c("red", "blue"))
+```
 
-ggsave("test.png", fig, height=12)
-
-
-fig = ggplot(data2[idx,], aes(dx, abber.rate.down)) + geom_violin() + geom_boxplot(width=0.1) + facet_wrap(~ geneID + celltype, ncol=4) + theme_classic() + theme(aspect.ratio=1)
-
-ggsave("test.png", fig, height=12)
-
-fig = ggplot(data2[idx,], aes(dx, pi.loss)) + geom_violin() + geom_boxplot(width=0.1) + facet_wrap(~ geneID + celltype, ncol=4) + theme_classic() + theme(aspect.ratio=1)
-
-ggsave("test.png", fig, height=12)
+```{r mu.z.gain, fig.height=12}
+ggplot(data2[idx,], aes(dx, mu.z.gain, fill=Sex)) + geom_violin(color=NA) + geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.size=1) + facet_wrap(~ geneID, ncol=4) + theme_classic() + theme(aspect.ratio=1) + scale_fill_manual(values=c("red", "blue"))
+```
 
 
+```{r abber.rate.down, fig.height=12}
+ggplot(data2[idx,], aes(dx, abber.rate.down, fill=Sex)) + geom_violin(color=NA) + geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.size=1) + facet_wrap(~ geneID , ncol=4) + theme_classic() + theme(aspect.ratio=1) + scale_fill_manual(values=c("red", "blue"))  + scale_y_continuous(limits=c(0,1), expand=c(0,0))
+```
 
+```{r abber.rate.up, fig.height=12}
+ggplot(data2[idx,], aes(dx, abber.rate.up, fill=Sex)) + geom_violin(color=NA) + geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.size=1) + facet_wrap(~ geneID, ncol=4) + theme_classic() + theme(aspect.ratio=1) + scale_fill_manual(values=c("red", "blue"))  + scale_y_continuous(limits=c(0,1), expand=c(0,0))
+```
+
+
+
+```{r pi.loss, fig.height=12}
+ggplot(data2[idx,], aes(dx, pi.loss, fill=Sex)) + geom_violin(color=NA) + geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.size=1) + facet_wrap(~ geneID , ncol=4) + theme_classic() + theme(aspect.ratio=1) + scale_fill_manual(values=c("red", "blue"))  + scale_y_continuous(limits=c(0,1), expand=c(0,0))
+```
+
+
+
+```{r pi.gain, fig.height=12}
+ggplot(data2[idx,], aes(dx, pi.gain, fill=Sex)) + geom_violin(color=NA) + geom_boxplot(width=0.1, position=position_dodge(width=0.9), outlier.size=1) + facet_wrap(~ geneID , ncol=4) + theme_classic() + theme(aspect.ratio=1) + scale_fill_manual(values=c("red", "blue")) + scale_y_continuous(limits=c(0,1), expand=c(0,0))
+```
+
+
+
+
+```{r lm}
 data2$dx = factor(data2$dx, c("Control", "AD"))
 fit = lm(mu.z.loss ~ dx + Age + Institution + Sex, data2 %>% filter(geneID == "21") )
 summary(fit)
