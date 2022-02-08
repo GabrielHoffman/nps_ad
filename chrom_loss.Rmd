@@ -275,9 +275,15 @@ run_by_celltype = function(chromExprObj, sce){
     ods = computeZscores(ods, BPPARAM=SerialParam())
 
     res = results(ods, all=TRUE)
+
+    rm(ods)
+
     res$celltype = CT
     res
   })
+  rm(chromExprObj)
+  rm(sce)
+  gc()
   do.call(rbind, res_CT)
 }
 
