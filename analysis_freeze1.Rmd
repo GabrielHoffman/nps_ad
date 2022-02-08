@@ -896,7 +896,7 @@ get_n_significant_conditions_na = function (m, thresh = 0.05, conditions = NULL,
 df_sharing = get_n_significant_conditions_na(res.joint$model)
 df_sharing =  data.frame(table(df_sharing))
 
-ggplot(df_sharing, aes(df, Freq)) + 
+ggplot(df_sharing, aes(df_sharing, Freq)) + 
   geom_bar(stat="identity", position="dodge") + 
   theme_classic() +
   theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
