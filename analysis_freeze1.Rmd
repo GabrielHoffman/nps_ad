@@ -933,6 +933,7 @@ corrplot(C, order="hclust", col=col, tl.col="black")
 ```
 
 ```{r hm2, fig.width=7, fig.height=7}
+library(gplots)
 par(mar=c(7,4,4,2)+0.1) 
 heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr", key.xlab="Correlation", key.title='', keysize=1, cexRow=1, cexCol=1, margins=c(12,8))
 ```
