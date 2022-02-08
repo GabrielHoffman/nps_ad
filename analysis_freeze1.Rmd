@@ -859,7 +859,7 @@ res.joint = run_mash( fit.dl, coefs)
 ```
 
 Make more plots here
-```{r pi1}
+```{r pi1.joint}
 df_pi = get_estimated_pi(res.joint$model)
 df_pi = data.frame(Component = names(df_pi), pi = df_pi)
 
@@ -883,7 +883,7 @@ ggplot(df_pi, aes(Component, pi)) +
 # Reduce("+", C)
 ```
 
-```{r sharing.freq}
+```{r sharing.freq.joint}
 # allow NA values
 get_n_significant_conditions_na = function (m, thresh = 0.05, conditions = NULL, sig_fn = get_lfsr){
     if (is.null(conditions)) {
@@ -908,7 +908,7 @@ ggplot(df_sharing, aes(df, Freq)) +
 ```
 
 
-```{r upsetr}
+```{r upsetr.joint}
 m = res.joint$model
 
 listInput = lapply( colnames(m$result$PosteriorMean), function(cond)
