@@ -269,8 +269,8 @@ run_by_celltype = function(chromExprObj, sce){
 
     # Without autoencoder
     ods = estimateSizeFactors(ods)
-    ods = controlForConfounders(ods, q=2, implementation="pca", BPPARAM=SnowParam(1))
-    ods = fit(ods, BPPARAM=SnowParam(6))
+    ods = controlForConfounders(ods, q=2, implementation="pca", BPPARAM=SerialParam())
+    ods = fit(ods, BPPARAM=SerialParam())
     ods = computePvalues(ods, method="BH")
     ods = computeZscores(ods)
 
