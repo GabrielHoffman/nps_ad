@@ -145,7 +145,7 @@ df_counts_aggr = df_res %>%
 
 
 # Correlation in gain/loss scores across chromosomes
-```{r dependence, fig.height=20}
+```{r dependence, fig.height=20, fig.width=12}
 library(broom)
 
 chrs = c(1:22, "MT", "X", "Y")
