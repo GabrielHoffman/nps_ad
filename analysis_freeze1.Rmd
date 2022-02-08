@@ -859,7 +859,82 @@ res.joint = run_mash( fit.dl, coefs)
 ```
 
 Make more plots here
-```{r mashr.joint.plots}
+```{r pi1}
+df_pi = get_estimated_pi(res.joint$model)
+df_pi = data.frame(Component = names(df_pi), pi = df_pi)
+
+ggplot(df_pi, aes(Component, pi)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  theme_classic() +
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  coord_flip() +
+  scale_y_continuous(limits=c(0, 0.4), expand=c(0,0)) +
+  ylab("Posterior probability") +
+  ggtitle("Sharing from mashr") +
+  scale_fill_brewer(palette="Set1")
+
+# m = res.joint$model
+
+# pi1 = get_estimated_pi(m)[-1]
+# C = lapply( 1:length(pi1), function(i){
+#   m$fitted_g$Ulist[[i]] * pi1[i]
+# })
+
+# Reduce("+", C)
+```
+
+```{r sharing.freq}
+# allow NA values
+get_n_significant_conditions_na = function (m, thresh = 0.05, conditions = NULL, sig_fn = get_lfsr){
+    if (is.null(conditions)) {
+        conditions = 1:mashr:::get_ncond(m)
+    }
+    return(apply(sig_fn(m)[, conditions, drop = FALSE] < thresh, 
+        1, sum, na.rm=TRUE))
+}
+
+df_sharing = get_n_significant_conditions_na(res.joint$model)
+df_sharing =  data.frame(table(df_sharing))
+
+ggplot(df_sharing, aes(df, Freq)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  theme_classic() +
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(limits=c(0, NA), expand=c(0,0)) +
+  ylab("Number of genes") +
+  xlab("Number of cell types")  +
+  ggtitle("Frequency of eQTL sharing") +
+  scale_fill_brewer(palette="Set1")
+```
+
+
+```{r upsetr}
+m = res.joint$model
+
+listInput = lapply( colnames(m$result$PosteriorMean), function(cond)
+                get_significant_results(m, conditions=cond))
+names(listInput) = colnames(m$result$PosteriorMean)
+
+upset(fromList(listInput), order.by = "freq", nsets=length(listInput))
+```
+
+
+#### Cross-disease signature analysis
+```{r compare.signatures.mashr.joint, fig.width=9, fig.height=9}
+beta = get_pm(res.joint$model)
+
+C = cor(beta, use='pairwise.complete.obs', method="sp")
+
+col = colorRampPalette(c("blue3", "white","red3"))(200)
+
+corrplot(C, col=col, tl.col="black")
+
+corrplot(C, order="hclust", col=col, tl.col="black")
+```
+
+```{r hm2, fig.width=7, fig.height=7}
+par(mar=c(7,4,4,2)+0.1) 
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr", key.xlab="Correlation", key.title='', keysize=1, cexRow=1, cexCol=1, margins=c(12,8))
 ```
 
 

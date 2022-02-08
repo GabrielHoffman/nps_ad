@@ -21,7 +21,7 @@ vignette: >
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
 ml python git
 git pull
-R
+R --vanilla
 
 system("git pull")
 rmarkdown::render('chrom_loss.Rmd');
