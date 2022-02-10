@@ -171,10 +171,12 @@ plotFromToNetwork = function(D.rate){
 	V(g)$vertex.label = gsub("^.*_(.+)$", "\\1", names(V(g)))
 
 	plot(g, 
-		edge.arrow.size = .3,
+		edge.arrow.size = .5,
 		# edge.arrow.size = E(g)$weight/4,
 		edge.width=E(g)$weight*4, 
-		vertex.label=V(g)$vertex.label)
+		vertex.label=V(g)$vertex.label, 
+		vertex.frame.color=NA,
+		vertex.label.color = "black")
 }
 
 
