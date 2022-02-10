@@ -1098,7 +1098,7 @@ topTable(fit, coef='dxAD', number=Inf, sort.by="none")
 
 
 
-```{r test.composiution}
+```{r test.composiution.plots}
 
 # library(crumblr)
 form = ~ (1|SubID) + (1|batch)  + (1|round_num) + (1|HTO) + (1|Institution) + Sex + scale(Age) 
