@@ -1191,7 +1191,7 @@ plotFromToNetwork( D.rate )
  dev.off()
 ```
 
-```{r remaCor}
+```{r remaCor, eval=FALSE}
 tab = topTable(fit, coef=coefs[1], number=Inf, sort.by="none")
 tab = tab[grep("neuron", rownames(tab)),]
 
