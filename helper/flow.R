@@ -166,9 +166,9 @@ plotFromToNetwork = function(D.rate){
 	n2 = length(grep("^to_", names(V(g))))
 
 	V(g)$x = c(rep(1, n1), rep(2, n2))
-	V(g)$y = match(gsub("^.*_(\\S+)$", "\\1", names(V(g))), ids)
+	V(g)$y = match(gsub("^.*_(.+)$", "\\1", names(V(g))), ids)
 	V(g)$color = c(rep(cols[1], n1), rep(cols[2], n2))
-	V(g)$vertex.label = gsub("^.*_(\\S+)$", "\\1", names(V(g)))
+	V(g)$vertex.label = gsub("^.*_(.+)$", "\\1", names(V(g)))
 
 	plot(g, 
 		edge.arrow.size = .3,
