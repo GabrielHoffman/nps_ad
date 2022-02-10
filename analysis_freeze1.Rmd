@@ -960,14 +960,12 @@ fig = plotZenithResults(res_zenith[[3]], 3, 1) + ggtitle(names(res_zenith)[3])
 
 
 
-
-
 # Cell type composition
 
 ## Plot cell type composition
 ```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
 tab = sort(table(pbObj$dx))
-tab = tab[tab<40][1:4]
+tab = tab[tab>40]
 
 figLst = lapply(names(tab), function(lvl){
 
@@ -981,12 +979,11 @@ figLst = lapply(names(tab), function(lvl){
   }
   fig
 })
-
-plot_grid(plotlist=figLst, rel_heights= tab[ids], ncol=1, align="hv", axis="tblr")
+plot_grid(plotlist=figLst, rel_heights= tab, ncol=1, align="hv", axis="tblr")
 ```
 
 
-```{r plotCellComposition.summary, fig.height=1, fig.width=6}
+```{r plotCellComposition.summary, fig.height=4, fig.width=6}
 df_cellCount = do.call(rbind, int_colData(pbObj)$n_cells)
 
 plotCellComposition( t(colSums(df_cellCount)))
@@ -1019,7 +1016,7 @@ colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
 plotPercentBars( df_vp )
 ```
 
-```{r pca}
+```{r vst, fig.width=7, fig.height=7}
 # compute cell fractions
 fractions = t(apply(cellCounts(pbObj[,i]), 1, function(x){
   x = x+1
@@ -1028,7 +1025,9 @@ fractions = t(apply(cellCounts(pbObj[,i]), 1, function(x){
 
 # correlation between cell types
 plotCorrMatrix( cor(t(vst(cobj))) )
+```
 
+```{r pca}
 # PCA on VST
 res = prcomp( t(vst(cobj)), scale.=FALSE )
 
@@ -1036,14 +1035,11 @@ res = prcomp( t(vst(cobj)), scale.=FALSE )
 df_pca = merge(as.data.frame(res$x), colData(pbObj[,i]), by="row.names")
 df_pca = merge(df_pca, fractions, by.x="Row.names", by.y="row.names")
 
-fig = df_pca %>%
+df_pca %>%
       ggplot(aes(PC1, PC2, color=dx)) + 
         geom_point() +
         theme_classic() +
         theme(aspect.ratio=1, legend.position="right")
-
-ggsave("test.png", fig)
-
 
 df = cor(df_pca[,2:3], df_pca[,c( 'Age', colnames(fractions))], method="sp")
 df = data.frame(variable = colnames(df), t(df))
@@ -1059,6 +1055,8 @@ df %>%
 
 ## Perform statistical tests
 For each cell type
+
+
 ```{r cellTypeCompositionTest}
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + dx + scale(Age) 
 
@@ -1077,6 +1075,140 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>%
   kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
+
+
+Examine effect of batch.  Check composition with age.
+
+```{r test.composiution}
+form = ~ (1|SubID)  + (1|batch)  + (1|round_num) + (1|HTO) + (1|Institution) + dx*Sex + scale(Age) 
+
+i = with(as.data.frame(colData(pbObj)), (dx %in% c("AD", "Control")) & !is.na(Age) & !is.na(Sex))
+
+# crumblr transform cell counts
+cobj = crumblr(cellCounts(pbObj))
+
+
+fit = dream(cobj[,i], form, as.data.frame(colData(pbObj[,i])))
+fit = eBayes(fit)
+
+head(coef(fit))
+
+topTable(fit, coef='dxAD', number=Inf, sort.by="none")
+```
+
+
+
+```{r test.composiution}
+
+# library(crumblr)
+form = ~ (1|SubID) + (1|batch)  + (1|round_num) + (1|HTO) + (1|Institution) + Sex + scale(Age) 
+
+i = with(as.data.frame(colData(pbObj)), (dx %in% c("Control")) & !is.na(Age) & !is.na(Sex))
+
+# crumblr transform cell counts
+cobj = crumblr(cellCounts(pbObj))
+
+
+fractions = t(apply(cellCounts(pbObj), 1, function(x){
+  x = x+1
+  x / sum(x)
+}))
+
+
+fit = dream(cobj[,i], form, as.data.frame(colData(pbObj[,i])))
+fit = eBayes(fit)
+
+head(coef(fit))
+
+topTable(fit, coef='scale(Age)', number=Inf, sort.by="none")
+
+# fractions[i,]
+# t(cobj[,i]$E)
+
+merge(colData(pbObj)[i,], fractions[i,], by="row.names") %>% 
+  as_tibble %>% 
+  group_by(SubID) %>% 
+  summarize(OPC = mean(OPC),
+    Age = Age[1]) %>%
+  ggplot(aes(Age, OPC)) + 
+    geom_point() + 
+    theme_classic() + 
+    theme(aspect.ratio=1) + 
+    geom_smooth(method="lm")
+
+# ggsave("test.png", fig)
+
+
+x = as.data.frame(fractions[i,][order(colData(pbObj)$Age[i]),])
+
+tail(x)
+
+plotPercentBars( x ) + theme(axis.text.y=element_blank())
+
+# ggsave("test.png", fig)
+
+
+merge(colData(pbObj)[i,], fractions[i,], by="row.names") %>% 
+  as_tibble  %>% 
+  mutate(ord = factor(Row.names[order(Age)])) %>% 
+  pivot_longer(cols=colnames(fractions), values_to="frac", names_to="CellComp") %>%ggplot(aes(ord, y=frac, fill=CellComp)) +
+    geom_bar(position="stack", stat="identity")  + 
+    theme(axis.text.x=element_blank())
+
+# ggsave("test.png", fig)
+
+library(propr)
+
+res = propr( cellCounts(pbObj) + .5, metric="rho" )
+
+# png("test.png")
+plotCorrMatrix(res@matrix)
+# dev.off()
+
+source("helper/flow.R")
+
+from = c(t(x[1,]))
+names(from) = colnames(x)
+
+to = c(t(x[492,]))
+names(to) = colnames(x)
+
+D.rate = getTransitionAverages(from, to)
+
+
+
+# Plots of data and inferred rates
+plotFromToBars(from, to) + coord_flip()
+
+# ggsave("test.png", fig)
+
+plotFromToMatrix(D.rate) + theme(axis.text.x=element_text(angle=45, hjust=1))
+
+# ggsave("test.png", fig)
+
+# png("test.png")
+plotFromToNetwork( D.rate )
+ dev.off()
+```
+
+```{r remaCor}
+tab = topTable(fit, coef=coefs[1], number=Inf, sort.by="none")
+tab = tab[grep("neuron", rownames(tab)),]
+
+library(remaCor)
+
+se = with(tab, logFC/t)
+C =  cor(t(vst(cobj)))
+i = grep("neuron", rownames(C))
+
+C[i,i]
+
+LS( tab$logFC, se, cor=C[i,i])
+
+RE2C( tab$logFC, se, cor=C[i,i])
+```
+
+
 
 
 ### Collapse neuronal subtypes
