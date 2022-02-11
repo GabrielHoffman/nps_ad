@@ -167,7 +167,7 @@ form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + dx + (1|Ins
 fit = dream(cobj, form, info[i,])
 fit = eBayes(fit)
 
-coefs = c('dxAD', 'dxBP', 'dxSCZ')
+coefs = c('dxAD', 'dxBP', 'dxSCZ', 'scale(Age)')
 
 topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
   kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
