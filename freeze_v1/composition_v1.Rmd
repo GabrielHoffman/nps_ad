@@ -182,7 +182,7 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>%
   kable_classic(full_width = FALSE, html_font = "Cambria")
 
 topTable(fit, coef=coefs[4], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[4]) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
 
