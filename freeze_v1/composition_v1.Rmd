@@ -177,10 +177,26 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>%
 ```
 
 ## Association between components
-```{r association, fig.height=6, fig.width=6}
+
+Compositional rho
+```{r association.rho, fig.height=6, fig.width=6}
 res = propr( df_cellCounts[i,] + .5, metric="rho" )
 
 plotCorrMatrix(res@matrix, main='propr rho')
+```
+
+Correlation of CLR
+```{r association.clr, fig.height=6, fig.width=6}
+C1 = cor(t(cobj$E))
+
+plotCorrMatrix(C1, main='Cor CLR')
+```
+
+Correlation of VST
+```{r association.vst, fig.height=6, fig.width=6}
+C2 = cor(t(vst(cobj)))
+
+plotCorrMatrix(C2, main='Cor vst')
 ```
 
 
