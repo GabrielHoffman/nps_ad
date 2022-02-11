@@ -287,12 +287,6 @@ merge(info[i,], t(cobj$E), by="row.names") %>%
 ```
 
 
-```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
-
-
-
 ```{r flow}
 source("../helper/flow.R")
 
@@ -317,6 +311,13 @@ plotFromToMatrix(D.rate) + theme(axis.text.x=element_text(angle=45, hjust=1))
 
 plotFromToNetwork( D.rate )
 ```
+
+
+
+```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
+```
+
 
 
 
