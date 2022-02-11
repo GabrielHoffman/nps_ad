@@ -273,6 +273,20 @@ merge(info[i,], fractions[i,], by="row.names") %>%
 ```
 
 
+```{r age.trend.clr}
+merge(info[i,], t(cobj$E), by="row.names") %>% 
+  as_tibble %>% 
+  group_by(SubID) %>% 
+  summarize(OPC = mean(OPC),
+    Age = Age[1]) %>%
+  ggplot(aes(Age, OPC)) + 
+    geom_point() + 
+    theme_classic() + 
+    theme(aspect.ratio=1) + 
+    geom_smooth(method="lm")
+```
+
+
 ```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
 ```
