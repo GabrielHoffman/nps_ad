@@ -55,6 +55,7 @@ knitr::opts_chunk$set(
 library(crumblr)
 library(variancePartition)
 library(dreamlet)
+library(tidyverse)
 ```
 
 
@@ -136,7 +137,7 @@ plotCorrMatrix( cor(t(vst(cobj))) )
 res = prcomp( t(vst(cobj)), scale.=FALSE )
 
 # merge with subject metadata
-df_pca = merge(as.data.frame(res$x), info[i,]), by="row.names")
+df_pca = merge(as.data.frame(res$x), info[i,], by="row.names")
 df_pca = merge(df_pca, fractions, by.x="Row.names", by.y="row.names")
 
 df_pca %>%
