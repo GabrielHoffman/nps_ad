@@ -51,7 +51,7 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-```{r load.packages, cache=FALSE}
+```{r load.packages}
 library(crumblr)
 library(variancePartition)
 library(dreamlet)
@@ -81,7 +81,7 @@ CT_FOCUS = 'celltype8'
 
 # Compute counts of each cell type
 df_cellCounts = infoFull %>% 
-  group_by(across(c('Channel', CT_FOCUS))) %>%
+  group_by(all_of(c('Channel', CT_FOCUS))) %>%
   count() %>%
   pivot_wider(names_from=CT_FOCUS, values_from='n', values_fill=0) %>%
   column_to_rownames("Channel")
@@ -95,7 +95,7 @@ info = infoFull %>%
 
 # same sorting
 info = info[rownames(df_cellCounts),]
-
+```
 
 
 ## Plot cell type composition
