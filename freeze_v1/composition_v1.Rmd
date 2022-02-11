@@ -90,8 +90,10 @@ df_cellCounts = infoFull %>%
 info = infoFull %>%
   group_by(Channel) %>%
   select(Channel, SubID, round_num, HTO, batch, prep, dx, Institution, Age, Sex, Ethnicity )  %>%
-  distinct  %>%
-  column_to_rownames("Channel")
+  distinct %>%
+  mutate(dx = relevel(dx, "Control")) %>%
+  column_to_rownames("Channel") 
+
 
 # same sorting
 info = info[rownames(df_cellCounts),]
