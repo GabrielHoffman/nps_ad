@@ -294,17 +294,16 @@ knitr::knit_exit()
 
 
 ```{r flow}
-
 source("../helper/flow.R")
 
-from = c(t(x[1,]))
-names(from) = colnames(x)
 
-to = c(t(x[492,]))
-names(to) = colnames(x)
+i = which(info$dx == "Control")
+from = colSums(df_cellCounts[i,])
+
+j = which(info$dx == "AD")
+to = colSums(df_cellCounts[j,])
 
 D.rate = getTransitionAverages(from, to)
-
 
 
 # Plots of data and inferred rates
@@ -316,9 +315,7 @@ plotFromToMatrix(D.rate) + theme(axis.text.x=element_text(angle=45, hjust=1))
 
 # ggsave("test.png", fig)
 
-# png("test.png")
 plotFromToNetwork( D.rate )
- dev.off()
 ```
 
 
