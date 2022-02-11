@@ -124,6 +124,7 @@ figLst = lapply(names(tab), function(lvl){
 
   idx = which(info$dx == lvl)
   idx = idx[!is.na(idx)]
+  idx = order(info$Age[idx])
 
   fig = plotCellComposition(df_cellCounts[idx,]) + ggtitle(lvl) + theme_void()
 
@@ -186,21 +187,6 @@ topTable(fit, coef=coefs[4], number=Inf, sort.by="none")[,1:5] %>%
   kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
 
-Age trend
-
-```{r age.trend.plot}
-merge(info, fractions, by="row.names") %>% 
-  as_tibble %>% 
-  group_by(SubID) %>% 
-  summarize(OPC = mean(OPC),
-    Age = Age[1]) %>%
-  ggplot(aes(Age, OPC)) + 
-    geom_point() + 
-    theme_classic() + 
-    theme(aspect.ratio=1) + 
-    geom_smooth(method="lm")
-```
-
 
 ## Association between components
 
@@ -260,7 +246,9 @@ df %>%
 # Age
 
 ```{r age.trend}
-x = as.data.frame(fractions[order(info$Age),])
+i = !is.na(info$Age)
+
+x = as.data.frame(fractions[i,][order(info$Age[i]),])
 
 plotPercentBars( x ) + theme(axis.text.y=element_blank())
 ```
