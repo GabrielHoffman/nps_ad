@@ -115,7 +115,7 @@ figLst = lapply(names(tab), function(lvl){
   idx = which(info$dx == lvl)
   idx = idx[!is.na(idx)]
 
-  fig = plotCellComposition(df_cellCounts[idx,]) + ggtitle(lvl) 
+  fig = plotCellComposition(df_cellCounts[idx,]) + ggtitle(lvl) + theme_void()
 
   if( lvl != names(tab)[which.max(tab)] ){
     fig = fig + theme(legend.position="none")
