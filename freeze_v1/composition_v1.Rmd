@@ -97,6 +97,12 @@ info = infoFull %>%
 
 # same sorting
 info = info[rownames(df_cellCounts),]
+
+# compute cell fractions
+fractions = t(apply(df_cellCounts, 1, function(x){
+  x = x+1
+  x / sum(x)
+}))
 ```
 
 
@@ -179,6 +185,7 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>%
 ## Association between components
 
 Compositional rho
+
 ```{r association.rho, fig.height=6, fig.width=6}
 res = propr( df_cellCounts[i,] + .5, metric="rho" )
 
@@ -186,6 +193,7 @@ plotCorrMatrix(res@matrix, main='propr rho')
 ```
 
 Correlation of CLR
+
 ```{r association.clr, fig.height=6, fig.width=6}
 C1 = cor(t(cobj$E))
 
@@ -193,6 +201,7 @@ plotCorrMatrix(C1, main='Cor CLR')
 ```
 
 Correlation of VST
+
 ```{r association.vst, fig.height=6, fig.width=6}
 C2 = cor(t(vst(cobj)))
 
@@ -200,23 +209,6 @@ plotCorrMatrix(C2, main='Cor vst')
 ```
 
 
-```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
-
-
-
-
-```{r vst, fig.width=7, fig.height=7}
-# compute cell fractions
-fractions = t(apply(df_cellCounts[i,], 1, function(x){
-  x = x+1
-  x / sum(x)
-}))
-
-# correlation between cell types
-plotCorrMatrix( cor(t(vst(cobj))) )
-```
 
 ```{r pca}
 # PCA on VST
@@ -243,6 +235,22 @@ df %>%
       theme(aspect.ratio=5) +
       scale_fill_gradient2(name = "Correlation", low="blue", mid="white", high="red", limits=c(-1, 1))
 ```
+
+
+
+```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
+```
+
+
+
+
+```{r vst, fig.width=7, fig.height=7}
+
+# correlation between cell types
+plotCorrMatrix( cor(t(vst(cobj))) )
+```
+
 
 Examine effect of batch.  Check composition with age.
 
