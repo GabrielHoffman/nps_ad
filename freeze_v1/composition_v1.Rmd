@@ -180,6 +180,10 @@ topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
 topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
   kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
   kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[4], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
 
 ## Association between components
@@ -209,10 +213,11 @@ plotCorrMatrix(C2, main='Cor vst')
 ```
 
 
-
+# PCA
 ```{r pca}
 # PCA on VST
-res = prcomp( t(vst(cobj)), scale.=FALSE )
+# res = prcomp( t(vst(cobj)), scale.=FALSE )
+res = prcomp( t(cobj$E) )
 
 # merge with subject metadata
 df_pca = merge(as.data.frame(res$x), info[i,], by="row.names")
@@ -243,13 +248,6 @@ knitr::knit_exit()
 ```
 
 
-
-
-```{r vst, fig.width=7, fig.height=7}
-
-# correlation between cell types
-plotCorrMatrix( cor(t(vst(cobj))) )
-```
 
 
 Examine effect of batch.  Check composition with age.
