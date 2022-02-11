@@ -89,7 +89,7 @@ df_cellCounts = infoFull %>%
 # extract subject metadata
 info = infoFull %>%
   group_by(Channel) %>%
-  select(Channel, SubID, round_num, batch, prep, dx, Institution, Age, Ethnicity, )  %>%
+  select(Channel, SubID, round_num, batch, prep, dx, Institution, Age, Sex, Ethnicity )  %>%
   distinct  %>%
   column_to_rownames("Channel")
 
@@ -128,11 +128,6 @@ plot_grid(plotlist=figLst, rel_heights= tab, ncol=1, align="hv", axis="tblr")
 ```
 
 
-```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
-
-
 
 
 ## Partition variation in cell type composition
@@ -156,6 +151,15 @@ colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
 
 plotPercentBars( df_vp )
 ```
+
+
+
+```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
+```
+
+
+
 
 ```{r vst, fig.width=7, fig.height=7}
 # compute cell fractions
