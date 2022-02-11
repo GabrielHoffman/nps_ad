@@ -177,7 +177,7 @@ topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>%
 ```
 
 ## Association between components
-```{r association}
+```{r association, fig.height=6, fig.width=6}
 res = propr( df_cellCounts[i,] + .5, metric="rho" )
 
 plotCorrMatrix(res@matrix, main='propr rho')
