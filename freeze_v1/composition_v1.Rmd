@@ -89,7 +89,7 @@ df_cellCounts = infoFull %>%
 # extract subject metadata
 info = infoFull %>%
   group_by(Channel) %>%
-  select(Channel, SubID, round_num, batch, prep, dx, Institution, Age, Sex, Ethnicity )  %>%
+  select(Channel, SubID, round_num, HTO, batch, prep, dx, Institution, Age, Sex, Ethnicity )  %>%
   distinct  %>%
   column_to_rownames("Channel")
 
@@ -132,24 +132,47 @@ plot_grid(plotlist=figLst, rel_heights= tab, ncol=1, align="hv", axis="tblr")
 
 ## Partition variation in cell type composition
 ```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
-# Add dream here
-# deal with NA's here 
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|Institution) + scale(Age) 
-
+# keep subjects with observed data
 i = with(info, !is.na(dx) & !is.na(Age) & !is.na(Sex))
 
 # crumblr transform cell counts
 cobj = crumblr(df_cellCounts[i,])
 
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|Institution) + scale(Age) 
+
 # variance partitioning analysis
 df_vp = fitExtractVarPartModel(cobj, form, info[i,])
 
 # rownames(df_vp) = df_vp$assay
-colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
+colnames(df_vp) = gsub("scale\\((.*)\\)", "\\1", colnames(df_vp))
+colnames(df_vp) = gsub("SubID", "Subject", colnames(df_vp))
 
 plotPercentBars( df_vp )
+```
+
+
+## Perform statistical tests
+For each cell type
+
+```{r cellTypeCompositionTest}
+form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + dx + (1|Institution) + scale(Age) 
+
+fit = dream(cobj, form, info[i,])
+fit = eBayes(fit)
+
+coefs = c('dxAD', 'dxBP', 'dxSCZ')
+
+topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+
+topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
+  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
+  kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
 
 
@@ -197,32 +220,6 @@ df %>%
       theme(aspect.ratio=5) +
       scale_fill_gradient2(name = "Correlation", low="blue", mid="white", high="red", limits=c(-1, 1))
 ```
-
-## Perform statistical tests
-For each cell type
-
-
-```{r cellTypeCompositionTest}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + dx + scale(Age) 
-
-fit = dream(cobj, form, info[i,])
-fit = eBayes(fit)
-
-coefs = c('dxAD', 'dxBP', 'dxSCZ')
-
-topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-
-topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-
-topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-```
-
 
 Examine effect of batch.  Check composition with age.
 
