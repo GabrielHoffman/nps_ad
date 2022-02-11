@@ -248,8 +248,11 @@ pbObj = readRDS(file)
 file = paste0(outfolder, 'cellCounts.RDS')
 saveRDS(cellCounts(pbObj), file=file)
 
-file = paste0(outfolder, 'colData.RDS')
+file = paste0(outfolder, 'colData_pb.RDS')
 saveRDS(colData(pbObj), file=file)
+
+file = paste0(outfolder, 'colData_full.RDS')
+saveRDS(colData(sceCombine), file=file)
 ```
 
 

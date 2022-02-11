@@ -64,37 +64,34 @@ knitr::opts_chunk$set(
 
 ```{r load.packages, cache=FALSE}
 library(crumblr)
+library(variancePartition)
+library(dreamlet)
 ```
 
 
+# Cell type composition
 ```{r load.data}
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
+
 file = paste0(outfolder, 'cellCounts.RDS')
 df_cellCounts = readRDS(file)
 
 file = paste0(outfolder, 'colData.RDS')
-info = readRDS(file)
+info = as.data.frame(readRDS(file))
 ```
 
 
-
-
-
-
-
-
-# Cell type composition
-
 ## Plot cell type composition
 ```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
-tab = sort(table(pbObj$dx))
+tab = sort(table(info$dx))
 tab = tab[tab>40]
 
 figLst = lapply(names(tab), function(lvl){
 
-  idx = which(pbObj$dx == lvl)
+  idx = which(info$dx == lvl)
   idx = idx[!is.na(idx)]
 
-  fig = plotCellComposition(pbObj[,idx]) + ggtitle(lvl) 
+  fig = plotCellComposition(df_cellCounts[idx,]) + ggtitle(lvl) 
 
   if( lvl != names(tab)[which.max(tab)] ){
     fig = fig + theme(legend.position="none")
@@ -106,9 +103,7 @@ plot_grid(plotlist=figLst, rel_heights= tab, ncol=1, align="hv", axis="tblr")
 
 
 ```{r plotCellComposition.summary, fig.height=4, fig.width=6}
-df_cellCount = do.call(rbind, int_colData(pbObj)$n_cells)
-
-plotCellComposition( t(colSums(df_cellCount)))
+plotCellComposition( t(colSums(df_cellCounts)))
 ```
 
 
@@ -120,15 +115,13 @@ plotCellComposition( t(colSums(df_cellCount)))
 # deal with NA's here 
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|Institution) + scale(Age) 
 
-i = with(as.data.frame(colData(pbObj)), !is.na(dx) & !is.na(Age) & !is.na(Sex))
-
-library(crumblr)
+i = with(info, !is.na(dx) & !is.na(Age) & !is.na(Sex))
 
 # crumblr transform cell counts
-cobj = crumblr(cellCounts(pbObj[,i]))
+cobj = crumblr(df_cellCounts[i,])
 
 # variance partitioning analysis
-df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
+df_vp = fitExtractVarPartModel(cobj, form, info[i,])
 
 # rownames(df_vp) = df_vp$assay
 colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
@@ -140,7 +133,7 @@ plotPercentBars( df_vp )
 
 ```{r vst, fig.width=7, fig.height=7}
 # compute cell fractions
-fractions = t(apply(cellCounts(pbObj[,i]), 1, function(x){
+fractions = t(apply(df_cellCounts[i,]), 1, function(x){
   x = x+1
   x / sum(x)
 }))
@@ -154,7 +147,7 @@ plotCorrMatrix( cor(t(vst(cobj))) )
 res = prcomp( t(vst(cobj)), scale.=FALSE )
 
 # merge with subject metadata
-df_pca = merge(as.data.frame(res$x), colData(pbObj[,i]), by="row.names")
+df_pca = merge(as.data.frame(res$x), info[i,]), by="row.names")
 df_pca = merge(df_pca, fractions, by.x="Row.names", by.y="row.names")
 
 df_pca %>%
@@ -182,7 +175,7 @@ For each cell type
 ```{r cellTypeCompositionTest}
 form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + dx + scale(Age) 
 
-fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
+fit = dream(cobj, form, info[i,])
 fit = eBayes(fit)
 
 topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
@@ -204,13 +197,13 @@ Examine effect of batch.  Check composition with age.
 ```{r test.composiution}
 form = ~ (1|SubID)  + (1|batch)  + (1|round_num) + (1|HTO) + (1|Institution) + dx*Sex + scale(Age) 
 
-i = with(as.data.frame(colData(pbObj)), (dx %in% c("AD", "Control")) & !is.na(Age) & !is.na(Sex))
+i = with(info, (dx %in% c("AD", "Control")) & !is.na(Age) & !is.na(Sex))
 
 # crumblr transform cell counts
-cobj = crumblr(cellCounts(pbObj))
+cobj = crumblr(df_cellCounts)
 
 
-fit = dream(cobj[,i], form, as.data.frame(colData(pbObj[,i])))
+fit = dream(cobj[,i], form, info[i,])
 fit = eBayes(fit)
 
 head(coef(fit))
@@ -225,19 +218,19 @@ topTable(fit, coef='dxAD', number=Inf, sort.by="none")
 # library(crumblr)
 form = ~ (1|SubID) + (1|batch)  + (1|round_num) + (1|HTO) + (1|Institution) + Sex + scale(Age) 
 
-i = with(as.data.frame(colData(pbObj)), (dx %in% c("Control")) & !is.na(Age) & !is.na(Sex))
+i = with(info, (dx %in% c("Control")) & !is.na(Age) & !is.na(Sex))
 
 # crumblr transform cell counts
-cobj = crumblr(cellCounts(pbObj))
+cobj = crumblr(df_cellCounts)
 
 
-fractions = t(apply(cellCounts(pbObj), 1, function(x){
+fractions = t(apply(df_cellCounts, 1, function(x){
   x = x+1
   x / sum(x)
 }))
 
 
-fit = dream(cobj[,i], form, as.data.frame(colData(pbObj[,i])))
+fit = dream(cobj[,i], form, info[i,])
 fit = eBayes(fit)
 
 head(coef(fit))
@@ -247,7 +240,7 @@ topTable(fit, coef='scale(Age)', number=Inf, sort.by="none")
 # fractions[i,]
 # t(cobj[,i]$E)
 
-merge(colData(pbObj)[i,], fractions[i,], by="row.names") %>% 
+merge(info[i,], fractions[i,], by="row.names") %>% 
   as_tibble %>% 
   group_by(SubID) %>% 
   summarize(OPC = mean(OPC),
@@ -261,7 +254,7 @@ merge(colData(pbObj)[i,], fractions[i,], by="row.names") %>%
 # ggsave("test.png", fig)
 
 
-x = as.data.frame(fractions[i,][order(colData(pbObj)$Age[i]),])
+x = as.data.frame(fractions[i,][order(info$Age[i]),])
 
 tail(x)
 
@@ -270,7 +263,7 @@ plotPercentBars( x ) + theme(axis.text.y=element_blank())
 # ggsave("test.png", fig)
 
 
-merge(colData(pbObj)[i,], fractions[i,], by="row.names") %>% 
+merge(info[i,], fractions[i,], by="row.names") %>% 
   as_tibble  %>% 
   mutate(ord = factor(Row.names[order(Age)])) %>% 
   pivot_longer(cols=colnames(fractions), values_to="frac", names_to="CellComp") %>%ggplot(aes(ord, y=frac, fill=CellComp)) +
@@ -281,13 +274,13 @@ merge(colData(pbObj)[i,], fractions[i,], by="row.names") %>%
 
 library(propr)
 
-res = propr( cellCounts(pbObj) + .5, metric="rho" )
+res = propr( df_cellCounts[i,] + .5, metric="rho" )
 
 # png("test.png")
 plotCorrMatrix(res@matrix)
 # dev.off()
 
-source("helper/flow.R")
+source("../helper/flow.R")
 
 from = c(t(x[1,]))
 names(from) = colnames(x)
@@ -328,58 +321,6 @@ C[i,i]
 LS( tab$logFC, se, cor=C[i,i])
 
 RE2C( tab$logFC, se, cor=C[i,i])
-```
-
-
-
-
-### Collapse neuronal subtypes
-```{r cellTypeCompositionVarPart.neuron, fig.height=4, fig.width=6}
-# Add dream here
-# deal with NA's here 
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1|Institution) + scale(Age) 
-
-i = with(colData(pbObj), !is.na(dx) & !is.na(Age) & !is.na(Sex))
-
-df_counts = as.data.frame(cellCounts(pbObj[,i]))
-idx = grep("GABA|Gluta", colnames(df_counts))
-
-# include summed neurons
-df_counts$Neurons = rowSums(df_counts[,idx])
-
-# drop split neurons
-df_counts = df_counts[,-idx]
-
-cobj = crumblr(as.matrix(df_counts))
-df_vp = fitExtractVarPartModel(cobj, form, as.data.frame(colData(pbObj[,i])))
-
-# rownames(df_vp) = df_vp$assay
-colnames(df_vp) = gsub("scale\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("\\.", "", colnames(df_vp))
-colnames(df_vp) = gsub("SubID", "Donor", colnames(df_vp))
-
-plotPercentBars( df_vp )
-```
-
-## Perform statistical tests
-For each cell type
-```{r cellTypeCompositionTest.neuron}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + dx + scale(Age) 
-
-fit = dream(cobj, form, as.data.frame(colData(pbObj[,i])))
-fit = eBayes(fit)
-
-topTable(fit, coef=coefs[1], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[1]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-
-topTable(fit, coef=coefs[2], number=Inf, sort.by="none")[,1:5] %>%
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[2]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
-
-topTable(fit, coef=coefs[3], number=Inf, sort.by="none")[,1:5] %>% 
-  kable(digits=c(2, 2, 2, 3, 3, 2, 2), caption=coefs[3]) %>% 
-  kable_classic(full_width = FALSE, html_font = "Cambria")
 ```
 
 
