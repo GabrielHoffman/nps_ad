@@ -94,7 +94,6 @@ info = infoFull %>%
   mutate(dx = relevel(dx, "Control")) %>%
   column_to_rownames("Channel") 
 
-
 # same sorting
 info = info[rownames(df_cellCounts),]
 ```
@@ -145,7 +144,6 @@ form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|dx) + (1
 # variance partitioning analysis
 df_vp = fitExtractVarPartModel(cobj, form, info[i,])
 
-# rownames(df_vp) = df_vp$assay
 colnames(df_vp) = gsub("scale\\((.*)\\)", "\\1", colnames(df_vp))
 colnames(df_vp) = gsub("SubID", "Subject", colnames(df_vp))
 
