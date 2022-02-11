@@ -101,11 +101,13 @@ info = info[rownames(df_cellCounts),]
 ## Plot cell type composition
 
 Study-wide
+
 ```{r plotCellComposition.summary, fig.height=4, fig.width=6}
 plotCellComposition( t(colSums(df_cellCounts)))
 ```
 
-Summarized by disease stat us
+Summarized by disease status
+
 ```{r plotCellComposition, fig.height=20, fig.width=5}
 tab = sort(table(info$dx))
 tab = tab[tab>40]
