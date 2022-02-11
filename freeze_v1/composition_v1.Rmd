@@ -25,23 +25,12 @@ git pull
 R --vanilla
 
 system("git pull")
-rmarkdown::render("analysis_freeze1.Rmd");
+rmarkdown::render("composition_v1.Rmd");
 
 
-# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/freeze_v1/composition_v1.html
 
 
-echo "echo \"rmarkdown::render('analysis_freeze1.Rmd');\" | R" > script.sh
-
-
-bsub -Is -q interactive -R "span[hosts=1]" -W 12:00 -P acc_CommonMind -n 24 bash
-
-
-
-ml git
-cd ~/build2/dreamlet
-git pull
-R CMD INSTALL .
 
 npsad:roussoslab
 
@@ -133,7 +122,7 @@ plotPercentBars( df_vp )
 
 ```{r vst, fig.width=7, fig.height=7}
 # compute cell fractions
-fractions = t(apply(df_cellCounts[i,]), 1, function(x){
+fractions = t(apply(df_cellCounts[i,], 1, function(x){
   x = x+1
   x / sum(x)
 }))
