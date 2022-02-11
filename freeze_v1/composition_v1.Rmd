@@ -64,16 +64,49 @@ library(kableExtra)
 ```{r load.data}
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
 
-file = paste0(outfolder, 'cellCounts.RDS')
-df_cellCounts = readRDS(file)
+# file = paste0(outfolder, 'cellCounts.RDS')
+# df_cellCounts = readRDS(file)
 
-file = paste0(outfolder, 'colData.RDS')
-info = as.data.frame(readRDS(file))
+# file = paste0(outfolder, 'colData_pb.RDS')
+# info = as.data.frame(readRDS(file))
+
+file = paste0(outfolder, 'colData_full.RDS')
+infoFull = as.data.frame(readRDS(file))
 ```
+
+```{r create.summary}
+
+CT_FOCUS = 'celltype8'
+# leiden_labels, anno, class, celltype, subtype, celltype8
+
+# Compute counts of each cell type
+df_cellCounts = infoFull %>% 
+  group_by(across(c('Channel', CT_FOCUS))) %>%
+  count() %>%
+  pivot_wider(names_from=CT_FOCUS, values_from='n', values_fill=0) %>%
+  column_to_rownames("Channel")
+
+# extract subject metadata
+info = infoFull %>%
+  group_by(Channel) %>%
+  select(Channel, SubID, round_num, batch, prep, dx, Institution, Age, Ethnicity, )  %>%
+  distinct  %>%
+  column_to_rownames("Channel")
+
+# same sorting
+info = info[rownames(df_cellCounts),]
+
 
 
 ## Plot cell type composition
-```{r plotCellComposition, fig.height=20, fig.width=5, eval=FALSE}
+
+Study-wide
+```{r plotCellComposition.summary, fig.height=4, fig.width=6}
+plotCellComposition( t(colSums(df_cellCounts)))
+```
+
+Summarized by disease stat us
+```{r plotCellComposition, fig.height=20, fig.width=5}
 tab = sort(table(info$dx))
 tab = tab[tab>40]
 
@@ -93,8 +126,8 @@ plot_grid(plotlist=figLst, rel_heights= tab, ncol=1, align="hv", axis="tblr")
 ```
 
 
-```{r plotCellComposition.summary, fig.height=4, fig.width=6}
-plotCellComposition( t(colSums(df_cellCounts)))
+```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
 ```
 
 
