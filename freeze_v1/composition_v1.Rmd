@@ -135,7 +135,7 @@ plotCellComposition( t(colSums(df_cellCounts)))
 ```
 
 
-```{r plotCellComposition.summary, fig.height=4, fig.width=6}
+```{r plotCellComposition.summary_Bars, fig.height=4, fig.width=6}
 df = data.frame(counts = colSums(df_cellCounts))
 df$celltype = rownames(df)
 df$fraction = df$counts / sum(df$counts)
