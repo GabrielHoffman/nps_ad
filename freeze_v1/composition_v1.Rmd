@@ -278,30 +278,34 @@ plotPercentBars( x ) + theme(axis.text.y=element_blank())
 
 
 ```{r age.trend2}
-merge(info[i,], fractions[i,], by="row.names") %>% 
-  as_tibble %>% 
-  group_by(SubID) %>% 
-  summarize(OPC = mean(OPC),
-    Age = Age[1]) %>%
-  ggplot(aes(Age, OPC)) + 
-    geom_point() + 
-    theme_classic() + 
-    theme(aspect.ratio=1) + 
-    geom_smooth(method="lm")
+if( 'OPC' %in% colnames(fractions)){
+  merge(info[i,], fractions[i,], by="row.names") %>% 
+    as_tibble %>% 
+    group_by(SubID) %>% 
+    summarize(OPC = mean(OPC),
+      Age = Age[1]) %>%
+    ggplot(aes(Age, OPC)) + 
+      geom_point() + 
+      theme_classic() + 
+      theme(aspect.ratio=1) + 
+      geom_smooth(method="lm")
+}
 ```
 
 
 ```{r age.trend.clr}
-merge(info[i,], t(cobj$E), by="row.names") %>% 
-  as_tibble %>% 
-  group_by(SubID) %>% 
-  summarize(OPC = mean(OPC),
-    Age = Age[1]) %>%
-  ggplot(aes(Age, OPC)) + 
-    geom_point() + 
-    theme_classic() + 
-    theme(aspect.ratio=1) + 
-    geom_smooth(method="lm")
+if( 'OPC' %in% colnames(fractions)){
+  merge(info[i,], t(cobj$E), by="row.names") %>% 
+    as_tibble %>% 
+    group_by(SubID) %>% 
+    summarize(OPC = mean(OPC),
+      Age = Age[1]) %>%
+    ggplot(aes(Age, OPC)) + 
+      geom_point() + 
+      theme_classic() + 
+      theme(aspect.ratio=1) + 
+      geom_smooth(method="lm")
+}
 ```
 
 
