@@ -81,7 +81,7 @@ library(kableExtra)
 
 
 # Cell type composition
-```{r load.data, eval=FALSE}
+```{r load.data, eval=TRUE}
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
 
 # file = paste0(outfolder, 'cellCounts.RDS')
