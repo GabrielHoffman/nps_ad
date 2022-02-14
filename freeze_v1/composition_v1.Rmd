@@ -40,7 +40,7 @@ library(tidyverse)
 
 ct_variables = c('celltype8', 'anno', 'class', 'celltype', 'subtype', 'leiden_labels')
 
-ct_variables[1] %>% 
+ct_variables %>% 
   walk(function(x) render("composition_v1.Rmd",
                           params = list(CT_FOCUS = x),
                           output_file = paste0("composition_v1_", x, ".html")))
