@@ -138,7 +138,7 @@ plotFromToMatrix = function( D.rate ){
 			ylab("From") + xlab("To") +
 			scale_fill_gradient2(low="white", high="navy", limits=c(0,1), name="Rate") +
 			scale_x_discrete(limits=ids) +
-			scale_y_discrete(limits=ids) +
+			scale_y_discrete(limits=rev(ids)) +
 			geom_text(aes(j,i, label=round(x,3)), color="red") 
 }
 
@@ -147,16 +147,14 @@ plotFromToMatrix = function( D.rate ){
 	
 
 
-plotFromToNetwork = function(D.rate){
+plotFromToNetwork = function(D.rate, node.cols = c("#E41A1C", "#377EB8"), edge.cols=c("orange", "grey90")){
 
 	ids = rownames(D.rate)
-
-	cols = brewer.pal(3, "Set1")[1:2]
 
 	g = D.rate %>%
 		Matrix(sparse=TRUE) %>%
 		summary %>%	
-		mutate( color = c("orange", "grey")[(i==j)+1],
+		mutate( color = edge.cols[(i==j)+1],
 				i = paste0("from_", ids[i]), 
 				j = paste0("to_", ids[j]), 
 				weight=x) %>%
@@ -166,8 +164,8 @@ plotFromToNetwork = function(D.rate){
 	n2 = length(grep("^to_", names(V(g))))
 
 	V(g)$x = c(rep(1, n1), rep(2, n2))
-	V(g)$y = match(gsub("^.*_(.+)$", "\\1", names(V(g))), ids)
-	V(g)$color = c(rep(cols[1], n1), rep(cols[2], n2))
+	V(g)$y = match(gsub("^.*_(.+)$", "\\1", names(V(g))), rev(ids))
+	V(g)$color = c(rep(node.cols[1], n1), rep(node.cols[2], n2))
 	V(g)$vertex.label = gsub("^.*_(.+)$", "\\1", names(V(g)))
 
 	plot(g, 
