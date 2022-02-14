@@ -80,7 +80,7 @@ library(tidyverse)
 ```
 
 
-# Cell type composition
+# Cell type composition: `r print(params$CT_FOCUS)`
 ```{r load.data, eval=TRUE}
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
 
