@@ -74,9 +74,9 @@ knitr::opts_chunk$set(
 library(crumblr)
 library(variancePartition)
 library(dreamlet)
-library(tidyverse)
 library(propr)
 library(kableExtra)
+library(tidyverse)
 ```
 
 
@@ -91,7 +91,7 @@ outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_re
 # info = as.data.frame(readRDS(file))
 
 file = paste0(outfolder, 'colData_full.RDS')
-infoFull = as.data.frame(readRDS(file))
+infoFull = readRDS(file) %>% as_tibble
 ```
 
 ```{r create.summary}
@@ -108,7 +108,7 @@ df_cellCounts = infoFull %>%
 # extract subject metadata
 info = infoFull %>%
   group_by(Channel) %>%
-  select(Channel, SubID, round_num, HTO, batch, prep, dx, Institution, Age, Sex, Ethnicity )  %>%
+  dplyr::select(Channel, SubID, round_num, HTO, batch, prep, dx, Institution, Age, Sex, Ethnicity ) %>%
   distinct %>%
   mutate(dx = relevel(dx, "Control")) %>%
   column_to_rownames("Channel") 
@@ -118,7 +118,7 @@ info = info[rownames(df_cellCounts),]
 
 # compute cell fractions
 fractions = t(apply(df_cellCounts, 1, function(x){
-  x = x+1
+  x = x + 0.5
   x / sum(x)
 }))
 ```
