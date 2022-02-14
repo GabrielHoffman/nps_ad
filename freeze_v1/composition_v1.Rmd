@@ -137,8 +137,9 @@ plotCellComposition( t(colSums(df_cellCounts)))
 
 ```{r plotCellComposition.summary_Bars, fig.height=4, fig.width=6}
 df = data.frame(counts = colSums(df_cellCounts))
-df$celltype = rownames(df)
+df$celltype = factor(rownames(df), rev(rownames(df)))
 df$fraction = df$counts / sum(df$counts)
+
 
 ggplot(df, aes(celltype, fraction, fill=celltype)) + 
   geom_bar(stat="identity") +
