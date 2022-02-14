@@ -40,7 +40,7 @@ library(tidyverse)
 
 ct_variables = c('celltype8', 'anno', 'class', 'celltype', 'subtype', 'leiden_labels')
 
-ct_variables %>% 
+ct_variables[1] %>% 
   walk(function(x) render("composition_v1.Rmd",
                           params = list(CT_FOCUS = x),
                           output_file = paste0("composition_v1_", x, ".html")))
@@ -80,7 +80,9 @@ library(tidyverse)
 ```
 
 
-# Cell type composition: `r print(params$CT_FOCUS)`
+# Cell type composition: 
+`r print(params$CT_FOCUS)`
+
 ```{r load.data, eval=TRUE}
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
 
@@ -149,7 +151,7 @@ figLst = lapply(names(tab), function(lvl){
   # sort by age
   counts = counts[order(info_sub$Age),]
 
-  fig = plotCellComposition(counts) + ggtitle(lvl) + theme_void()
+  fig = plotCellComposition(counts) + ggtitle(lvl) + theme_void() + theme(legend.position="bottom")
 
   if( lvl != names(tab)[which.max(tab)] ){
     fig = fig + theme(legend.position="none")
@@ -163,7 +165,7 @@ plot_grid(plotlist=figLst, rel_heights= tab, ncol=1, align="hv", axis="tblr")
 
 
 ## Partition variation in cell type composition
-```{r cellTypeCompositionVarPart, fig.height=4, fig.width=6}
+```{r cellTypeCompositionVarPart, fig.height=5, fig.width=6}
 # keep subjects with observed data
 i = with(info, !is.na(dx) & !is.na(Age) & !is.na(Sex))
 
