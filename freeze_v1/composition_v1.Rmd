@@ -178,7 +178,7 @@ df_vp = fitExtractVarPartModel(cobj, form, info[i,])
 colnames(df_vp) = gsub("scale\\((.*)\\)", "\\1", colnames(df_vp))
 colnames(df_vp) = gsub("SubID", "Subject", colnames(df_vp))
 
-plotPercentBars( df_vp )
+plotPercentBars( df_vp, width=1 )
 ```
 
 
@@ -273,7 +273,7 @@ i = !is.na(info$Age)
 
 x = as.data.frame(fractions[i,][order(info$Age[i]),])
 
-plotPercentBars( x ) + theme(axis.text.y=element_blank())
+plotPercentBars( x, width=1 ) + theme(axis.text.y=element_blank())
 ```
 
 
@@ -312,7 +312,6 @@ if( 'OPC' %in% colnames(fractions)){
 ```{r flow}
 source("../helper/flow.R")
 
-
 i = which(info$dx == "Control")
 from = colSums(df_cellCounts[i,])
 
@@ -321,16 +320,16 @@ to = colSums(df_cellCounts[j,])
 
 D.rate = getTransitionAverages(from, to)
 
-
+```{r plotFromToBars, fig.width=7, fig.height=7}
 # Plots of data and inferred rates
 plotFromToBars(from, to) + coord_flip()
+```
 
-# ggsave("test.png", fig)
-
+```{r plotFromToMatrix, fig.width=7, fig.height=7}
 plotFromToMatrix(D.rate) + theme(axis.text.x=element_text(angle=45, hjust=1))
+```
 
-# ggsave("test.png", fig)
-
+```{r plotFromToNetwork, fig.width=7, fig.height=7}
 plotFromToNetwork( D.rate )
 ```
 
