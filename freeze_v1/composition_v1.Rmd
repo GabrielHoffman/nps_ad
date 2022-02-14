@@ -8,6 +8,8 @@ output:
   html_document:
   toc: true
   smart: false
+params:
+  CT_FOCUS: 'celltype8'
 vignette: >
   %\VignetteIndexEntry{Decorrelate}
   %\VignetteEngine{knitr::rmarkdown}
@@ -25,7 +27,24 @@ git pull
 R --vanilla
 
 system("git pull")
+
 rmarkdown::render("composition_v1.Rmd");
+
+
+
+
+# 
+
+library(rmarkdown)
+library(tidyverse)
+
+ct_variables = c('leiden_labels', 'anno', 'class', 'celltype', 'subtype', 'celltype8')
+
+ct_variables %>% 
+  walk(function(x) render("composition_v1.Rmd",
+                          params = list(CT_FOCUS = x),
+                          output_file = paste0("file", x, ".html")))
+
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/freeze_v1/composition_v1.html
@@ -76,9 +95,8 @@ infoFull = as.data.frame(readRDS(file))
 ```
 
 ```{r create.summary}
-
-CT_FOCUS = 'celltype8'
-# leiden_labels, anno, class, celltype, subtype, celltype8
+# get parameter value from header
+CT_FOCUS = params$CT_FOCUS
 
 # Compute counts of each cell type
 df_cellCounts = infoFull %>% 
