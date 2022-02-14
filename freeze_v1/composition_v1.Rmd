@@ -134,6 +134,14 @@ Study-wide
 plotCellComposition( t(colSums(df_cellCounts)))
 ```
 
+
+```{r plotCellComposition.summary, fig.height=4, fig.width=6}
+t(colSums(df_cellCounts))
+
+
+```
+
+
 Summarized by disease status
 
 ```{r plotCellComposition, fig.height=20, fig.width=5}
@@ -151,7 +159,7 @@ figLst = lapply(names(tab), function(lvl){
   # sort by age
   counts = counts[order(info_sub$Age),]
 
-  fig = plotCellComposition(counts) + ggtitle(lvl) + theme_void() + theme(legend.position="bottom")
+  fig = plotCellComposition(counts, width=1) + ggtitle(lvl) + theme_void() + theme(legend.position="bottom")
 
   if( lvl != names(tab)[which.max(tab)] ){
     fig = fig + theme(legend.position="none")
@@ -180,7 +188,7 @@ df_vp = fitExtractVarPartModel(cobj, form, info[i,])
 colnames(df_vp) = gsub("scale\\((.*)\\)", "\\1", colnames(df_vp))
 colnames(df_vp) = gsub("SubID", "Subject", colnames(df_vp))
 
-plotPercentBars( df_vp, width=1 )
+plotPercentBars( df_vp )
 ```
 
 
