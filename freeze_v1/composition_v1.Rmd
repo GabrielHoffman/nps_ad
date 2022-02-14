@@ -33,17 +33,17 @@ rmarkdown::render("composition_v1.Rmd");
 
 
 
-# 
+# Run for many cell type annotations
 
 library(rmarkdown)
 library(tidyverse)
 
-ct_variables = c('leiden_labels', 'anno', 'class', 'celltype', 'subtype', 'celltype8')
+ct_variables = c('celltype8', 'anno', 'class', 'celltype', 'subtype', 'leiden_labels')
 
-ct_variables %>% 
+ct_variables[1] %>% 
   walk(function(x) render("composition_v1.Rmd",
                           params = list(CT_FOCUS = x),
-                          output_file = paste0("file", x, ".html")))
+                          output_file = paste0("composition_v1_", x, ".html")))
 
 
 
