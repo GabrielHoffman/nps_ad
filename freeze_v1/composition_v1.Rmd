@@ -350,7 +350,7 @@ plotFromToBars(from, to) + coord_flip()
 plotFromToMatrix(D.rate) + theme(axis.text.x=element_text(angle=45, hjust=1))
 ```
 
-```{r plotFromToNetwork, fig.width=8, fig.height=8}
+```{r plotFromToNetwork, fig.width=8, fig.height=12}
 plotFromToNetwork( D.rate )
 ```
 
