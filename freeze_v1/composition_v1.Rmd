@@ -77,6 +77,8 @@ library(dreamlet)
 library(propr)
 library(kableExtra)
 library(tidyverse)
+library(ggplot2)
+library(ggrepel)
 ```
 
 
@@ -123,6 +125,21 @@ fractions = t(apply(df_cellCounts, 1, function(x){
   x = x + 0.5
   x / sum(x)
 }))
+```
+
+# Empirical overdispersion of counts
+```{r overdisp}
+# empirical overdispersion values
+df_disp = apply(df_cellCounts, 2, function(x){
+  data.frame(mu = mean(x), var = var(x))
+})  
+df_disp = do.call(rbind, df_disp)  
+df_disp$overdisp = with(df_disp, var/mu)
+df_disp$celltype = rownames(df_disp)
+
+lim = 1.02*max(c(df_disp$mu, df_disp$overdisp))
+
+ggplot(df_disp, aes(mu, overdisp, label=celltype, color=celltype)) + geom_abline(color="grey50", linetype="dashed") + geom_point() + geom_text_repel() + theme_classic() + theme(aspect.ratio=1, legend.position="none") + xlab("Mean cell count") + ylab("Overdispersion") + scale_x_continuous(expand=c(0,0), limits=c(0,lim)) + scale_y_continuous(expand=c(0,0), limits=c(0,lim))
 ```
 
 
