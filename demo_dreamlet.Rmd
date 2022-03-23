@@ -539,11 +539,10 @@ tabB = topTable(res.dlList[['B']], coef='Dx2SCZ', number=Inf) %>%
 
 df = inner_join(tabA, tabB, by="ID") 
 
+plotScatterDensity(tabB$AveExpr, tabB$logFC)
 
-fig = plotScatterDensity(tabB$AveExpr, tabB$logFC)
-
-ggsave("test.png", fig)
-
+#ggsave("test.png", fig)
+```
 
 
 
@@ -607,8 +606,7 @@ resTab = lapply( coefs, function(key){
         nGenes = length(adj.P.Val.x), 
         nDE = sum(adj.P.Val.x < 0.05),
         pi1.x = get_pi1(P.Value.x[adj.P.Val.y <= 0.05]),
-        pi1.y = get_pi1(P.Value.y[adj.P.Val.x <= 0.05]))
-
+        pi1.y = get_pi1(P.Value.y[adj.P.Val.x <= 0.05])) %>%
     mutate(coef = key)
   })
 resTab = do.call(rbind, resTab)
