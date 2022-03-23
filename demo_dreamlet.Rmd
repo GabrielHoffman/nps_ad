@@ -441,7 +441,7 @@ df %>%
 res.procList = lapply( pbList, function(pb){
  
   idx = which(pb$Dx2 %in% c("AD", "Control", "SCZ"))
-
+  
   # Normalize and apply voom
   processAssays(pb[,idx], ~ (1|SubID) + (1|batch) + (1|HTO) + (1|cohort), 
     min.cells = 5,
@@ -453,7 +453,7 @@ res.procList = lapply( pbList, function(pb){
 
 ```{r varPart.2}
 form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI)      
-
+  
 res.vpList = lapply( res.procList, function(x){
   fitVarPart(x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
 })
@@ -464,10 +464,10 @@ Compare 1) fixed effects collapsing model, 2) full pwLMM, 3) no batch correction
 f(res.dlList) to evaluate concordance.  Correlation of Dx signal with GC content
 
 ```{r dreamlet.2}
-form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) + Dx2
+form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) + Dx2  
    
 res.dlList = lapply( res.procList, function(x){
-  dreamlet(x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
+  dreamlet( x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
 }) 
 ```
 
