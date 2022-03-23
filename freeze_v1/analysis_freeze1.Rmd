@@ -971,7 +971,7 @@ fig = plotZenithResults(res_zenith[[3]], 3, 1) + ggtitle(names(res_zenith)[3])
 ```
 
 
-
+<---
 # are too many genes being excluded?
 # what does voom look like from **complete** pseudobulk??
 # TODO get pH info?
@@ -984,12 +984,13 @@ fig = plotZenithResults(res_zenith[[3]], 3, 1) + ggtitle(names(res_zenith)[3])
 # + PMI and brain bank (Institution) and Ethnicity
 # mvIC
 # write data for QTL analysis
+--->
 
-
-
+<!---
 ```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
 ```
+--->
 
 
 
