@@ -476,7 +476,7 @@ Correlation between t-statistics
 ```{r de.summary.2}
 library(broom)
 coefs = c('Dx2AD', 'Dx2SCZ')
-
+ 
 resTab = lapply( coefs, function(key){
 
   tab = lapply( res.dlList, function(fit){
@@ -500,7 +500,7 @@ ggplot(resTab, aes(assay.x, estimate, fill=assay.x)) + geom_bar(stat="identity")
 ```{r plots}
 library(ggplot2)
 library(viridis)
-
+ 
 # Compute two dimensional density
 get_density <- function(x, y, n = 250) {
   dens <- MASS::kde2d(x = x, y = y, n = n)
@@ -528,7 +528,7 @@ plotScatterDensity = function(value1, value2){
 ```
 
 ```{r concordance.t.stat}
-
+ 
 tabA = topTable(res.dlList[['A']], coef='Dx2SCZ', number=Inf) %>%
         as_tibble  %>%
         filter(assay == "OPC") 
