@@ -543,12 +543,30 @@ resTab = lapply( coefs, function(key){
   tab %>%  
     as_tibble %>% 
     group_by(assay.x) %>% 
-    group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="spearman"))) %>% 
-    mutate(coef = key)
+    group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="spearman"))) %>%
+    left_join( tab %>% group_by(assay.x) %>% tally) %>% 
+    mutate(coef = key, se = sqrt((1-estimate^2)/(n-2)))
   })
 resTab = do.call(rbind, resTab)
 
-ggplot(resTab, aes(assay.x, estimate, fill=assay.x)) + geom_bar(stat="identity") + theme_classic() + theme(aspect.ratio=1, legend.position="none") + facet_wrap(~coef) + coord_flip()
+
+resTab %>%
+  as_tibble %>%
+  mutate( fdr = p.adjust(p.value, "fdr")) %>% 
+  ggplot(aes(assay.x, estimate, fill=assay.x)) + 
+    geom_bar(stat="identity") + 
+    theme_classic() + 
+    theme(aspect.ratio=1, legend.position="none") + 
+    facet_wrap(~coef) + 
+    coord_flip() +
+    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0) +
+
+
+
+```
+
+```{r dd, cache=FALSE}
+knitr::knit_exit()
 ```
 
 ```{r plots}
