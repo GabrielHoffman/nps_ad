@@ -197,8 +197,70 @@ colData(pbObj)$Dx2 = factor(colData(pbObj)$Dx2, c("Control", lvls))
 saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS" )
 ```
 
-# Analysis of joint dataset
+### Pseudobulk at Donor level
+```{r combineData.donor}
+df_batch_info = colData(sceCombine) %>%
+  as_tibble %>%
+  group_by(batch) %>%
+  summarize(batchID = paste(sort(unique(SubID)), collapse=',')) %>%
+  distinct
 
+colData(sceCombine)$BatchID = as.character(colData(sceCombine)$batch)
+
+colData(sceCombine)$BatchID = sapply(colData(sceCombine)$BatchID, function(x){
+  with(df_batch_info, batchID[batch==x])
+  })
+names(colData(sceCombine)$BatchID) = c()
+colData(sceCombine)$BatchID = as.factor(colData(sceCombine)$BatchID)
+
+# Create pseudo-bulk SingleCellExperiment
+pbObj.Donor <- aggregateToPseudoBulk(sceCombine,
+    assay = "X", 
+    fun = "sum",
+    cluster_id = "celltype8",
+    sample_id  = "SubID")
+
+# Combine with phenotype data at the Donor level
+# read metadata
+meta_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/MSSM_HBCC_RUSH_clinical_metadata_combo.csv"
+df_meta = fread(meta_file)
+df_meta = df_meta[,-1]
+
+# save original order of samples
+colData(pbObj.Donor)$row.order = 1:nrow(colData(pbObj.Donor))
+
+# g = intersect(colnames(colData(pbObj)), colnames(df_meta))
+
+# merge colData with additional metadata
+df_merge = merge(colData(pbObj.Donor), df_meta, by.x="row.names", by.y="SubID", all.x=TRUE)
+
+# set rownames to be same as original, based on row.order
+# These rownames determine colnames(pbObj.Donor), which is used downstream
+rownames(df_merge) = rownames(colData(pbObj.Donor))[df_merge$row.order]
+
+# extract batch info per sample
+# df_batching = with( colData(sceCombine), unique(data.frame(id, round_num, batch, prep, HTO)))
+# df_merge = merge(df_merge, df_batching, by.x= "row.names", by.y="id", all.x=TRUE)
+
+# rownames(df_merge) = df_merge$Row.names
+# df_merge = df_merge[,-1]
+
+# save merged data as colData while retaining original cell order
+colData(pbObj.Donor) = df_merge[order(df_merge$row.order),]
+colData(pbObj.Donor)$row.order = c()# remove row.order
+
+# Set levels for Dx2
+lvls = sort(unique(as.character(colData(pbObj.Donor)$Dx2)))
+lvls = lvls[-which(lvls=="Control")]
+colData(pbObj.Donor)$Dx2 = factor(colData(pbObj.Donor)$Dx2, c("Control", lvls))
+
+saveRDS(pbObj.Donor, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj_Donor.RDS" )
+```
+
+
+
+
+# Analysis of joint dataset
 ```{r round_num.summary}
 table(pbObj$round_num)
 ```
@@ -549,24 +611,21 @@ resTab = lapply( coefs, function(key){
   })
 resTab = do.call(rbind, resTab)
 
-
 resTab %>%
   as_tibble %>%
   mutate( fdr = p.adjust(p.value, "fdr")) %>% 
-  ggplot(aes(assay.x, estimate, fill=assay.x)) + 
+  ggplot(aes(assay.x, estimate, fill=assay.x, label=ifelse(fdr < 0.05,'  #',''))) + 
     geom_bar(stat="identity") + 
     theme_classic() + 
-    theme(aspect.ratio=1, legend.position="none") + 
+    theme(aspect.ratio=1, legend.position="none", plot.title = element_text(hjust = 0.5)) + 
     facet_wrap(~coef) + 
     coord_flip() +
-    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0) +
-
-
-
-```
-
-```{r dd, cache=FALSE}
-knitr::knit_exit()
+    geom_errorbar(aes(ymin = estimate-1.96*se, ymax = estimate+1.96*se), width=0) +
+    geom_text(y=0.63) + 
+    scale_y_continuous(limits=c(NA,.65), expand=c(0,0)) +
+    xlab("Spearman correlation") +
+    ylab("Cell type") +
+    ggtitle("Concordance between t-statistics")
 ```
 
 ```{r plots}
@@ -595,25 +654,23 @@ plotScatterDensity = function(value1, value2){
   df$density <- get_density(df$value1, df$value2, n = 100)
   
   # Scatter plot colored by density
-  ggplot(df, aes(value1, value2, color=density)) + geom_point(size=.4) + theme_bw(16) + theme(aspect.ratio=1, legend.position="bottom", plot.title = element_text(hjust = 0.5)) + geom_abline(color="red") + geom_vline(xintercept=0, col="grey40", linetype="dashed") + geom_hline(yintercept=0, col="grey40", linetype="dashed")+ scale_color_viridis() + geom_smooth(method="lm", se=FALSE, color="darkorange")#  + xlim(-lim, lim) + ylim(-lim, lim) 
+  ggplot(df, aes(value1, value2, color=density)) + geom_point(size=.4) + theme_bw(16) + theme(aspect.ratio=1, legend.position="bottom", plot.title = element_text(hjust = 0.5)) + geom_abline(color="red") + geom_vline(xintercept=0, col="grey40", linetype="dashed") + geom_hline(yintercept=0, col="grey40", linetype="dashed")+ scale_color_viridis() + geom_smooth(method="lm", se=FALSE, color="darkorange")  + xlim(-lim, lim) + ylim(-lim, lim) 
 }
 ```
 
-```{r concordance.t.stat}
- 
-tabA = topTable(res.dlList[['A']], coef='Dx2SCZ', number=Inf) %>%
+```{r concordance.t.stat} 
+tabA = topTable(res.dlList[['A']], coef='Dx2AD', number=Inf) %>%
         as_tibble  %>%
-        filter(assay == "OPC") 
+        filter(assay == "Glutamatergic neuron") 
 
-tabB = topTable(res.dlList[['B']], coef='Dx2SCZ', number=Inf) %>%
+tabB = topTable(res.dlList[['B']], coef='Dx2AD', number=Inf) %>%
         as_tibble  %>%
-        filter(assay == "OPC") 
+        filter(assay == "Glutamatergic neuron") 
 
 df = inner_join(tabA, tabB, by="ID") 
 
-plotScatterDensity(tabB$AveExpr, tabB$logFC)
-
-#ggsave("test.png", fig)
+cor(df$t.x, df$t.y, method="sp")
+plotScatterDensity(df$t.x, df$t.y) 
 ```
 
 
