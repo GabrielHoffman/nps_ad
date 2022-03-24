@@ -275,6 +275,7 @@ plot_grid( plotlist=figList, nrow=2 )
 ```
 
 ### variance partitioning and eQTLs
+Variance partitioning corresponds to genetic regulation of gene expression.  Genes with high variation across Donor have high variation explained by cis SNPs.  Genes with high variation explained by batch are inversely related to genetic R2.
 ```{r vp.eqtl}
 library(synapser)
 
@@ -309,13 +310,14 @@ df %>%
   mutate(name = recode_factor(name, batch = "Batch", Donor.augment="Donor")) %>%
   ggplot(aes(assay, estimate, fill=name, label=ifelse(fdr < 0.05, "  #", ''))) +
     geom_bar(stat="identity") +
+    geom_errorbar(aes(ymin = estimate - 1.96*se, ymax = estimate + 1.96*se), width=0) +
     facet_wrap(~name) + 
-    geom_text() + 
+    geom_text(y = .15) + 
     theme_classic() +
     coord_flip() +
     ylab("Spearman correlation") +
     xlab("Cell type") +
-    theme(aspect.ratio=1)
+    theme(aspect.ratio=1, legend.position="none")
 ```
 
 
@@ -356,6 +358,14 @@ res = do.call(rbind, res)
 res$FDR = p.adjust(res$PValue, "fdr")
 
 # table(res$FDR < 0.05)
+```
+
+
+plotZenithResults(res_zenith, 3, 1)
+
+
+```{r exita, cache=FALSE}
+knitr::knit_exit()
 ```
 
 
