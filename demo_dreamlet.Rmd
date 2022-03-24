@@ -414,7 +414,7 @@ res = lapply( unique(res.vp$assay), function(key){
   index = index[vapply(index, length, FUN.VALUE=numeric(1)) >= n_genes_min]
 
   res = cameraPR( statistic, index, use.ranks=TRUE)
-  res$PValue = pmin(1, res$PValue)
+  res$PValue = pmin(0.999, res$PValue)
 
   DataFrame( assay = key, Geneset = rownames(res), res)
 })
@@ -428,7 +428,7 @@ res$FDR = p.adjust(res$PValue, "fdr")
 
 ```{r zenith.vp, fig.height=10}
 res$coef = "BatchEffect"
-plotZenithResults(data.frame(res), 4, 2)
+plotZenithResults(as.data.frame(res), 4, 2)
 ```
 
 
