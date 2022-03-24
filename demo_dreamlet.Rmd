@@ -751,9 +751,9 @@ df_res %>%
   # filter(key == "batch") %>%
   mutate(fdr = p.adjust(p.value, "BH")) %>%
   group_by(assay.y) %>%
-  ggplot(aes(assay.y, estimate, fill=assay.y, alpha=key)) + 
-    geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
-    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0, position = position_dodge(width = 0.9), alpha=1) +
+  ggplot(aes(assay.y, estimate, fill=assay.y)) + 
+    geom_bar(aes(alpha=key), stat="identity", position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0, position = position_dodge(width = 0.9)) +
     theme_classic() +
     theme(aspect.ratio=1, legend.position="none") +
     coord_flip() +
