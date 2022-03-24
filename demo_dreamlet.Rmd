@@ -87,6 +87,7 @@ library(kableExtra)
 library(qvalue)
 library(corrplot)
 library(org.Hs.eg.db)
+library(broom)
 })
 ```
 
@@ -272,6 +273,51 @@ figList = lapply( df$gene[i], function(geneName){
 })
 plot_grid( plotlist=figList, nrow=2 )
 ```
+
+### variance partitioning and eQTLs
+```{r vp.eqtl}
+library(synapser)
+
+synLogin()
+
+df_eqtl_r2 = as.data.frame(fread(synGet('syn17083748')$path))
+
+res.vp.augment = res.vp %>%
+  as_tibble %>%
+  mutate( Donor.augment = Donor + Dx2 + Age + Sex + PMI)
+
+# merge with R^2 for each gene 
+df = res.vp.augment %>% 
+  pivot_longer(colnames(res.vp.augment)[-c(1,2)]) 
+
+df = df %>% 
+  inner_join(df_eqtl_r2, by=c('gene' = 'ensembl_gene_id')) %>% 
+  group_by(assay, name) %>% 
+  group_modify(~ tidy(cor.test(.x$value, .x$CMC_R2, method="spearman"))) %>%
+  mutate(fdr = p.adjust(p.value, "fdr")) %>%
+  inner_join( df %>% group_by(assay, name) %>% tally) %>%
+  mutate(se = sqrt((1-estimate^2)/(n-2)))
+
+zmax = max(abs(df$estimate))
+
+df %>%
+  ggplot(aes(assay, name, fill=estimate, label=ifelse(fdr < 0.05, "  #", ''))) +
+  geom_tile() + geom_text() + scale_fill_gradient2(low="blue", mid="white", high="red", limits=c(-zmax, zmax)) + theme_classic() + theme(axis.text.x = element_text(angle = 75, vjust = 1, hjust=1))
+
+df %>%
+  filter(name %in% c("batch", "Donor.augment")) %>%
+  mutate(name = recode_factor(name, batch = "Batch", Donor.augment="Donor")) %>%
+  ggplot(aes(assay, estimate, fill=name, label=ifelse(fdr < 0.05, "  #", ''))) +
+    geom_bar(stat="identity") +
+    facet_wrap(~name) + 
+    geom_text() + 
+    theme_classic() +
+    coord_flip() +
+    ylab("Spearman correlation") +
+    xlab("Cell type") +
+    theme(aspect.ratio=1)
+```
+
 
 ## Batch effects and gen sets
 ```{r DE.batch}
@@ -689,21 +735,23 @@ ggplot(df, aes_string(a,b)) + geom_point(aes(color=density), size=.02) + facet_w
 ```{r barplot}
 df %>%
   group_by(assay.y) %>%
-  summarize(Corr = cor(batch.x, batch.y, method="spearman")) %>%
-  ggplot(aes(assay.y, Corr, fill=assay.y)) + 
+  group_modify(~ tidy(cor.test(.x$batch.x, .x$batch.y, method="spearman"))) %>%
+  left_join(df %>% group_by(assay.y) %>% tally) %>%
+  mutate(se = sqrt((1-estimate^2)/(n-2)), fdr = p.adjust(p.value, 'fdr')) %>% 
+  ggplot(aes(assay.y, estimate, fill=assay.y, label = ifelse(fdr < 0.05, '    #', ''))) + 
     geom_bar(stat="identity") +
+    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0) +
     theme_classic() +
     theme(aspect.ratio=1, legend.position="none") +
     coord_flip() +
     ylab("Spearman Correlation in batch effect across freezes") +
     xlab("Cell type") +  
     scale_fill_discrete(name = "Cell type") +
-    scale_y_continuous(limits=c(0,NA), expand=c(0,0))
+    scale_y_continuous(limits=c(0,.65), expand=c(0,0)) +
+    geom_text(y=0.62) 
 ```
 
 ```{r corr}
-library(broom)
- 
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
 
 df_res = lapply(colnames(df)[c(5:13, 17)], function(key){
@@ -751,8 +799,8 @@ df_res %>%
   # filter(key == "batch") %>%
   mutate(fdr = p.adjust(p.value, "BH")) %>%
   group_by(assay.y) %>%
-  ggplot(aes(assay.y, estimate, fill=assay.y)) + 
-    geom_bar(aes(alpha=key), stat="identity", position = position_dodge(width = 0.9)) +
+  ggplot(aes(assay.y, estimate, fill=assay.y, alpha=key)) + 
+    geom_bar( stat="identity", position = position_dodge(width = 0.9)) +
     geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0, position = position_dodge(width = 0.9)) +
     theme_classic() +
     theme(aspect.ratio=1, legend.position="none") +
