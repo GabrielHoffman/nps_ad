@@ -544,8 +544,8 @@ knitr::knit_exit()
 
 # Split data
 ```{r split.data}
-pbList = list( A = pbObj[,pbObj$round_num %in% 1:2],
-               B = pbObj[,pbObj$round_num %in% 3:4])
+pbList = list( A = pbObj[,pbObj$splitAB == "A"],
+               B = pbObj[,pbObj$splitAB == "B"])
 
 # summarize disease status
 df = lapply( names(pbList), function(x){
