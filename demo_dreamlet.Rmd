@@ -277,11 +277,9 @@ plot_grid( plotlist=figList, nrow=2 )
 ### variance partitioning and eQTLs
 Variance partitioning corresponds to genetic regulation of gene expression.  Genes with high variation across Donor have high variation explained by cis SNPs.  Genes with high variation explained by batch are inversely related to genetic R2.
 ```{r vp.eqtl}
-library(synapser)
+synapser::synLogin()
 
-synLogin()
-
-df_eqtl_r2 = as.data.frame(fread(synGet('syn17083748')$path))
+df_eqtl_r2 = as.data.frame(fread(synapser::synGet('syn17083748')$path))
 
 res.vp.augment = res.vp %>%
   as_tibble %>%
@@ -321,7 +319,7 @@ df %>%
 ```
 
 
-## Batch effects and gen sets
+## Batch effects and gene sets
 ```{r DE.batch}
 library(zenith)
 go.gs = get_GeneOntology(to="ENSEMBL")
@@ -361,7 +359,10 @@ res$FDR = p.adjust(res$PValue, "fdr")
 ```
 
 
-plotZenithResults(res_zenith, 3, 1)
+```{r zenith.vp}
+res$coef = "BatchEffect"
+plotZenithResults(data.frame(res), 4, 2)
+```
 
 
 ```{r exita, cache=FALSE}
