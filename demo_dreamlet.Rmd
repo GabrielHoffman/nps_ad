@@ -414,6 +414,7 @@ res = lapply( unique(res.vp$assay), function(key){
   index = index[vapply(index, length, FUN.VALUE=numeric(1)) >= n_genes_min]
 
   res = cameraPR( statistic, index, use.ranks=TRUE)
+  res$PValue = pmin(1, res$PValue)
 
   DataFrame( assay = key, Geneset = rownames(res), res)
 })
