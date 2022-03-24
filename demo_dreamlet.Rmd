@@ -365,9 +365,6 @@ plotZenithResults(data.frame(res), 4, 2)
 ```
 
 
-```{r exita, cache=FALSE}
-knitr::knit_exit()
-```
 
 
 ## Correlation with and between donors
