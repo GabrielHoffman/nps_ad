@@ -277,7 +277,7 @@ sort(table(df$Dx2), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALS
 
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort), 
+res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|HTO) + (1|cohort), 
   min.cells = 5,
   min.count = 10, 
   # pmetadata = df_collapse,  
@@ -299,7 +299,7 @@ plotVoom( res.proc[7:9] )
 
 
 ```{r varPart}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
+form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Dx2) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) 
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(18, progressbar=TRUE))
 ```
@@ -443,7 +443,7 @@ eval_within_across_donor( res.proc, "SubID" )
 
 ## dreamlet analysis
 ```{r dreamlet.fit}
-form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
+form = ~ Sex + (1|SubID) + (1|batch) + (1|HTO) + (1|cohort) + Dx2 + scale(Age) + scale(PMI)
 
 fit.dl = dreamlet( res.proc, form, BPPARAM=SnowParam(36))
 
@@ -538,6 +538,9 @@ fig = plotZenithResults(res.gsa[[1]], 3, 1) + ggtitle(names(res.gsa)[1])
 fig = plotZenithResults(res.gsa[[2]], 3, 1) + ggtitle(names(res.gsa)[3])
 ```
 
+```{r exitasdf, cache=FALSE}
+knitr::knit_exit()
+```
 
 # Split data
 ```{r split.data}
