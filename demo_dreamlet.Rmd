@@ -359,7 +359,7 @@ res$FDR = p.adjust(res$PValue, "fdr")
 ```
 
 
-```{r zenith.vp}
+```{r zenith.vp, fig.height=9}
 res$coef = "BatchEffect"
 plotZenithResults(data.frame(res), 4, 2)
 ```
