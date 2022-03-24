@@ -150,8 +150,25 @@ ggplot(df, aes(V1, V2, color=celltype8)) + geom_point(size=.05) + theme_classic(
 ```
 
 ```{r combineData}
+# Name batches by samples in them
+df_batch_info = colData(sceCombine) %>%
+  as_tibble %>%
+  group_by(batch) %>%
+  summarize(batchID = paste(sort(unique(SubID)), collapse=',')) %>%
+  distinct
+
+colData(sceCombine)$BatchID = as.character(colData(sceCombine)$batch)
+
+colData(sceCombine)$BatchID = sapply(colData(sceCombine)$BatchID, function(x){
+  with(df_batch_info, batchID[batch==x])
+  })
+names(colData(sceCombine)$BatchID) = c()
+colData(sceCombine)$BatchID = as.factor(colData(sceCombine)$BatchID)
+
 # Specify how to collapse into pseudo-bulk
 sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
+
+colData(sceCombine)$splitAB = ifelse( colData(sceCombine)$BatchID %in% levels(colData(sceCombine)$BatchID)[1:45], "A", "B")
 
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine,
@@ -199,19 +216,6 @@ saveRDS(pbObj, file="/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_drea
 
 ### Pseudobulk at Donor level
 ```{r combineData.donor}
-df_batch_info = colData(sceCombine) %>%
-  as_tibble %>%
-  group_by(batch) %>%
-  summarize(batchID = paste(sort(unique(SubID)), collapse=',')) %>%
-  distinct
-
-colData(sceCombine)$BatchID = as.character(colData(sceCombine)$batch)
-
-colData(sceCombine)$BatchID = sapply(colData(sceCombine)$BatchID, function(x){
-  with(df_batch_info, batchID[batch==x])
-  })
-names(colData(sceCombine)$BatchID) = c()
-colData(sceCombine)$BatchID = as.factor(colData(sceCombine)$BatchID)
 
 # Create pseudo-bulk SingleCellExperiment
 pbObj.Donor <- aggregateToPseudoBulk(sceCombine,
@@ -583,6 +587,29 @@ f(res.dlList) to evaluate concordance.  Correlation of Dx signal with GC content
 form = ~ (1|SubID) + (1|batch) + (1|HTO) + (1|Sex) + (1|cohort) + scale(Age) + scale(PMI) + Dx2  
     
 res.dlList = lapply( res.procList, function(x){
+  dreamlet( x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
+}) 
+```
+
+### Differential expression with collapsed counts
+```{r collapse}
+pbList.Donor = list(  A = pbObj.Donor[,pbObj.Donor$round_num %in% 1:2],
+                      B = pbObj.Donor[,pbObj.Donor$round_num %in% 3:4])
+
+res.procList.Donor = lapply( pbList.Donor, function(pb){
+ 
+  idx = which(pb$Dx2 %in% c("AD", "Control", "SCZ"))
+  
+  # Normalize and apply voom
+  processAssays(pb[,idx], ~ cohort, 
+    min.cells = 5,
+    min.count = 10, 
+    BPPARAM = SnowParam(16, progressbar=TRUE))
+})   
+
+form = ~ Sex + cohort + scale(Age) + scale(PMI) + Dx2  
+    
+res.dlList.Donor = lapply( res.procList.Donor, function(x){
   dreamlet( x, form, BPPARAM = SnowParam(12, progressbar=TRUE))
 }) 
 ```
