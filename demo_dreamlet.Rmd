@@ -585,11 +585,6 @@ tab = lapply( names(res.dlList), function(key){
 tab = do.call(rbind, tab)
 
 
-
-
-
-
-
 resTab = lapply( coefs, function(key){
 
   tab = lapply( res.dlList, function(fit){
@@ -708,7 +703,7 @@ df %>%
 
 ```{r corr}
 library(broom)
-
+ 
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
 
 df_res = lapply(colnames(df)[c(5:13, 17)], function(key){
@@ -736,7 +731,7 @@ ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=
 
 ```{r barplot2}
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
-
+ 
 df_res = lapply( c("batch.x", "batch.y"), function(key){
 
   res = df2 %>% 
@@ -758,7 +753,7 @@ df_res %>%
   group_by(assay.y) %>%
   ggplot(aes(assay.y, estimate, fill=assay.y, alpha=key)) + 
     geom_bar(stat="identity", position = position_dodge(width = 0.9)) +
-    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0, position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0, position = position_dodge(width = 0.9), alpha=1) +
     theme_classic() +
     theme(aspect.ratio=1, legend.position="none") +
     coord_flip() +
