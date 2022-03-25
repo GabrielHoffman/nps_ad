@@ -636,9 +636,9 @@ resTab = lapply( coefs, function(key){
     left_join( tab %>% group_by(assay.x) %>% tally) %>% 
     mutate(coef = key, se = sqrt((1-estimate^2)/(n-2)))
   })
-resTab = do.call(rbind, resTab)
+resTab.mixed = do.call(rbind, resTab)
 
-resTab %>%
+resTab.mixed %>%
   as_tibble %>%
   mutate( fdr = p.adjust(p.value, "fdr")) %>% 
   ggplot(aes(assay.x, estimate, fill=assay.x, label=ifelse(fdr < 0.05,'  #',''))) + 
@@ -652,8 +652,90 @@ resTab %>%
     scale_y_continuous(limits=c(NA,.65), expand=c(0,0)) +
     xlab("Spearman correlation") +
     ylab("Cell type") +
-    ggtitle("Concordance between t-statistics")
+    ggtitle("Concordance between t-statistics: mixed")
 ```
+
+
+### Concordance between sets: fixed
+Correlation between t-statistics
+```{r de.summary.fixed}
+library(broom)
+coefs = c('Dx2AD', 'Dx2SCZ')
+ 
+resTab = lapply( coefs, function(key){
+
+  tab = lapply( res.dlList.Donor, function(fit){
+    tab = topTable(fit, coef=key, number=Inf)
+    tab$key = with(tab, paste(assay, ID, key))
+    data.frame(coef=key, tab)
+  })
+  tab = inner_join(tab[[1]], tab[[2]], by='key')
+
+  tab %>%  
+    as_tibble %>% 
+    group_by(assay.x) %>% 
+    group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="spearman"))) %>%
+    left_join( tab %>% group_by(assay.x) %>% tally) %>% 
+    mutate(coef = key, se = sqrt((1-estimate^2)/(n-2)))
+  })
+resTab.fixed = do.call(rbind, resTab)
+
+resTab.fixed %>%
+  as_tibble %>%
+  mutate( fdr = p.adjust(p.value, "fdr")) %>% 
+  ggplot(aes(assay.x, estimate, fill=assay.x, label=ifelse(fdr < 0.05,'  #',''))) + 
+    geom_bar(stat="identity") + 
+    theme_classic() + 
+    theme(aspect.ratio=1, legend.position="none", plot.title = element_text(hjust = 0.5)) + 
+    facet_wrap(~coef) + 
+    coord_flip() +
+    geom_errorbar(aes(ymin = estimate-1.96*se, ymax = estimate+1.96*se), width=0) +
+    geom_text(y=0.63) + 
+    scale_y_continuous(limits=c(NA,.65), expand=c(0,0)) +
+    xlab("Spearman correlation") +
+    ylab("Cell type") +
+    ggtitle("Concordance between t-statistics: fixed")
+```
+
+```{r compare.concordance}
+resTab.fixed$method = "fixed"
+resTab.mixed$method = "mixed"
+
+df = rbind(resTab.fixed, resTab.mixed)
+
+df %>%
+  as_tibble %>%
+  mutate( fdr = p.adjust(p.value, "fdr")) %>% 
+  ggplot(aes(assay.x, estimate, fill=assay.x, label=ifelse(fdr < 0.05,'  #',''), alpha=method)) + 
+    geom_bar(stat="identity", position = position_dodge(width = 0.9)) + 
+    theme_classic() + 
+    theme(aspect.ratio=1, legend.position="bottom", plot.title = element_text(hjust = 0.5)) + 
+    facet_wrap(~coef) + 
+    coord_flip() +
+    geom_errorbar(aes(ymin = pmax(0, estimate-1.96*se), ymax = estimate+1.96*se), width=0, position = position_dodge(width = 0.9)) +
+    geom_text(y=0.63) + 
+    scale_y_continuous(limits=c(0,.65), expand=c(0,0)) +
+    xlab("Spearman correlation") +
+    ylab("Cell type") +
+    ggtitle("Concordance between t-statistics") +
+    scale_alpha_manual(values = c(1, .5)) +
+     guides(fill = FALSE)
+
+merge(resTab.fixed, resTab.mixed, by=c('assay.x', 'coef')) %>%
+  ggplot(aes(estimate.x, estimate.y, color=assay.x)) +  
+  geom_abline(linetype="dashed", color="grey50") +
+  geom_errorbar(aes(xmin = estimate.x - 1.96*se.x, xmax = estimate.x + 1.96*se.x)) +
+  geom_errorbar(aes(ymin = estimate.y - 1.96*se.y, ymax = estimate.y + 1.96*se.y)) +
+  geom_point() +
+  facet_wrap(~coef) +
+  theme_classic() + 
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  coord_fixed(xlim=c(0, .6), ylim=c(0, .6), expand=FALSE) +
+  scale_color_discrete(name = "Cell type") +
+  xlab("dreamlet: fixed") +
+  ylab("dreamlet: mixed") 
+```
+
 
 ```{r plots}
 library(ggplot2)
