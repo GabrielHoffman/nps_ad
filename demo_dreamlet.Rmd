@@ -632,7 +632,7 @@ resTab = lapply( coefs, function(key){
   tab %>%  
     as_tibble %>% 
     group_by(assay.x) %>% 
-    group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="spearman"))) %>%
+    group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="p"))) %>%
     left_join( tab %>% group_by(assay.x) %>% tally) %>% 
     mutate(coef = key, se = sqrt((1-estimate^2)/(n-2)))
   })
@@ -674,7 +674,7 @@ resTab = lapply( coefs, function(key){
   tab %>%  
     as_tibble %>% 
     group_by(assay.x) %>% 
-    group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="spearman"))) %>%
+    group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="p"))) %>%
     left_join( tab %>% group_by(assay.x) %>% tally) %>% 
     mutate(coef = key, se = sqrt((1-estimate^2)/(n-2)))
   })
@@ -702,7 +702,7 @@ resTab.fixed$method = "fixed"
 resTab.mixed$method = "mixed"
 
 df = rbind(resTab.fixed, resTab.mixed)
-
+  
 df %>%
   as_tibble %>%
   mutate( fdr = p.adjust(p.value, "fdr")) %>% 
