@@ -886,6 +886,8 @@ colnames(df_GC) <- c("Length", "GC")
 df_GC = as.data.frame(df_GC)
 ```
 
+
+
 ### Concordance with batch effect in each freeze
 ```{r examine, fig.width=8, fig.height=14}
 library(viridis)
