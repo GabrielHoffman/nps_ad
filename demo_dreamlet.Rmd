@@ -1044,6 +1044,123 @@ df_res %>%
     scale_alpha_discrete(range=c(1, .5))
 ```
 
+
+```{r barplot2}
+
+# get DE stats
+get_test_stats = function(res.dlList){
+  resTab = lapply( coefs, function(key){
+
+    tab = lapply( names(res.dlList), function(AB){
+      fit = res.dlList[[AB]]
+      tab = topTable(fit, coef=key, number=Inf)
+      tab$key = with(tab, paste(assay, ID, key))
+      tab$splitAB = AB
+      data.frame(coef=key, tab)
+    })
+    do.call(rbind, tab)
+  })
+  do.call(rbind, resTab)
+}
+
+resTab.fixed = get_test_stats(res.dlList.Donor)
+resTab.fixed$method = "fixed"
+
+resTab.mixed = get_test_stats(res.dlList)
+resTab.mixed$method = "mixed"
+
+resTab = rbind(resTab.fixed, resTab.mixed[,-10]) %>%
+    as_tibble %>%
+    left_join( data.frame(ID = rownames(df_GC), df_GC), by="ID" )
+
+
+df = resTab %>%
+  group_by(coef, assay, splitAB, method) %>%
+  summarise(estimate = cor(t, GC, method="sp"), n=length(t)) %>%
+  mutate(se = sqrt((1-estimate^2)/(n-2)))
+
+ggplot(df, aes(assay, estimate, fill=method, alpha=splitAB)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_classic() +
+  theme(aspect.ratio=1) +
+  coord_flip() +
+  facet_wrap(~coef) +
+  scale_alpha_discrete(range=c(1, 0.5))
+
+
+# get VP
+df_vp = lapply(names(res.vpList), function(id){
+  df = data.frame(Set = id, res.vpList[[id]])  
+  df$splitAB = id
+  df$key = with(df, paste(gene, assay))
+  df
+  })
+df_vp = do.call(rbind, df_vp)
+
+
+
+# relationship with VP
+resTab = rbind(resTab.fixed, resTab.mixed[,-10]) %>%
+    as_tibble %>%
+    mutate(key = paste(assay, ID, splitAB)) %>%
+    left_join( df_vp %>% mutate(key = paste(assay, gene, splitAB)), by="key")
+
+df = resTab %>%
+  group_by(coef, assay.x, splitAB.x, method) %>%
+  summarise(estimate = cor(t, batch, method="sp", use="pair"), n=length(t)) %>%
+  mutate(se = sqrt((1-estimate^2)/(n-2))) 
+
+
+ggplot(df, aes(assay.x, estimate, fill=method, alpha=splitAB.x)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_classic() +
+  theme(aspect.ratio=1) +
+  coord_flip() +
+  facet_wrap(~coef) +
+  scale_alpha_discrete(range=c(1, 0.5))
+
+
+
+
+df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
+ 
+df_res = lapply( c("batch.x", "batch.y"), function(key){
+
+  res = df2 %>% 
+    as_tibble %>% 
+    group_by(assay.y) %>%  
+    group_modify(~ tidy(cor.test(.x[[key]], .x$GC, method="spearman"))) %>%
+    left_join(df2 %>% group_by(assay.y) %>% tally, by="assay.y" ) %>%
+    mutate(se = sqrt((1-estimate^2)/(n-2)))
+
+  res$key = key
+  res
+})
+df_res = do.call(rbind, df_res)
+df_res$fdr = p.adjust(df_res$p.value, 'fdr')
+
+df_res %>%
+  # filter(key == "batch") %>%
+  mutate(fdr = p.adjust(p.value, "BH")) %>%
+  group_by(assay.y) %>%
+  ggplot(aes(assay.y, estimate, fill=assay.y, alpha=key)) + 
+    geom_bar( stat="identity", position = position_dodge(width = 0.9)) +
+    geom_errorbar(aes(ymin = pmax(0,estimate-1.96*se), ymax = estimate+1.96*se), width=0, position = position_dodge(width = 0.9)) +
+    theme_classic() +
+    theme(aspect.ratio=1, legend.position="none") +
+    coord_flip() +
+    ylab("Spearman correlation between batch effect and GC content per gene") +
+    xlab("Cell type") +  
+    scale_fill_discrete(name = "Cell type") +
+    scale_y_continuous(limits=c(0,.31), expand=c(0,0)) +
+    geom_text(aes(y=0.28, label=ifelse(fdr < 0.05, "            #", '')), 
+      , position = position_dodge(width = 0.9)) +
+    scale_alpha_discrete(range=c(1, .5))
+```
+
+
+
+
 ```{r GC.batch, eval=FALSE}
 
 fig = df2 %>% 
@@ -1065,6 +1182,23 @@ with(df3, cor(GC, batch.x, method="sp"))
 # ggsave("test.png", fig)
 
 ```
+
+# Relationship between disease DE, batch, GC
+```{r assoc.DE.batch}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
