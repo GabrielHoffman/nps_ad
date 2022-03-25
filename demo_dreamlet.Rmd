@@ -593,8 +593,8 @@ res.dlList = lapply( res.procList, function(x){
 
 ### Differential expression with collapsed counts
 ```{r collapse}
-pbList.Donor = list(  A = pbObj.Donor[,pbObj.Donor$round_num %in% 1:2],
-                      B = pbObj.Donor[,pbObj.Donor$round_num %in% 3:4])
+pbList.Donor = list(  A = pbObj.Donor[,pbObj.Donor$splitAB == 'A'],
+                      B = pbObj.Donor[,pbObj.Donor$splitAB == 'B'])
 
 res.procList.Donor = lapply( pbList.Donor, function(pb){
  
