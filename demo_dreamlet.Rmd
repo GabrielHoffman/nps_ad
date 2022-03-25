@@ -1007,7 +1007,7 @@ ggplot(df_res, aes(assay.y, key, fill=estimate)) + geom_tile() + geom_text(data=
 
 
 
-```{r barplot2}
+```{r barplot4}
 df2 = merge(df, df_GC, by.x="gene.x", by.y="row.names")
  
 df_res = lapply( c("batch.x", "batch.y"), function(key){
