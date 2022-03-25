@@ -629,12 +629,28 @@ resTab = lapply( coefs, function(key){
   })
   tab = inner_join(tab[[1]], tab[[2]], by='key')
 
-  tab %>%  
+  res1 = tab %>%  
     as_tibble %>% 
     group_by(assay.x) %>% 
     group_modify(~ tidy(cor.test(.x$t.x, .x$t.y, method="p"))) %>%
     left_join( tab %>% group_by(assay.x) %>% tally) %>% 
     mutate(coef = key, se = sqrt((1-estimate^2)/(n-2)))
+
+  res2 = tab %>%  
+    as_tibble %>% 
+    group_by(assay.x) %>% 
+     summarize( nGenes.x = length(adj.P.Val.x),
+      nDE.x = sum(adj.P.Val.x < 0.05),
+      pi1.x = get_pi1(P.Value.x),
+      nGenes.y = length(adj.P.Val.y),
+      nDE.y = sum(adj.P.Val.y < 0.05),
+      pi1.y = get_pi1(P.Value.y),
+      pi1.rep.x = get_pi1(P.Value.x[adj.P.Val.y <= 0.05]),
+      pi1.rep.y = get_pi1(P.Value.y[adj.P.Val.x <= 0.05])
+        )  %>%
+      mutate(key = key, coef = coef)
+
+    left_join(res1, res2, by='assay.x')
   })
 resTab.mixed = do.call(rbind, resTab)
 
@@ -653,6 +669,23 @@ resTab.mixed %>%
     xlab("Spearman correlation") +
     ylab("Cell type") +
     ggtitle("Concordance between t-statistics: mixed")
+
+
+
+
+
+
+resTab.mixed %>%
+  as_tibble %>%
+  mutate( fdr = p.adjust(p.value, "fdr")) %>% 
+  ggplot(aes(assay.x, pi1.rep.x, fill=assay.x)) + 
+    geom_bar(stat="identity") + 
+    theme_classic() + 
+    theme(aspect.ratio=1, legend.position="none", plot.title = element_text(hjust = 0.5)) + 
+    facet_wrap(~coef) + 
+    coord_flip() +
+
+
 ```
 
 
