@@ -166,7 +166,7 @@ plotFromToMatrix = function( D.rate ){
 	
 
 
-plotFromToNetwork = function(D.rate, from=NULL, to=NULL, node.cols = c("#E41A1C", "#377EB8"), edge.cols=c("orange", "grey90")){
+plotFromToNetwork = function(D.rate, from=NULL, to=NULL, node.cols = c("#E41A1C", "#377EB8"), edge.cols=c("orange", "grey90"), weight.factor=4){
 
 	ids = rownames(D.rate)
 
@@ -214,10 +214,9 @@ plotFromToNetwork = function(D.rate, from=NULL, to=NULL, node.cols = c("#E41A1C"
 	plot(g, 
 		edge.arrow.size = .5,
 		# edge.arrow.size = E(g)$weight/4,
-		edge.width=E(g)$weight*4, 
+		edge.width=E(g)$weight*weight.factor, 
 		vertex.label=V(g)$vertex.label, 
 		vertex.frame.color=NA,
-		# vertex.size = V(g)$size,
 		vertex.label.color = "black")
 }
 
