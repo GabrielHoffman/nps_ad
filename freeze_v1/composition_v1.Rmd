@@ -79,6 +79,7 @@ library(kableExtra)
 library(tidyverse)
 library(ggplot2)
 library(ggrepel)
+library(cowplot)
 ```
 
 
@@ -94,8 +95,10 @@ outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_re
 # file = paste0(outfolder, 'colData_pb.RDS')
 # info = as.data.frame(readRDS(file))
 
-file = paste0(outfolder, 'colData_full.RDS')
-infoFull = readRDS(file) %>% as_tibble
+
+infoFull = paste0(outfolder, 'colData_full.RDS' %>% 
+              readRDS %>% 
+              as_tibble
 ```
 
 ```{r create.summary}
