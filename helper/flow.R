@@ -119,7 +119,26 @@ plotFromToBars = function(from, to){
 			ylab("Proportion") + 
 			scale_y_continuous(expand=c(0, 0), limits=c(0, NA)) +
 			scale_fill_brewer(palette="Set1") +
-			scale_x_discrete(limits=ids)
+			scale_x_discrete(limits=ids) +
+			coord_flip()
+}
+
+
+plotFromToBarsStacked = function(from, to){
+
+	ids = names(from)
+
+	df1 = data.frame( Category = names(from), name = "from", value=from/sum(from))
+	df2 = data.frame( Category = names(to), name = "to", value=to/sum(to))
+
+	rbind(df1, df2) %>%
+		ggplot(aes(name, value, fill=Category)) +
+			geom_bar(stat="identity", position="fill") +
+			theme_classic() +
+			theme(aspect.ratio=1) +
+			ylab("Proportion") + 
+			xlab("") +
+			scale_y_continuous(expand=c(0, 0), limits=c(0, 1)) 
 }
 
 plotFromToMatrix = function( D.rate ){
@@ -134,7 +153,7 @@ plotFromToMatrix = function( D.rate ){
 		ggplot(aes(j,i, fill=x)) + 
 			geom_tile() +
 			theme_classic() +
-			theme(aspect.ratio=1) +
+			theme(aspect.ratio=1, axis.text.x=element_text(angle=75, hjust=1) ) +
 			ylab("From") + xlab("To") +
 			scale_fill_gradient2(low="white", high="navy", limits=c(0,1), name="Rate") +
 			scale_x_discrete(limits=ids) +
@@ -147,7 +166,7 @@ plotFromToMatrix = function( D.rate ){
 	
 
 
-plotFromToNetwork = function(D.rate, node.cols = c("#E41A1C", "#377EB8"), edge.cols=c("orange", "grey90")){
+plotFromToNetwork = function(D.rate, from=NULL, to=NULL, node.cols = c("#E41A1C", "#377EB8"), edge.cols=c("orange", "grey90")){
 
 	ids = rownames(D.rate)
 
@@ -167,6 +186,10 @@ plotFromToNetwork = function(D.rate, node.cols = c("#E41A1C", "#377EB8"), edge.c
 	V(g)$y = match(gsub("^.*_(.+)$", "\\1", names(V(g))), rev(ids))
 	V(g)$color = c(rep(node.cols[1], n1), rep(node.cols[2], n2))
 	V(g)$vertex.label = gsub("^.*_(.+)$", "\\1", names(V(g)))
+
+	if( !is.null(from) & !is.null(to) ){
+		V(g)$size = c(from/sum(from), to/sum(to)) *100
+	}
 
 	plot(g, 
 		edge.arrow.size = .5,

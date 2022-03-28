@@ -92,10 +92,27 @@ names(to) = LETTERS[1:n]
 D.rate = getTransitionAverages(from, to)
 
 # Plots of data and inferred rates
+plotFromToBarsStacked(from, to) 
 plotFromToBars(from, to)
 plotFromToMatrix(D.rate)
-plotFromToNetwork( D.rate )
+plotFromToNetwork( D.rate, from, to )
 ```
+
+<!---
+source("flow.R")
+
+from[] = 1
+from[1] = 20
+
+to[] = 1
+to[9] = 20
+
+cbind(from/sum(from), to/sum(to))
+
+
+plotFromToNetwork( D.rate, from, to )
+--->
+
 
 
 
