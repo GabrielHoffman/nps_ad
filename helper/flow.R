@@ -179,16 +179,27 @@ plotFromToNetwork = function(D.rate, from=NULL, to=NULL, node.cols = c("#E41A1C"
 				weight=x) %>%
 		graph.data.frame(directed=TRUE)
 
-	n1 = length(grep("^from_", names(V(g))))
-	n2 = length(grep("^to_", names(V(g))))
+	x = rep(rep(0, length(ids)), 2)
+	x[grep("^from_", names(V(g)))] = 1
+	x[grep("^to_", names(V(g)))] = 2
+	V(g)$x = x
+	V(g)$color = node.cols[x]
 
-	V(g)$x = c(rep(1, n1), rep(2, n2))
 	V(g)$y = match(gsub("^.*_(.+)$", "\\1", names(V(g))), rev(ids))
-	V(g)$color = c(rep(node.cols[1], n1), rep(node.cols[2], n2))
+
 	V(g)$vertex.label = gsub("^.*_(.+)$", "\\1", names(V(g)))
 
 	if( !is.null(from) & !is.null(to) ){
-		V(g)$size = c(from/sum(from), to/sum(to)) *100
+		names(from) = paste0('from_', names(from))
+		names(to) = paste0('to_', names(to))
+
+		i = match(names(from), names(V(g)) )
+		V(g)$size[i] = from#[order(i)]
+
+		i = match(names(to), names(V(g)) )
+		V(g)$size[i] = to#[order(i)]
+
+		V(g)$size = V(g)$size / max(V(g)$size) * 40
 	}
 
 	plot(g, 
@@ -197,6 +208,7 @@ plotFromToNetwork = function(D.rate, from=NULL, to=NULL, node.cols = c("#E41A1C"
 		edge.width=E(g)$weight*4, 
 		vertex.label=V(g)$vertex.label, 
 		vertex.frame.color=NA,
+		# vertex.size = V(g)$size,
 		vertex.label.color = "black")
 }
 

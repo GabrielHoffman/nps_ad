@@ -360,6 +360,8 @@ j = which(info$dx == "AD")
 to = colSums(df_cellCounts[j,])
 
 D.rate = getTransitionAverages(from, to)
+```
+
 
 ```{r plotFromToBars, fig.width=7, fig.height=7}
 # Plots of data and inferred rates
