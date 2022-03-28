@@ -96,7 +96,7 @@ outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_re
 # info = as.data.frame(readRDS(file))
 
 
-infoFull = paste0(outfolder, 'colData_full.RDS' %>% 
+infoFull = paste0(outfolder, 'colData_full.RDS') %>% 
               readRDS %>% 
               as_tibble
 ```
