@@ -375,6 +375,10 @@ plotFromToNetwork( D.rate )
 ```
 
 
+```{r plotFromToNetwork, fig.width=8, fig.height=12}
+plotFromToNetwork( D.rate, from, to )
+```
+
 
 ```{r exit2, cache=FALSE, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
