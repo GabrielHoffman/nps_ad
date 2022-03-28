@@ -190,6 +190,15 @@ plotFromToNetwork = function(D.rate, from=NULL, to=NULL, node.cols = c("#E41A1C"
 	V(g)$vertex.label = gsub("^.*_(.+)$", "\\1", names(V(g)))
 
 	if( !is.null(from) & !is.null(to) ){
+
+		if( any(names(from) != rownames(D.rate)) ){
+			stop("names of *from* must equal rownames(D.rate)")
+		}
+
+		if( any(names(from) != colnames(D.rate)) ){
+			stop("names of *from* must equal colnames(D.rate)")
+		}
+
 		names(from) = paste0('from_', names(from))
 		names(to) = paste0('to_', names(to))
 
