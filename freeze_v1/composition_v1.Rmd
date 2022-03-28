@@ -375,7 +375,7 @@ plotFromToNetwork( D.rate )
 ```
 
 
-```{r plotFromToNetwork, fig.width=8, fig.height=12}
+```{r plotFromToNetwork2, fig.width=8, fig.height=12}
 plotFromToNetwork( D.rate, from, to )
 ```
 
