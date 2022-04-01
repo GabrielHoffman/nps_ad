@@ -237,6 +237,38 @@ for( annot in annotation){
 rm(pb)
 ```
 
+
+
+```{r combineData.2, message=TRUE}
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
+
+# update block size for reading h5ad file from disk
+setAutoBlockSize(1e9)
+
+annotation = c("celltype", 'celltype8', "subtype")
+
+for( annot in annotation){
+  message(annot)
+  # Create pseudo-bulk SingleCellExperiment
+  pb <- aggregateToPseudoBulk(sceCombine,
+      assay = "X", 
+      fun = "sum",
+      cluster_id = annot,
+      sample_id  = "SubID")
+
+  # Set levels for Dx2
+  lvls = sort(unique(as.character(colData(pb)$dx)))
+  lvls = lvls[-which(lvls=="Control")]
+  colData(pb)$dx = factor(colData(pb)$dx, c("Control", lvls))
+
+  file = paste0(outfolder, 'pbObj_SubID', annot, '.RDS')
+  saveRDS(pb, file=file)
+}
+rm(pb)
+```
+
+
+
 ```{r read.pb}
 annot = "celltype8"
 file = paste0(outfolder, 'pbObj_', annot, '.RDS')
