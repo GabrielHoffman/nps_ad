@@ -263,8 +263,9 @@ for( annot in annotation){
 
   file = paste0(outfolder, 'pbObj_SubID', annot, '.RDS')
   saveRDS(pb, file=file)
+  rm(pb)
+  gc()
 }
-rm(pb)
 ```
 
 
