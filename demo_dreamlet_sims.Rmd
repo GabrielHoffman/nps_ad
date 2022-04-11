@@ -25,11 +25,10 @@ ml python git
 git pull
 R
 
-system("git pull")
-rmarkdown::render("demo_dreamlet_sims.Rmd");
+system("git pull"); rmarkdown::render("demo_dreamlet_sims.Rmd");
 
 
-# https://hoffmg01.u.hpc.mssm.edu/nps_ad/demo_dreamlet.html
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/demo_dreamlet_sims.html
 
 
 ml git
@@ -186,7 +185,7 @@ resTabl = do.call(rbind, resTabl)
 ```{r plot.time}
 resTabl %>%
   as_tibble %>%
-  ggplot(aes(n, time.elapsed, color="method")) + 
+  ggplot(aes(n, time.elapsed, color=method)) + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
@@ -202,7 +201,7 @@ resTabl %>%
   as_tibble %>%
   group_by(n, method) %>%
   summarize( nDE = sum(adj.P.Val < 0.05)) %>%
-  ggplot(aes(n, nDE, color="method")) + 
+  ggplot(aes(n, nDE, color=method)) + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
