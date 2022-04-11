@@ -196,7 +196,7 @@ resTabl %>%
     ylab("Elapsed time (s)")
 ```
 
-```{r plot.FPR}
+```{r plot.FD}
 resTabl %>%
   as_tibble %>%
   group_by(n, method) %>%
@@ -210,6 +210,25 @@ resTabl %>%
     ggtitle("False positives from simulations") + 
     xlab("# Subjects") + 
     ylab("False positive genes")
+```
+
+
+
+
+```{r plot.FPR}
+resTabl %>%
+  as_tibble %>%
+  group_by(n, method) %>%
+  summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value))) %>%
+  ggplot(aes(n, FPR, color=method)) + 
+    geom_point() + 
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+    scale_y_continuous(limits=c(0, NA)) + 
+    scale_x_continuous(limits=c(0, NA)) +
+    ggtitle("False positives from simulations") + 
+    xlab("# Subjects") + 
+    ylab("False positive rate")
 ```
 
 
