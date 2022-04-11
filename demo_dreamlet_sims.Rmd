@@ -78,6 +78,8 @@ n_donors = c(seq(10, 30, by=10),
             seq(275, 500, by=50),
             seq(600, 1000, by=100))
 
+n_donors = n_donors[1:5]
+
 # includes replicates
 pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS")
 
@@ -169,7 +171,7 @@ run_method = function(pb, formula, method){
 ```{r run.sims}
 methods = c('dreamlet', "DESeq2")
 
-resTabl = lapply(n_donors[1:5], function(n){
+resTabl = lapply(n_donors, function(n){
   resTabl = lapply(methods, function(method){
     message(n, ' ', method)
     run_method( pb[,seq(1,n)], ~ Dxsim, method)
@@ -180,6 +182,37 @@ resTabl = lapply(n_donors[1:5], function(n){
   do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
 })
 resTabl = do.call(rbind, resTabl)
+
+# # fixed
+# resTabl2 = lapply(n_donors[1:3], function(n){
+#   resTabl = lapply(methods, function(method){
+#     message(n, ' ', method)
+#     run_method( pb[,seq(1,n)], ~ Dxsim + BatchID, method)
+#   })
+#   ids = sapply(resTabl, colnames)
+#   tab = table(ids)
+
+#   do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
+# })
+# resTabl2 = do.call(rbind, resTabl2)
+# resTabl2$method = paste(resTabl2$, "- fixed" )
+# resTabl = rbind(resTabl, resTabl2)
+
+# Random
+resTabl3 = lapply(n_donors, function(n){
+  resTabl = lapply('dreamlet', function(method){
+    message(n, ' ', method)
+    run_method( pb[,seq(1,n)], ~ Dxsim + (1|BatchID), method)
+  })
+  ids = sapply(resTabl, colnames)
+  tab = table(ids)
+
+  do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
+})
+resTabl3 = do.call(rbind, resTabl3)
+resTabl3$method = paste(resTabl3$, "- random" )
+
+resTabl = rbind(resTabl, resTabl3)
 ```
 
 ```{r plot.time}
