@@ -78,7 +78,7 @@ n_donors = c(seq(10, 30, by=10),
             seq(275, 500, by=50),
             seq(600, 1000, by=100))
 
-n_donors = n_donors[1:5]
+n_donors = n_donors[1:3]
 
 # includes replicates
 pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS")
@@ -160,6 +160,7 @@ run_method = function(pb, formula, method){
 
   tab$n = ncol(pb)
   tab$method = method
+  tab$formula = paste(as.character(formula), collapse=' ')
   tab$time.user = res.time[1]
   tab$time.system = res.time[2]
   tab$time.elapsed = res.time[3]
@@ -173,8 +174,11 @@ methods = c('dreamlet', "DESeq2")
 
 resTabl = lapply(n_donors, function(n){
   resTabl = lapply(methods, function(method){
-    message(n, ' ', method)
-    run_method( pb[,seq(1,n)], ~ Dxsim, method)
+    lapply(forms, function(form){
+      res1 = run_method( pb[,seq(1,n)], ~ Dxsim, method)
+      res2 = run_method( pb[,seq(1,n)], ~ Dxsim + BatchID, method)
+      rbind(res1, res2)
+    })
   })
   ids = sapply(resTabl, colnames)
   tab = table(ids)
@@ -183,36 +187,21 @@ resTabl = lapply(n_donors, function(n){
 })
 resTabl = do.call(rbind, resTabl)
 
-# # fixed
-# resTabl2 = lapply(n_donors[1:3], function(n){
-#   resTabl = lapply(methods, function(method){
+# # Random
+# resTabl3 = lapply(n_donors, function(n){
+#   resTabl = lapply('dreamlet', function(method){
 #     message(n, ' ', method)
-#     run_method( pb[,seq(1,n)], ~ Dxsim + BatchID, method)
+#     run_method( pb[,seq(1,n)], ~ Dxsim + (1|BatchID), method)
 #   })
 #   ids = sapply(resTabl, colnames)
 #   tab = table(ids)
 
 #   do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
 # })
-# resTabl2 = do.call(rbind, resTabl2)
-# resTabl2$method = paste(resTabl2$, "- fixed" )
-# resTabl = rbind(resTabl, resTabl2)
+# resTabl3 = do.call(rbind, resTabl3)
+# resTabl3$method = paste(resTabl3$, "- random" )
 
-# Random
-resTabl3 = lapply(n_donors, function(n){
-  resTabl = lapply('dreamlet', function(method){
-    message(n, ' ', method)
-    run_method( pb[,seq(1,n)], ~ Dxsim + (1|BatchID), method)
-  })
-  ids = sapply(resTabl, colnames)
-  tab = table(ids)
-
-  do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
-})
-resTabl3 = do.call(rbind, resTabl3)
-resTabl3$method = paste(resTabl3$, "- random" )
-
-resTabl = rbind(resTabl, resTabl3)
+# resTabl = rbind(resTabl, resTabl3)
 ```
 
 ```{r plot.time}
