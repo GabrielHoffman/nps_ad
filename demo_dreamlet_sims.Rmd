@@ -26,7 +26,7 @@ git pull
 R
 
 system("git pull")
-rmarkdown::render("demo_dreamlet.Rmd");
+rmarkdown::render("demo_dreamlet_sims.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/demo_dreamlet.html
@@ -84,8 +84,6 @@ pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pb
 
 # Completely collapsed
 pbObj.Donor = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj_Donor.RDS")
-```
-
 
 # simulate balanced phenotype
 set.seed(1)
@@ -107,7 +105,7 @@ pb$Dxsim = factor(pb$Dxsim, c("Control", "AD"))
 pbObj.Donor$Dxsim = rep("Control", ncol(pbObj.Donor))
 pbObj.Donor$Dxsim[pbObj.Donor$SubID %in% ids_ad] = "AD"
 pbObj.Donor$Dxsim = factor(pbObj.Donor$Dxsim, c("Control", "AD"))
-
+```
 
 
 
