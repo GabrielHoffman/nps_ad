@@ -200,7 +200,7 @@ resTabl %>%
 resTabl %>%
   as_tibble %>%
   group_by(n, method) %>%
-  summarize( nDE = sum(adj.P.Val < 0.05)) %>%
+  summarize( nDE = sum(adj.P.Val < 0.05, na.rm=TRUE)) %>%
   ggplot(aes(n, nDE, color=method)) + 
     geom_point() + 
     theme_classic() +
