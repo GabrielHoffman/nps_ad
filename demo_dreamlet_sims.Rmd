@@ -1,0 +1,252 @@
+---
+title: "Null simulations subsets of NPS/AD"
+subtitle: 'STAR-solo R1-4 merged h5ad'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{Decorrelate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+# results 
+# /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/
+ml python git
+git pull
+R
+
+system("git pull")
+rmarkdown::render("demo_dreamlet.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/demo_dreamlet.html
+
+
+ml git
+cd ~/build2/dreamlet
+git pull
+R CMD INSTALL .
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(dreamlet)
+library(muscat)
+library(scater)
+library(tidyverse)
+library(ggplot2)
+library(DESeq2)
+library(edgeR)
+library(kableExtra)
+})
+```
+
+```{r load.data}
+n_donors = c(seq(10, 30, by=10),
+            seq(40, 100, by=40),
+            seq(120, 250, by=30),
+            seq(275, 500, by=50),
+            seq(600, 1000, by=100))
+
+# includes replicates
+pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS")
+
+# Completely collapsed
+pbObj.Donor = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj_Donor.RDS")
+```
+
+
+# simulate balanced phenotype
+set.seed(1)
+ids_ad = c()
+
+for( batch in levels(pb$BatchID)){
+
+  # get Subject IDs in this batch
+  ids = strsplit(batch, ',')[[1]]
+
+  # sample Subjects to be Case
+  ids_ad = append(ids_ad, sample(ids, length(ids)/2))
+}
+
+pb$Dxsim = rep("Control", ncol(pb))
+pb$Dxsim[pb$SubID %in% ids_ad] = "AD"
+pb$Dxsim = factor(pb$Dxsim, c("Control", "AD"))
+
+pbObj.Donor$Dxsim = rep("Control", ncol(pbObj.Donor))
+pbObj.Donor$Dxsim[pbObj.Donor$SubID %in% ids_ad] = "AD"
+pbObj.Donor$Dxsim = factor(pbObj.Donor$Dxsim, c("Control", "AD"))
+
+
+
+
+
+```{r define.methods}
+run_method = function(pb, formula, method){
+
+  if( method == "dreamlet"){
+    res.time = system.time({
+      res.proc = processAssays( pb, ~ 1, BPPARAM=SnowParam(12), quiet=TRUE) 
+      fit = dreamlet( res.proc, formula, BPPARAM=SnowParam(12), quiet=TRUE)
+      tab <- topTable(fit, coef='DxsimAD', number=Inf)
+    })
+  }else if( method == "DESeq2"){
+
+    # filter genes and samples using dreamlet code
+    res.proc = processAssays( pb, ~ 1, quiet=TRUE)
+  
+    res.time = system.time({
+    # DESeq2
+    res = lapply(assayNames(res.proc), function(CT){
+        
+        # get included genes and samples
+        tmp = assay(res.proc, CT)
+
+        # cat(CT, dim(pb.sub))
+
+        # subset based on dreamlet filter
+        pb.sub = pb[rownames(tmp), colnames(tmp)]
+
+        dds = suppressMessages(DESeqDataSetFromMatrix( assay(pb.sub, CT), colData(pb.sub), formula))
+        dds = suppressMessages(DESeq(dds, quiet=TRUE))
+        res = results(dds)
+
+        data.frame(gene = rownames(res),
+            cluster_id = CT,
+            logFC = res$log2FoldChange,
+            AveExpr = res$baseMean, 
+            t = res$stat, 
+            p_val = res$pvalue, 
+            p_adj.loc = p.adjust(res$pvalue, "BH"))
+    })
+    tab = do.call(rbind, res)
+    tab$p_adj.glb = p.adjust(tab$p_val, "BH")
+    })
+  }else if( method == "limma"){
+
+  }else if( method == "edgeR"){
+    
+  }
+
+  tab$n = ncol(pb)
+  tab$method = method
+  tab$time.user = res.time[1]
+  tab$time.system = res.time[2]
+  tab$time.elapsed = res.time[3]
+
+  tab
+}
+```
+
+```{r run.sims}
+methods = c('dreamlet', "DESeq2")
+
+resTabl = lapply(n_donors[1:5], function(n){
+  resTabl = lapply(methods, function(method){
+    message(n, ' ', method)
+    run_method( pb[,seq(1,n)], ~ Dxsim, method)
+  })
+  do.call(rbind, resTabl)
+})
+resTabl = do.call(rbind, resTabl)
+```
+
+```{r plot.time}
+resTabl %>%
+  as_tibble %>%
+  ggplot(aes(n, time.elapsed, color="method")) + 
+    geom_point() + 
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+    scale_y_continuous(limits=c(0, NA)) + 
+    scale_x_continuous(limits=c(0, NA)) +
+    ggtitle("Run time") + 
+    xlab("# Subjects") + 
+    ylab("Elapsed time (s)")
+```
+
+```{r plot.FPR}
+resTabl %>%
+  as_tibble %>%
+  group_by(n, method) %>%
+  summarize( nDE = sum(adj.P.Val < 0.05)) %>%
+  ggplot(aes(n, nDE, color="method")) + 
+    geom_point() + 
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+    scale_y_continuous(limits=c(0, NA)) + 
+    scale_x_continuous(limits=c(0, NA)) +
+    ggtitle("False positives from simulations") + 
+    xlab("# Subjects") + 
+    ylab("False positive genes")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
