@@ -72,13 +72,6 @@ library(kableExtra)
 ```
 
 ```{r load.data}
-n_donors = c(seq(10, 30, by=10),
-            seq(40, 100, by=40),
-            seq(120, 250, by=30),
-            seq(275, 500, by=50),
-            seq(600, 1000, by=100))
-
-n_donors = n_donors[1:3]
 
 # includes replicates
 pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS")
@@ -95,8 +88,10 @@ for( batch in levels(pb$BatchID)){
   # get Subject IDs in this batch
   ids = strsplit(batch, ',')[[1]]
 
-  # sample Subjects to be Case
-  ids_ad = append(ids_ad, sample(ids, length(ids)/2))
+  a = ids[1:ceiling(length(ids)/2)]
+  # a = sample(ids, length(ids)/2)
+
+  ids_ad = append(ids_ad, a)
 }
 
 pb$Dxsim = rep("Control", ncol(pb))
@@ -104,7 +99,7 @@ pb$Dxsim[pb$SubID %in% ids_ad] = "AD"
 pb$Dxsim = factor(pb$Dxsim, c("Control", "AD"))
 
 pbObj.Donor$Dxsim = rep("Control", ncol(pbObj.Donor))
-pbObj.Donor$Dxsim[pbObj.Donor$SubID %in% ids_ad] = "AD"
+pbObj.Donor$Dxsim[pbObj.Donor$Row.names %in% ids_ad] = "AD"
 pbObj.Donor$Dxsim = factor(pbObj.Donor$Dxsim, c("Control", "AD"))
 ```
 
@@ -116,14 +111,14 @@ run_method = function(pb, formula, method){
 
   if( method == "dreamlet"){
     res.time = system.time({
-      res.proc = processAssays( pb, ~ 1, BPPARAM=SnowParam(12), quiet=TRUE) 
+      res.proc = processAssays( pb, ~ 1, BPPARAM=SnowParam(12), quiet=TRUE, min.samples=6) 
       fit = dreamlet( res.proc, formula, BPPARAM=SnowParam(12), quiet=TRUE)
       tab <- topTable(fit, coef='DxsimAD', number=Inf)
     })
   }else if( method == "DESeq2"){
 
     # filter genes and samples using dreamlet code
-    res.proc = processAssays( pb, ~ 1, quiet=TRUE)
+    res.proc = processAssays( pb, ~ 1, quiet=TRUE, min.samples=6)
   
     res.time = system.time({
     # DESeq2
@@ -132,7 +127,7 @@ run_method = function(pb, formula, method){
         # get included genes and samples
         tmp = assay(res.proc, CT)
 
-        # cat(CT, dim(pb.sub))
+        # cat(CT, dim(tmp))
 
         # subset based on dreamlet filter
         pb.sub = pb[rownames(tmp), colnames(tmp)]
@@ -170,15 +165,22 @@ run_method = function(pb, formula, method){
 ```
 
 ```{r run.sims}
+n_batches = c(3, 6, 12, 18, 25, 36)
 methods = c('dreamlet', "DESeq2")
 
-resTabl = lapply(n_donors, function(n){
+resTabl = lapply(n_batches, function(nbatch){
+
+  idx = pbObj.Donor$BatchID %in% levels(pbObj.Donor$BatchID)[1:nbatch]
+
   resTabl = lapply(methods, function(method){
-    lapply(forms, function(form){
-      res1 = run_method( pb[,seq(1,n)], ~ Dxsim, method)
-      res2 = run_method( pb[,seq(1,n)], ~ Dxsim + BatchID, method)
-      rbind(res1, res2)
-    })
+    res1 = run_method( pbObj.Donor[,idx], ~ Dxsim, method)
+    res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + BatchID, method)
+    if( method == "dreamlet"){      
+      res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
+    }else{
+      res3 = data.frame()
+    }
+    rbind(res1, res2, res3)
   })
   ids = sapply(resTabl, colnames)
   tab = table(ids)
@@ -186,25 +188,9 @@ resTabl = lapply(n_donors, function(n){
   do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
 })
 resTabl = do.call(rbind, resTabl)
-
-# # Random
-# resTabl3 = lapply(n_donors, function(n){
-#   resTabl = lapply('dreamlet', function(method){
-#     message(n, ' ', method)
-#     run_method( pb[,seq(1,n)], ~ Dxsim + (1|BatchID), method)
-#   })
-#   ids = sapply(resTabl, colnames)
-#   tab = table(ids)
-
-#   do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
-# })
-# resTabl3 = do.call(rbind, resTabl3)
-# resTabl3$method = paste(resTabl3$, "- random" )
-
-# resTabl = rbind(resTabl, resTabl3)
 ```
 
-```{r plot.time}
+```{r plot.time, cache=FALSE}
 resTabl %>%
   as_tibble %>%
   ggplot(aes(n, time.elapsed, color=method)) + 
@@ -218,7 +204,7 @@ resTabl %>%
     ylab("Elapsed time (s)")
 ```
 
-```{r plot.FD}
+```{r plot.FD, cache=FALSE}
 resTabl %>%
   as_tibble %>%
   group_by(n, method) %>%
@@ -237,7 +223,7 @@ resTabl %>%
 
 
 
-```{r plot.FPR}
+```{r plot.FPR, cache=FALSE}
 resTabl %>%
   as_tibble %>%
   group_by(n, method) %>%
