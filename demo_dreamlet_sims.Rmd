@@ -221,6 +221,7 @@ resTabl %>%
   group_by(n, method) %>%
   summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value))) %>%
   ggplot(aes(n, FPR, color=method)) + 
+    geom_hline(linetype="dashed", color="grey") +
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
