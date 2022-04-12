@@ -208,7 +208,7 @@ resTabl %>%
     xlab("# Subjects") + 
     ylab("Elapsed time (s)") +
     scale_y_log10() +
-    scale_fill_brewer(palette="Set1")
+    scale_fill_brewer(palette="Set1", name="Method + formula")
 ```
 
 
@@ -223,48 +223,55 @@ resTabl %>%
     scale_x_continuous(limits=c(0, NA)) +
     ggtitle("CPU time") + 
     xlab("# Subjects") + 
-    ylab("Elapsed time (s)") +
+    ylab("CPU time (s)") +
     scale_y_log10() +
-    scale_fill_brewer(palette="Set1")
+    scale_fill_brewer(palette="Set1", name="Method + formula")
 ```
 
 
 ```{r plot.FD, cache=FALSE}
-resTabl %>%
+df = resTabl %>%
   as_tibble %>%
   group_by(n, method, formula) %>%
-  summarize( nDE = sum(adj.P.Val < 0.05, na.rm=TRUE), total = sum(!is.na(adj.P.Val))) %>%
-  ggplot(aes(n, nDE, color=paste(method, formula))) + 
+  summarize( nDE = sum(adj.P.Val < 0.05, na.rm=TRUE), total = sum(!is.na(adj.P.Val))) 
+ymax = 1.02* max(df$nDE)
+xmax = 1.02* max(df$n)
+
+ggplot(df, aes(n, nDE, color=paste(method, formula))) + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
-    scale_y_continuous(limits=c(0, NA)) + 
-    scale_x_continuous(limits=c(0, NA)) +
+    scale_y_continuous(limits=c(0, ymax)) + 
+    scale_x_continuous(limits=c(0, xmax), expand=c(0,0)) +
     ggtitle("False positives from simulations") + 
     xlab("# Subjects") + 
     ylab("False positive genes") +
-    scale_fill_brewer(palette="Set1")
+    scale_color_brewer(palette="Set1", name="Method + formula")
 ```
 
 
 
 
 ```{r plot.FPR, cache=FALSE}
-resTabl %>%
+df = resTabl %>%
   as_tibble %>%
   group_by(n, method, formula) %>%
-  summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value))) %>%
-  ggplot(aes(n, FPR, color=paste(method, formula))) + 
+  summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value)))
+
+ymax = 1.02* max(df$FPR)
+xmax = 1.02* max(df$n)
+
+ggplot(df, aes(n, FPR, color=paste(method, formula))) + 
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
-    geom_point() + 
+    geom_point() +
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
-    scale_y_continuous(limits=c(0, NA)) + 
-    scale_x_continuous(limits=c(0, NA)) +
+    scale_y_continuous(limits=c(0, ymax), expand=c(0,0)) + 
+    scale_x_continuous(limits=c(0, xmax), expand=c(0,0)) +
     ggtitle("False positives from simulations") + 
     xlab("# Subjects") + 
     ylab("False positive rate") +
-    scale_fill_brewer(palette="Set1")
+    scale_color_brewer(palette="Set1", name="Method + formula")
 ```
 
 
