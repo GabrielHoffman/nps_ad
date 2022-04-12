@@ -134,8 +134,8 @@ run_method = function(pb, formula, method){
 
   if( method == "dreamlet"){
     res.time = system.time({
-      res.proc = processAssays( pb, ~ 1, BPPARAM=SnowParam(1), quiet=TRUE, min.samples=6) 
-      fit = dreamlet( res.proc, formula, BPPARAM=SnowParam(1), quiet=TRUE)
+      res.proc = processAssays( pb, ~ 1, BPPARAM=SnowParam(4), quiet=TRUE, min.samples=6) 
+      fit = dreamlet( res.proc, formula, BPPARAM=SnowParam(4), quiet=TRUE)
       tab <- topTable(fit, coef='DxsimAD', number=Inf)
     })
   }else if( method == "DESeq2"){
@@ -201,7 +201,7 @@ run_method = function(pb, formula, method){
 
         df$cs = colSums(counts)
 
-        res.glmer = lapply(rownames(pb.sub), function(gene){
+        res.glmer = mclapply(rownames(pb.sub), function(gene){
 
           df$y = c(counts[gene,])
           form = as.formula(paste('y ~ offset(log(cs)) + ', as.character(formula)[2] ,'+ (1|SubID)'))
@@ -209,7 +209,7 @@ run_method = function(pb, formula, method){
           fit = glmer(form, data=df, family = 'poisson')
 
           data.frame(ID = gene, t(coef(summary(fit))['DxsimAD',]))
-          })
+          }, mc.cores=4)
         res.glmer = do.call(rbind, res.glmer)
 
         data.frame(ID = res.glmer$ID,
