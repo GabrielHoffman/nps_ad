@@ -206,7 +206,7 @@ run_method = function(pb, formula, method){
           df$y = c(counts[gene,])
           form = as.formula(paste('y ~ offset(log(cs)) + ', as.character(formula)[2] ,'+ (1|SubID)'))
 
-          fit = glmer(form, data=df, family = 'poisson')
+          fit = suppressWarnings(glmer(form, data=df, family = 'poisson'))
 
           data.frame(ID = gene, t(coef(summary(fit))['DxsimAD',]))
           }, mc.cores=4)
