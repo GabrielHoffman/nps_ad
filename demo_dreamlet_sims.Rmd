@@ -169,8 +169,8 @@ run_method = function(pb, formula, method){
 
 
 ```{r run.sims}
-n_batches = c(3, 6, 12, 18, 25, 36)
-methods = c('dreamlet', "DESeq2")
+n_batches = c(3, 6, 12, 18, 25, 36)[1:3]
+methods = c('dreamlet')#, "DESeq2")
 
 resTabl = lapply(n_batches, function(nbatch){
 
@@ -179,11 +179,11 @@ resTabl = lapply(n_batches, function(nbatch){
   resTabl = lapply(methods, function(method){
     res1 = run_method( pbObj.Donor[,idx], ~ Dxsim, method)
     res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + BatchID, method)
-    if( method == "dreamlet"){      
-      res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
-    }else{
+    # if( method == "dreamlet"){      
+    #   res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
+    # }else{
       res3 = data.frame()
-    }
+    # }
     smartbind(res1, res2, res3)
   })
   smartbind(list=resTabl)
@@ -202,14 +202,15 @@ resTabl %>%
     scale_x_continuous(limits=c(0, NA)) +
     ggtitle("Run time") + 
     xlab("# Subjects") + 
-    ylab("Elapsed time (s)")
+    ylab("Elapsed time (s)") +
+    scale_y_log10()
 ```
 
 ```{r plot.FD, cache=FALSE}
 resTabl %>%
   as_tibble %>%
   group_by(n, method, formula) %>%
-  summarize( nDE = sum(adj.P.Val < 0.05, na.rm=TRUE)) %>%
+  summarize( nDE = sum(adj.P.Val < 0.05, na.rm=TRUE), total = sum(!is.na(adj.P.Val))) %>%
   ggplot(aes(n, nDE, color=paste(method, formula))) + 
     geom_point() + 
     theme_classic() +
