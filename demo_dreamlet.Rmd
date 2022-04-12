@@ -181,6 +181,9 @@ sceCombine$id <- paste0(sceCombine$batch, '_', sceCombine$SubID)
 
 colData(sceCombine)$splitAB = ifelse( colData(sceCombine)$BatchID %in% levels(colData(sceCombine)$BatchID)[1:45], "A", "B")
 
+datafile = paste(outfolder, "demo_dreamlet_sce_mod.RDS")
+saveRDS(sceCombine, file=datafile)
+
 # Create pseudo-bulk SingleCellExperiment
 pbObj <- aggregateToPseudoBulk(sceCombine,
     assay = "X", 
