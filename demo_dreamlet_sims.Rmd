@@ -154,6 +154,8 @@ run_method = function(pb, formula, method){
     })
   }else if( method == "limma"){
 
+      # 
+
   }else if( method == "edgeR"){
     
   }
@@ -172,7 +174,7 @@ run_method = function(pb, formula, method){
 
 
 ```{r run.sims}
-n_batches = c(3, 6, 12, 18, 25, 36)
+n_batches = c(3, 6, 12)#, 18, 25, 36)
 methods = c('dreamlet', "DESeq2")
 
 resTabl = mclapply(n_batches, function(nbatch){
@@ -183,11 +185,11 @@ resTabl = mclapply(n_batches, function(nbatch){
     message(method, ' ', nbatch )
     res1 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort, method)
     res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + BatchID, method)
-    # if( method == "dreamlet"){      
-    #   res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + (1|BatchID), method)
-    # }else{
+    if( method == "dreamlet"){      
+      res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + (1|BatchID), method)
+    }else{
       res3 = data.frame()
-    # }
+    }
     smartbind(res1, res2, res3)
   })
   smartbind(list=resTabl)
