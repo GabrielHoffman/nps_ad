@@ -243,8 +243,6 @@ run_method = function(pb, formula, method){
 
 
 ```{r run.sims}
-knitr::knit_exit()
-
 n_batches = c(2, 3)#, 6, 12)#, 18, 25, 36)
 methods = c('dreamlet', "DESeq2", "glmer")
 
