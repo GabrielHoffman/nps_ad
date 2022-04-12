@@ -177,20 +177,16 @@ resTabl = lapply(n_batches, function(nbatch){
   idx = pbObj.Donor$BatchID %in% levels(pbObj.Donor$BatchID)[1:nbatch]
 
   resTabl = lapply(methods, function(method){
-    res1 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim, method)
-    res2 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim + BatchID, method)
+    res1 = run_method( pbObj.Donor[1:100,idx], ~ Dxsim, method)
+    res2 = run_method( pbObj.Donor[1:100,idx], ~ Dxsim + BatchID, method)
     if( method == "dreamlet"){      
-      res3 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim + (1|BatchID), method)
+      res3 = run_method( pbObj.Donor[1:100,idx], ~ Dxsim + (1|BatchID), method)
     }else{
       res3 = data.frame()
     }
-    rbind(res1, res2, res3)
+    smartbind(res1, res2, res3)
   })
-  do.call(smartrbind, resTabl)
-  # ids = sapply(resTabl, colnames)
-  # tab = table(ids)
-
-  # do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
+  smartbind(list=resTabl)
 })
 resTabl = do.call(rbind, resTabl)
 ```
