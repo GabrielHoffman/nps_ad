@@ -86,9 +86,8 @@ pbObj.Donor = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dr
 pbObj.Donor$SubID = pbObj.Donor$Row.names 
 
 # Full Data
-outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/demo_dreamlet_sce_mod.RDS'
+outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/ demo_dreamlet_sce_mod.RDS'
 sceFull = readRDS(outfolder)
-
 
 # simulate balanced phenotype
 set.seed(1)
@@ -112,6 +111,19 @@ pb$Dxsim = factor(pb$Dxsim, c("Control", "AD"))
 pbObj.Donor$Dxsim = rep("Control", ncol(pbObj.Donor))
 pbObj.Donor$Dxsim[pbObj.Donor$SubID %in% ids_ad] = "AD"
 pbObj.Donor$Dxsim = factor(pbObj.Donor$Dxsim, c("Control", "AD"))
+
+sceFull$Dxsim = rep("Control", ncol(sceFull))
+sceFull$Dxsim[sceFull$SubID %in% ids_ad] = "AD"
+sceFull$Dxsim = factor(sceFull$Dxsim, c("Control", "AD"))
+
+# set cohort
+sceFull$cohort = c()
+for(CHRT in unique(pbObj.Donor$cohort)){
+
+  ids = pbObj.Donor$SubID[pbObj.Donor$cohort == CHRT]
+
+  sceFull$cohort[sceFull$SubID %in% ids] = CHRT
+}
 ```
 
 
@@ -167,6 +179,8 @@ run_method = function(pb, formula, method){
 
     # filter genes and samples using dreamlet code
     res.proc = processAssays( pb, ~ 1, quiet=TRUE, min.samples=6)
+
+    sce = sceFull[,sceFull$SubID %in% unique(pb$SubID)]
   
     res.time = system.time({
     # DESeq2
@@ -180,30 +194,35 @@ run_method = function(pb, formula, method){
         # subset based on dreamlet filter
         pb.sub = pb[rownames(tmp), colnames(tmp)]
 
-        counts = assay(pb.sub, CT)
+        sce.CT = sce[,sce$celltype8==CT]
+        df = droplevels(as.data.frame(colData(sce.CT)))
 
-        res.glmer = lapply(1:nrow(pb.sub), function(i){
-          y = counts[i,]
+        counts = as(assay(sce.CT, "X"), "sparseMatrix")
 
-          form = as.formula(paste('y ~', as.character(formula)[2] ,'+ (1|SubID)'))
+        df$cs = colSums(counts)
 
-          fit = glmer(formula, data=colData(pb.sub))
-          coef(summary(fit))
+        res.glmer = lapply(rownames(pb.sub), function(gene){
 
+          df$y = c(counts[gene,])
+          form = as.formula(paste('y ~ offset(log(cs)) + ', as.character(formula)[2] ,'+ (1|SubID)'))
+
+          fit = glmer(form, data=df, family = 'poisson')
+
+          data.frame(ID = gene, t(coef(summary(fit))['DxsimAD',]))
           })
+        res.glmer = do.call(rbind, res.glmer)
 
-        data.frame(ID = rownames(res),
+        data.frame(ID = res.glmer$ID,
             cluster_id = CT,
-            logFC = res$log2FoldChange,
-            AveExpr = res$baseMean, 
-            t = res$stat, 
-            P.Value = res$pvalue, 
-            p_adj.loc = p.adjust(res$pvalue, "BH"))
+            logFC = res.glmer$Estimate,
+            AveExpr = NA, 
+            t = res.glmer$z.value, 
+            P.Value = res.glmer$Pr...z.., 
+            p_adj.loc = p.adjust(res.glmer$Pr...z.., "BH"))
     })
     tab = do.call(rbind, res)
     tab$adj.P.Val = p.adjust(tab$P.Value, "BH")
     })
-
     
   }
 
@@ -221,8 +240,10 @@ run_method = function(pb, formula, method){
 
 
 ```{r run.sims}
-n_batches = c(3, 6, 12)#, 18, 25, 36)
-methods = c('dreamlet', "DESeq2")
+knitr::knit_exit()
+
+n_batches = c(2, 3)#, 6, 12)#, 18, 25, 36)
+methods = c('dreamlet', "DESeq2", "glmer")
 
 resTabl = mclapply(n_batches, function(nbatch){
 
