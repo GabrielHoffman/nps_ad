@@ -243,27 +243,38 @@ run_method = function(pb, formula, method){
 
 
 ```{r run.sims}
-n_batches = c(2, 3)#, 6, 12)#, 18, 25, 36)
+
+run_analysis = function(n_batches, methods){
+
+  resTabl = mclapply(n_batches, function(nbatch){
+
+    idx = pbObj.Donor$BatchID %in% levels(pbObj.Donor$BatchID)[1:nbatch]
+
+    resTabl = lapply(methods, function(method){
+      message(method, ' ', nbatch )
+      res1 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort, method)
+      res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + BatchID, method)
+      # if( method == "dreamlet"){      
+      #   res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + (1|BatchID), method)
+      # }else{
+        res3 = data.frame()
+      # }
+      smartbind(res1, res2, res3)
+    })
+    smartbind(list=resTabl)
+  }, mc.cores=6)
+  resTabl = do.call(rbind, resTabl)
+}
+
+n_batches = c(2, 3)
 methods = c('dreamlet', "DESeq2", "glmer")
+resTabl1 = run_analysis(n_batches, methods)
 
-resTabl = mclapply(n_batches, function(nbatch){
+n_batches = c(2, 3, 6, 12)#, 18, 25, 36)
+methods = c('dreamlet', "DESeq2")
+resTabl2 = run_analysis(n_batches, methods)
 
-  idx = pbObj.Donor$BatchID %in% levels(pbObj.Donor$BatchID)[1:nbatch]
-
-  resTabl = lapply(methods, function(method){
-    message(method, ' ', nbatch )
-    res1 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort, method)
-    res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + BatchID, method)
-    # if( method == "dreamlet"){      
-    #   res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + (1|BatchID), method)
-    # }else{
-      res3 = data.frame()
-    # }
-    smartbind(res1, res2, res3)
-  })
-  smartbind(list=resTabl)
-}, mc.cores=6)
-resTabl = do.call(rbind, resTabl)
+resTabl = rbind(resTabl1, resTabl2)
 ```
 
 ```{r plot.time, cache=FALSE}
