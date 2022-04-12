@@ -73,7 +73,6 @@ library(kableExtra)
 ```
 
 ```{r load.data}
-
 # includes replicates
 pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS")
 
