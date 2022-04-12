@@ -85,6 +85,11 @@ pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pb
 pbObj.Donor = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj_Donor.RDS")
 pbObj.Donor$SubID = pbObj.Donor$Row.names 
 
+# Full Data
+outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/demo_dreamlet_sce_mod.RDS'
+sceFull = readRDS(outfolder)
+
+
 # simulate balanced phenotype
 set.seed(1)
 ids_ad = c()
@@ -183,6 +188,7 @@ run_method = function(pb, formula, method){
           form = as.formula(paste('y ~', as.character(formula)[2] ,'+ (1|SubID)'))
 
           fit = glmer(formula, data=colData(pb.sub))
+          coef(summary(fit))
 
           })
 
@@ -335,8 +341,8 @@ ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
 ggplot(df, aes(as.character(n), FPR, fill=paste(method, formula))) + 
-    geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     geom_bar(stat="identity", position="dodge2") +
+    geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
     scale_y_continuous(limits=c(0, ymax), expand=c(0,0)) + 
