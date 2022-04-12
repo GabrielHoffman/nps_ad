@@ -207,8 +207,27 @@ resTabl %>%
     ggtitle("Run time") + 
     xlab("# Subjects") + 
     ylab("Elapsed time (s)") +
-    scale_y_log10()
+    scale_y_log10() +
+    scale_fill_brewer(palette="Set1")
 ```
+
+
+```{r plot.time.user, cache=FALSE}
+resTabl %>%
+  as_tibble %>%
+  ggplot(aes(n, time.user, color=paste(method, formula))) + 
+    geom_point() + 
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+    scale_y_continuous(limits=c(0, NA)) + 
+    scale_x_continuous(limits=c(0, NA)) +
+    ggtitle("CPU time") + 
+    xlab("# Subjects") + 
+    ylab("Elapsed time (s)") +
+    scale_y_log10() +
+    scale_fill_brewer(palette="Set1")
+```
+
 
 ```{r plot.FD, cache=FALSE}
 resTabl %>%
@@ -223,7 +242,8 @@ resTabl %>%
     scale_x_continuous(limits=c(0, NA)) +
     ggtitle("False positives from simulations") + 
     xlab("# Subjects") + 
-    ylab("False positive genes")
+    ylab("False positive genes") +
+    scale_fill_brewer(palette="Set1")
 ```
 
 
@@ -243,7 +263,8 @@ resTabl %>%
     scale_x_continuous(limits=c(0, NA)) +
     ggtitle("False positives from simulations") + 
     xlab("# Subjects") + 
-    ylab("False positive rate")
+    ylab("False positive rate") +
+    scale_fill_brewer(palette="Set1")
 ```
 
 
