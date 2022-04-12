@@ -70,6 +70,7 @@ library(gtools)
 library(DESeq2)
 library(parallel)
 library(edgeR)
+library(lme4)
 library(kableExtra)
 library(RhpcBLASctl)
 omp_set_num_threads(1)
@@ -154,9 +155,49 @@ run_method = function(pb, formula, method){
     })
   }else if( method == "limma"){
 
-      # 
 
   }else if( method == "edgeR"){
+    
+  }else if( method == "glmer"){
+
+    # filter genes and samples using dreamlet code
+    res.proc = processAssays( pb, ~ 1, quiet=TRUE, min.samples=6)
+  
+    res.time = system.time({
+    # DESeq2
+    res = lapply(assayNames(res.proc), function(CT){
+        
+        # get included genes and samples
+        tmp = assay(res.proc, CT)
+
+        # cat(CT, dim(tmp))
+
+        # subset based on dreamlet filter
+        pb.sub = pb[rownames(tmp), colnames(tmp)]
+
+        counts = assay(pb.sub, CT)
+
+        res.glmer = lapply(1:nrow(pb.sub), function(i){
+          y = counts[i,]
+
+          form = as.formula(paste('y ~', as.character(formula)[2] ,'+ (1|SubID)'))
+
+          fit = glmer(formula, data=colData(pb.sub))
+
+          })
+
+        data.frame(ID = rownames(res),
+            cluster_id = CT,
+            logFC = res$log2FoldChange,
+            AveExpr = res$baseMean, 
+            t = res$stat, 
+            P.Value = res$pvalue, 
+            p_adj.loc = p.adjust(res$pvalue, "BH"))
+    })
+    tab = do.call(rbind, res)
+    tab$adj.P.Val = p.adjust(tab$P.Value, "BH")
+    })
+
     
   }
 
@@ -280,6 +321,29 @@ ggplot(df, aes(n, FPR, color=paste(method, formula))) +
     xlab("# Subjects") + 
     ylab("False positive rate") +
     scale_color_brewer(palette="Set1", name="Method + formula")
+```
+
+
+
+```{r plot.FPR.bar, cache=FALSE}
+df = resTabl %>%
+  as_tibble %>%
+  group_by(n, method, formula) %>%
+  summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value)))
+
+ymax = 1.02* max(df$FPR)
+xmax = 1.02* max(df$n)
+
+ggplot(df, aes(as.character(n), FPR, fill=paste(method, formula))) + 
+    geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
+    geom_bar(stat="identity", position="dodge2") +
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+    scale_y_continuous(limits=c(0, ymax), expand=c(0,0)) + 
+    ggtitle("False positives from simulations") + 
+    xlab("# Subjects") + 
+    ylab("False positive rate") +
+    scale_fill_brewer(palette="Set1", name="Method + formula")
 ```
 
 
