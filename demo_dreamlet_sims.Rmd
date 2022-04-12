@@ -66,6 +66,7 @@ library(muscat)
 library(scater)
 library(tidyverse)
 library(ggplot2)
+library(gtools)
 library(DESeq2)
 library(edgeR)
 library(kableExtra)
@@ -165,11 +166,10 @@ run_method = function(pb, formula, method){
 }
 ```
 
-library(gtools)
-smartrbind
+
 
 ```{r run.sims}
-n_batches = c(3, 6, 12, 18, 25, 36)
+n_batches = c(3, 6, 12, 18, 25, 36)[1:2]
 methods = c('dreamlet', "DESeq2")
 
 resTabl = lapply(n_batches, function(nbatch){
@@ -177,19 +177,20 @@ resTabl = lapply(n_batches, function(nbatch){
   idx = pbObj.Donor$BatchID %in% levels(pbObj.Donor$BatchID)[1:nbatch]
 
   resTabl = lapply(methods, function(method){
-    res1 = run_method( pbObj.Donor[,idx], ~ Dxsim, method)
-    res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + BatchID, method)
+    res1 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim, method)
+    res2 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim + BatchID, method)
     if( method == "dreamlet"){      
-      res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
+      res3 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim + (1|BatchID), method)
     }else{
       res3 = data.frame()
     }
     rbind(res1, res2, res3)
   })
-  ids = sapply(resTabl, colnames)
-  tab = table(ids)
+  do.call(smartrbind, resTabl)
+  # ids = sapply(resTabl, colnames)
+  # tab = table(ids)
 
-  do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
+  # do.call(rbind, lapply(resTabl, function(x) x[,names(tab)[tab == length(resTabl)]]))
 })
 resTabl = do.call(rbind, resTabl)
 ```
