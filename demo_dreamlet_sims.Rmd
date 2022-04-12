@@ -173,7 +173,7 @@ run_method = function(pb, formula, method){
 
 ```{r run.sims}
 n_batches = c(3, 6, 12, 18, 25, 36)
-methods = c('dreamlet')#, "DESeq2")
+methods = c('dreamlet', "DESeq2")
 
 resTabl = mclapply(n_batches, function(nbatch){
 
