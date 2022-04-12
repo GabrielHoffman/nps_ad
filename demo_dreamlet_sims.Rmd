@@ -196,36 +196,42 @@ resTabl = do.call(rbind, resTabl)
 ```
 
 ```{r plot.time, cache=FALSE}
-resTabl %>%
-  as_tibble %>%
-  ggplot(aes(n, time.elapsed, color=paste(method, formula))) + 
+df = resTabl %>%
+  as_tibble 
+
+xmax = 1.02* max(df$n)
+
+ggplot(df, aes(n, time.elapsed, color=paste(method, formula))) + 
+    geom_line() + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
-    scale_y_continuous(limits=c(0, NA)) + 
-    scale_x_continuous(limits=c(0, NA)) +
+    scale_y_log10() + 
+    scale_x_continuous(limits=c(0, xmax), expand=c(0,0)) +
     ggtitle("Run time") + 
     xlab("# Subjects") + 
     ylab("Elapsed time (s)") +
-    scale_y_log10() +
-    scale_fill_brewer(palette="Set1", name="Method + formula")
+    scale_color_brewer(palette="Set1", name="Method + formula")
 ```
 
 
 ```{r plot.time.user, cache=FALSE}
-resTabl %>%
-  as_tibble %>%
-  ggplot(aes(n, time.user, color=paste(method, formula))) + 
+df = resTabl %>%
+  as_tibble 
+
+xmax = 1.02* max(df$n)
+
+ggplot(df, aes(n, time.elapsed, color=paste(method, formula))) + 
+    geom_line() + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
-    scale_y_continuous(limits=c(0, NA)) + 
-    scale_x_continuous(limits=c(0, NA)) +
+    scale_y_log10() + 
+    scale_x_continuous(limits=c(0, xmax), expand=c(0,0)) +
     ggtitle("CPU time") + 
     xlab("# Subjects") + 
     ylab("CPU time (s)") +
-    scale_y_log10() +
-    scale_fill_brewer(palette="Set1", name="Method + formula")
+    scale_color_brewer(palette="Set1", name="Method + formula")
 ```
 
 
