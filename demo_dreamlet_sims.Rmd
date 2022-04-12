@@ -74,6 +74,7 @@ library(lme4)
 library(kableExtra)
 library(RhpcBLASctl)
 omp_set_num_threads(1)
+blas_set_num_threads(1)
 })
 ```
 
@@ -198,6 +199,7 @@ run_method = function(pb, formula, method){
         df = droplevels(as.data.frame(colData(sce.CT)))
 
         counts = as(assay(sce.CT, "X"), "sparseMatrix")
+        rm(sce.CT)
 
         df$cs = colSums(counts)
 
@@ -211,6 +213,7 @@ run_method = function(pb, formula, method){
           data.frame(ID = gene, t(coef(summary(fit))['DxsimAD',]))
           }, mc.cores=4)
         res.glmer = do.call(rbind, res.glmer)
+        rm(counts)
 
         data.frame(ID = res.glmer$ID,
             cluster_id = CT,
