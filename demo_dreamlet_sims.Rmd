@@ -243,7 +243,6 @@ run_method = function(pb, formula, method){
 
 
 ```{r run.sims}
-
 run_analysis = function(n_batches, methods){
 
   resTabl = mclapply(n_batches, function(nbatch){
@@ -270,7 +269,7 @@ n_batches = c(2, 3)
 methods = c('dreamlet', "DESeq2", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(2, 3, 6, 12)#, 18, 25, 36)
+n_batches = c(6, 12)#, 18, 25, 36)
 methods = c('dreamlet', "DESeq2")
 resTabl2 = run_analysis(n_batches, methods)
 
