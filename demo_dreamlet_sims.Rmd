@@ -165,6 +165,9 @@ run_method = function(pb, formula, method){
 }
 ```
 
+library(gtools)
+smartrbind
+
 ```{r run.sims}
 n_batches = c(3, 6, 12, 18, 25, 36)
 methods = c('dreamlet', "DESeq2")
@@ -194,7 +197,7 @@ resTabl = do.call(rbind, resTabl)
 ```{r plot.time, cache=FALSE}
 resTabl %>%
   as_tibble %>%
-  ggplot(aes(n, time.elapsed, color=method)) + 
+  ggplot(aes(n, time.elapsed, color=paste(method, formula))) + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
@@ -208,9 +211,9 @@ resTabl %>%
 ```{r plot.FD, cache=FALSE}
 resTabl %>%
   as_tibble %>%
-  group_by(n, method) %>%
+  group_by(n, method, formula) %>%
   summarize( nDE = sum(adj.P.Val < 0.05, na.rm=TRUE)) %>%
-  ggplot(aes(n, nDE, color=method)) + 
+  ggplot(aes(n, nDE, color=paste(method, formula))) + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
@@ -227,9 +230,9 @@ resTabl %>%
 ```{r plot.FPR, cache=FALSE}
 resTabl %>%
   as_tibble %>%
-  group_by(n, method) %>%
+  group_by(n, method, formula) %>%
   summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value))) %>%
-  ggplot(aes(n, FPR, color=method)) + 
+  ggplot(aes(n, FPR, color=paste(method, formula))) + 
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     geom_point() + 
     theme_classic() +
