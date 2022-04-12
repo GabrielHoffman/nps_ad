@@ -68,8 +68,11 @@ library(tidyverse)
 library(ggplot2)
 library(gtools)
 library(DESeq2)
+library(parallel)
 library(edgeR)
 library(kableExtra)
+library(RhpcBLASctl)
+omp_set_num_threads(1)
 })
 ```
 
@@ -113,8 +116,8 @@ run_method = function(pb, formula, method){
 
   if( method == "dreamlet"){
     res.time = system.time({
-      res.proc = processAssays( pb, ~ 1, BPPARAM=SnowParam(12), quiet=TRUE, min.samples=6) 
-      fit = dreamlet( res.proc, formula, BPPARAM=SnowParam(12), quiet=TRUE)
+      res.proc = processAssays( pb, ~ 1, BPPARAM=SnowParam(1), quiet=TRUE, min.samples=6) 
+      fit = dreamlet( res.proc, formula, BPPARAM=SnowParam(1), quiet=TRUE)
       tab <- topTable(fit, coef='DxsimAD', number=Inf)
     })
   }else if( method == "DESeq2"){
@@ -172,7 +175,7 @@ run_method = function(pb, formula, method){
 n_batches = c(3, 6, 12, 18, 25, 36)
 methods = c('dreamlet')#, "DESeq2")
 
-resTabl = lapply(n_batches, function(nbatch){
+resTabl = mclapply(n_batches, function(nbatch){
 
   idx = pbObj.Donor$BatchID %in% levels(pbObj.Donor$BatchID)[1:nbatch]
 
@@ -188,7 +191,7 @@ resTabl = lapply(n_batches, function(nbatch){
     smartbind(res1, res2, res3)
   })
   smartbind(list=resTabl)
-})
+}, mc.cores=6)
 resTabl = do.call(rbind, resTabl)
 ```
 
