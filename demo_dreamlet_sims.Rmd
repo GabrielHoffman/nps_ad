@@ -262,7 +262,7 @@ run_analysis = function(n_batches, methods){
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2, 3, 4)
+n_batches = c(2, 3, 4, 5)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
@@ -294,7 +294,7 @@ ggplot(df, aes(n, time.elapsed, color=method, formula)) +
 ```
 
 
-```{r plot.time.user, cache=FALSE}
+```{r plot.time.user, cache=FALSE, fig.width=8}
 df = resTabl %>%
   as_tibble 
 
@@ -315,7 +315,7 @@ ggplot(df, aes(n, time.elapsed, color=method)) +
 ```
 
 
-```{r plot.FD, cache=FALSE}
+```{r plot.FD, cache=FALSE, fig.width=8}
 df = resTabl %>%
   as_tibble %>%
   group_by(n, method, formula) %>%
@@ -339,7 +339,7 @@ ggplot(df, aes(n, nDE, color=method)) +
 
 
 
-```{r plot.FPR, cache=FALSE}
+```{r plot.FPR, cache=FALSE}, fig.width=8
 df = resTabl %>%
   as_tibble %>%
   group_by(n, method, formula) %>%
@@ -364,7 +364,7 @@ ggplot(df, aes(n, FPR, color=method)) +
 
 
 
-```{r plot.FPR.bar, cache=FALSE}
+```{r plot.FPR.bar, cache=FALSE, fig.width=8}
 df = resTabl %>%
   as_tibble %>%
   group_by(n, method, formula) %>%
@@ -373,7 +373,7 @@ df = resTabl %>%
 ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(as.character(n), FPR, fill=method)) + 
+ggplot(df, aes(factor(n), FPR, fill=method)) + 
     geom_bar(stat="identity", position="dodge2") +
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     theme_classic() +
