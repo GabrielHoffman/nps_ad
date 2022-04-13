@@ -187,7 +187,7 @@ run_method = function(pb, formula, method){
       pb$group_id = df$group_id
       pb$sample_id = df$sample_id
 
-      design = model.matrix(formula, colData(pb))
+      design = model.matrix(formula, droplevels(colData(pb)))
       colnames(design) = gsub(',', '_', colnames(design))
 
       metadata(pb)$agg_pars$by = c("cluster_id", "sample_id" )
@@ -296,7 +296,7 @@ run_analysis = function(n_batches, methods){
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2)
+n_batches = c(2, 3)
 methods = c('dreamlet', "limma-voom")#"DESeq2", )#, "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
