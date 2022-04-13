@@ -188,6 +188,7 @@ run_method = function(pb, formula, method){
       pb$sample_id = df$sample_id
 
       design = model.matrix(formula, colData(pb))
+      colnames(design) = gsub(',', '_', colnames(design))
 
       metadata(pb)$agg_pars$by = c("cluster_id", "sample_id" )
 
@@ -291,16 +292,16 @@ run_analysis = function(n_batches, methods){
       smartbind(res1, res2, res3)
     })
     smartbind(list=resTabl)
-  }, mc.cores=6)
+  }, mc.cores=1)
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2, 3)
-methods = c('dreamlet', "DESeq2", "limma-voom")#, "edgeR", "glmer")
+n_batches = c(2)
+methods = c('dreamlet', "limma-voom")#"DESeq2", )#, "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
 n_batches = c(6, 12)#, 18, 25, 36)
-methods = c('dreamlet', "DESeq2", "limma-voom", "edgeR")
+# methods = c('dreamlet', "DESeq2", "limma-voom", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
 resTabl = rbind(resTabl1, resTabl2)
@@ -312,7 +313,7 @@ df = resTabl %>%
 
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, time.elapsed, color=paste(method, formula))) + 
+ggplot(df, aes(n, time.elapsed, color=method, formula)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
@@ -322,7 +323,8 @@ ggplot(df, aes(n, time.elapsed, color=paste(method, formula))) +
     ggtitle("Run time") + 
     xlab("# Subjects") + 
     ylab("Elapsed time (s)") +
-    scale_color_brewer(palette="Set1", name="Method + formula")
+    scale_color_brewer(palette="Set1", name="Method + formula") +
+    facet_wrap(~formula)
 ```
 
 
