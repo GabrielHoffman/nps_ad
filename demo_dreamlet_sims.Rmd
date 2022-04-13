@@ -72,9 +72,9 @@ library(parallel)
 library(edgeR)
 library(lme4)
 library(kableExtra)
-library(RhpcBLASctl)
-omp_set_num_threads(1)
-blas_set_num_threads(1)
+# library(RhpcBLASctl)
+# omp_set_num_threads(1)
+# blas_set_num_threads(1)
 })
 ```
 
@@ -139,43 +139,9 @@ run_method = function(pb, formula, method){
       fit = dreamlet( res.proc, formula, BPPARAM=SnowParam(4), quiet=TRUE)
       tab <- topTable(fit, coef='DxsimAD', number=Inf)
     })
-  }else if( method == "DESeq2a"){
-
-    # filter genes and samples using dreamlet code
-    res.proc = processAssays( pb, ~ 1, quiet=TRUE, min.samples=6)
-  
-    res.time = system.time({
-    # DESeq2
-    res = lapply(assayNames(res.proc), function(CT){
-        
-        # get included genes and samples
-        tmp = assay(res.proc, CT)
-
-        # cat(CT, dim(tmp))
-
-        # subset based on dreamlet filter
-        pb.sub = pb[rownames(tmp), colnames(tmp)]
-
-        dds = suppressMessages(DESeqDataSetFromMatrix( assay(pb.sub, CT), colData(pb.sub), formula))
-        dds = suppressMessages(DESeq(dds, quiet=TRUE))
-        res = results(dds)
-
-        data.frame(ID = rownames(res),
-            cluster_id = CT,
-            logFC = res$log2FoldChange,
-            AveExpr = res$baseMean, 
-            t = res$stat, 
-            P.Value = res$pvalue, 
-            p_adj.loc = p.adjust(res$pvalue, "BH"))
-    })
-    tab = do.call(rbind, res)
-    tab$adj.P.Val = p.adjust(tab$P.Value, "BH")
-    })
-
   }else if( method %in% c("limma-voom", "edgeR", "DESeq2")){
 
-      res.proc = processAssays( pb, ~ 1, quiet=TRUE, min.samples=6)
-
+      # convert counts to integer
       for(CT in assayNames(pb)){
         assay(pb, CT) = as.matrix( assay(pb, CT))
       }
@@ -282,8 +248,8 @@ run_analysis = function(n_batches, methods){
 
     resTabl = lapply(methods, function(method){
       message(method, ' ', nbatch )
-      res1 = run_method( pbObj.Donor[1:500,idx], ~ Dxsim + cohort, method)
-      res2 = run_method( pbObj.Donor[1:500,idx], ~ Dxsim + cohort + BatchID, method)
+      res1 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort, method)
+      res2 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort + BatchID, method)
       # if( method == "dreamlet"){      
       #   res3 = run_method( pbObj.Donor[1:500,idx], ~ Dxsim + cohort + (1|BatchID), method)
       # }else{
@@ -292,16 +258,16 @@ run_analysis = function(n_batches, methods){
       smartbind(res1, res2, res3)
     })
     smartbind(list=resTabl)
-  }, mc.cores=1)
+  }, mc.cores=6)
   resTabl = do.call(rbind, resTabl)
 }
 
 n_batches = c(2, 3)
-methods = c('dreamlet', "limma-voom")#"DESeq2", )#, "edgeR", "glmer")
+methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
 n_batches = c(6, 12)#, 18, 25, 36)
-# methods = c('dreamlet', "DESeq2", "limma-voom", "edgeR")
+methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
 resTabl = rbind(resTabl1, resTabl2)
@@ -323,7 +289,7 @@ ggplot(df, aes(n, time.elapsed, color=method, formula)) +
     ggtitle("Run time") + 
     xlab("# Subjects") + 
     ylab("Elapsed time (s)") +
-    scale_color_brewer(palette="Set1", name="Method + formula") +
+    scale_color_brewer(palette="Set1", name="Method") +
     facet_wrap(~formula)
 ```
 
