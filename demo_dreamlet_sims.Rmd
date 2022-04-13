@@ -208,7 +208,7 @@ run_method = function(pb, formula, method){
           df$y = c(counts[gene,])
           form = as.formula(paste('y ~ offset(log(cs)) + ', as.character(formula)[2] ,'+ (1|SubID)'))
 
-          fit = suppressWarnings(glmer(form, data=df, family = 'poisson'))
+          fit = suppressMessages(glmer(form, data=df, family = 'poisson'))
 
           data.frame(ID = gene, t(coef(summary(fit))['DxsimAD',]))
           }, mc.cores=4)
@@ -225,8 +225,7 @@ run_method = function(pb, formula, method){
     })
     tab = do.call(rbind, res)
     tab$adj.P.Val = p.adjust(tab$P.Value, "BH")
-    })
-    
+    })    
   }
 
   tab$n = ncol(pb)
@@ -251,10 +250,10 @@ run_analysis = function(n_batches, methods){
 
     resTabl = lapply(methods, function(method){
       message(method, ' ', nbatch )
-      res1 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort, method)
-      res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + BatchID, method)
+      res1 = run_method( pbObj.Donor[1:500,idx], ~ Dxsim + cohort, method)
+      res2 = run_method( pbObj.Donor[1:500,idx], ~ Dxsim + cohort + BatchID, method)
       # if( method == "dreamlet"){      
-      #   res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + cohort + (1|BatchID), method)
+      #   res3 = run_method( pbObj.Donor[1:500,idx], ~ Dxsim + cohort + (1|BatchID), method)
       # }else{
         res3 = data.frame()
       # }
