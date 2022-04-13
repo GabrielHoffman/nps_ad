@@ -334,7 +334,7 @@ df = resTabl %>%
 
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, time.elapsed, color=paste(method, formula))) + 
+ggplot(df, aes(n, time.elapsed, color=method)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
@@ -344,7 +344,8 @@ ggplot(df, aes(n, time.elapsed, color=paste(method, formula))) +
     ggtitle("CPU time") + 
     xlab("# Subjects") + 
     ylab("CPU time (s)") +
-    scale_color_brewer(palette="Set1", name="Method + formula")
+    scale_color_brewer(palette="Set1", name="Method") +
+    facet_wrap(~formula)
 ```
 
 
@@ -356,7 +357,7 @@ df = resTabl %>%
 ymax = 1.02* max(df$nDE)
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, nDE, color=paste(method, formula))) + 
+ggplot(df, aes(n, nDE, color=method)) + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
@@ -365,7 +366,8 @@ ggplot(df, aes(n, nDE, color=paste(method, formula))) +
     ggtitle("False positives from simulations") + 
     xlab("# Subjects") + 
     ylab("False positive genes") +
-    scale_color_brewer(palette="Set1", name="Method + formula")
+    scale_color_brewer(palette="Set1", name="Method") +
+    facet_wrap(~formula)
 ```
 
 
@@ -380,7 +382,7 @@ df = resTabl %>%
 ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, FPR, color=paste(method, formula))) + 
+ggplot(df, aes(n, FPR, color=method)) + 
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     geom_point() +
     theme_classic() +
@@ -390,7 +392,8 @@ ggplot(df, aes(n, FPR, color=paste(method, formula))) +
     ggtitle("False positives from simulations") + 
     xlab("# Subjects") + 
     ylab("False positive rate") +
-    scale_color_brewer(palette="Set1", name="Method + formula")
+    scale_color_brewer(palette="Set1", name="Method") +
+    facet_wrap(~formula)
 ```
 
 
@@ -404,7 +407,7 @@ df = resTabl %>%
 ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(as.character(n), FPR, fill=paste(method, formula))) + 
+ggplot(df, aes(as.character(n), FPR, fill=method)) + 
     geom_bar(stat="identity", position="dodge2") +
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     theme_classic() +
@@ -413,7 +416,8 @@ ggplot(df, aes(as.character(n), FPR, fill=paste(method, formula))) +
     ggtitle("False positives from simulations") + 
     xlab("# Subjects") + 
     ylab("False positive rate") +
-    scale_fill_brewer(palette="Set1", name="Method + formula")
+    scale_fill_brewer(palette="Set1", name="Method") +
+    facet_wrap(~formula)
 ```
 
 
