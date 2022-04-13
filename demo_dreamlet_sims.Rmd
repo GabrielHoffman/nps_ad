@@ -262,11 +262,11 @@ run_analysis = function(n_batches, methods){
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2, 3)
+n_batches = c(2, 3, 4)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12)#, 18, 25, 36)
+n_batches = c(6, 12, 18)#, 25, 36)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
@@ -379,7 +379,7 @@ ggplot(df, aes(as.character(n), FPR, fill=method)) +
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
     scale_y_continuous(limits=c(0, ymax), expand=c(0,0)) + 
-    ggtitle("False positives from simulations") + 
+    ggtitle("False positive rate from simulations") + 
     xlab("# Subjects") + 
     ylab("False positive rate") +
     scale_fill_brewer(palette="Set1", name="Method") +
