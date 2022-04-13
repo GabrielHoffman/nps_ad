@@ -194,7 +194,7 @@ run_method = function(pb, formula, method){
       contrast = suppressWarnings(makeContrasts("DxsimAD", levels = design))
 
       res.time = system.time({
-        res = pbDS(pb, method=method, design = design, contrast=contrast)
+        res = pbDS(pb, method=method, design = design, contrast=contrast, verbose=FALSE)
 
         tab = lapply( names(res$table$DxsimAD), function(CT){
           tab = res$table$DxsimAD[[CT]]
@@ -296,7 +296,7 @@ run_analysis = function(n_batches, methods){
 }
 
 n_batches = c(2, 3)
-methods = c('dreamlet', "DESeq2", "limma-voom", "edgeR", "glmer")
+methods = c('dreamlet', "DESeq2", "limma-voom")#, "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
 n_batches = c(6, 12)#, 18, 25, 36)
