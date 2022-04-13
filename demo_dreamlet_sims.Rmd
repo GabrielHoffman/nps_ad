@@ -72,9 +72,9 @@ library(parallel)
 library(edgeR)
 library(lme4)
 library(kableExtra)
-# library(RhpcBLASctl)
-# omp_set_num_threads(1)
-# blas_set_num_threads(1)
+library(RhpcBLASctl)
+omp_set_num_threads(2)
+blas_set_num_threads(2)
 })
 ```
 
