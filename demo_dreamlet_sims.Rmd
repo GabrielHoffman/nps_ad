@@ -248,25 +248,27 @@ run_analysis = function(n_batches, methods){
 
     resTabl = lapply(methods, function(method){
       message(method, ' ', nbatch )
-      res1 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort, method)
-      res2 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort + BatchID, method)
+      res1 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort, method)
+      res2 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort + BatchID, method)
       if( method == "dreamlet"){      
-        res3 = run_method( pbObj.Donor[1:500,idx], ~ Dxsim + cohort + (1|BatchID), method)
+        res3 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort + (1|BatchID), method)
       }else{
         res3 = data.frame()
       }
+      gc()
       smartbind(res1, res2, res3)
     })
     smartbind(list=resTabl)
   }, mc.cores=6)
+  gc()
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2, 3, 4, 5)
+n_batches = c(2, 3, 4, 5, 6)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12, 18)#, 25, 36)
+n_batches = c(6, 12, 17, 29, 41)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
@@ -300,7 +302,7 @@ df = resTabl %>%
 
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, time.elapsed, color=method)) + 
+ggplot(df, aes(n, time.user, color=method)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
@@ -339,7 +341,7 @@ ggplot(df, aes(n, nDE, color=method)) +
 
 
 
-```{r plot.FPR, cache=FALSE}, fig.width=8
+```{r plot.FPR, cache=FALSE, fig.width=8}
 df = resTabl %>%
   as_tibble %>%
   group_by(n, method, formula) %>%
