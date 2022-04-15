@@ -252,10 +252,10 @@ run_analysis = function(n_batches, methods){
 
     resTabl = lapply(methods, function(method){
       message(method, ' ', nbatch )
-      res1 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort, method)
-      res2 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort + BatchID, method)
+      res1 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort, method)
+      res2 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort + BatchID, method)
       if( method %in% c("dreamlet", "glmer")){      
-        res3 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort + (1|BatchID), method)
+        res3 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort + (1|BatchID), method)
       }else{
         res3 = data.frame()
       }
@@ -268,15 +268,15 @@ run_analysis = function(n_batches, methods){
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2, 3)#, 4, 5)
+n_batches = c(2, 3, 4, 5)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-# n_batches = c(6, 12, 17, 29, 41)
-# methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
-# resTabl2 = run_analysis(n_batches, methods)
+n_batches = c(6, 12, 17, 29, 41)
+methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
+resTabl2 = run_analysis(n_batches, methods)
 
-# resTabl = rbind(resTabl1, resTabl2)
+resTabl = rbind(resTabl1, resTabl2)
 ```
 
 ```{r plot.time, cache=FALSE}
