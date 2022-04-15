@@ -73,8 +73,8 @@ library(edgeR)
 library(lme4)
 library(kableExtra)
 library(RhpcBLASctl)
-omp_set_num_threads(2)
-blas_set_num_threads(2)
+omp_set_num_threads(1)
+blas_set_num_threads(1)
 })
 ```
 
@@ -132,6 +132,10 @@ for(CHRT in unique(pbObj.Donor$cohort)){
 
 ```{r define.methods}
 run_method = function(pb, formula, method){
+  
+  library(RhpcBLASctl)
+  omp_set_num_threads(2)
+  blas_set_num_threads(2)
 
   if( method == "dreamlet"){
     res.time = system.time({
@@ -248,10 +252,10 @@ run_analysis = function(n_batches, methods){
 
     resTabl = lapply(methods, function(method){
       message(method, ' ', nbatch )
-      res1 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort, method)
-      res2 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort + BatchID, method)
-      if( method == "dreamlet"){      
-        res3 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort + (1|BatchID), method)
+      res1 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort, method)
+      res2 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort + BatchID, method)
+      if( method %in% c("dreamlet", "glmer")){      
+        res3 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + cohort + (1|BatchID), method)
       }else{
         res3 = data.frame()
       }
@@ -264,7 +268,7 @@ run_analysis = function(n_batches, methods){
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2, 3, 4, 5, 6)
+n_batches = c(2, 3, 4, 5)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
