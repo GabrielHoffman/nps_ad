@@ -268,15 +268,15 @@ run_analysis = function(n_batches, methods){
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2, 3, 4, 5)
+n_batches = c(2, 3)#, 4, 5)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12, 17, 29, 41)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
-resTabl2 = run_analysis(n_batches, methods)
+# n_batches = c(6, 12, 17, 29, 41)
+# methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
+# resTabl2 = run_analysis(n_batches, methods)
 
-resTabl = rbind(resTabl1, resTabl2)
+# resTabl = rbind(resTabl1, resTabl2)
 ```
 
 ```{r plot.time, cache=FALSE}
