@@ -285,7 +285,7 @@ methods = c("dreamlet", "limma-voom", "edgeR", "DESeq2", "glmer")
 xmax = 1.02* max(resTabl$n)
 
 resTabl %>% 
-  as_tibble 
+  as_tibble %>% 
   group_by(n, method, formula) %>% 
   summarize( seconds = max(time.elapsed)) %>%
   mutate(method = factor(method, methods)) %>%
@@ -305,12 +305,11 @@ resTabl %>%
 
 
 ```{r plot.time.user, cache=FALSE, fig.width=8}
-
 xmax = 1.02* max(resTabl$n)
 
 resTabl %>% 
   group_by(n, method, formula) %>% 
-  summarize( seconds = max(time.user))
+  summarize( seconds = max(time.user)) %>% 
   mutate(method = factor(method, methods)) %>%
   ggplot(aes(n, seconds/60, color=method)) + 
     geom_line() + 
