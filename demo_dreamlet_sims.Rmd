@@ -275,7 +275,7 @@ resTabl1 = run_analysis(n_batches, methods)
 # methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 # resTabl2 = run_analysis(n_batches, methods)
 
-resTabl = rbind(resTabl1, resTabl2)
+resTabl = rbind(resTabl1)#, resTabl2)
 ```
 
 ```{r plot.time, cache=FALSE, fig.width=8}
