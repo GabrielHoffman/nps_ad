@@ -280,12 +280,15 @@ resTabl = rbind(resTabl1, resTabl2)
 ```
 
 ```{r plot.time, cache=FALSE}
+# methods = c("dreamlet", "limma-voom", "edgeR", "DESeq2", "glmer")
 df = resTabl %>%
   as_tibble 
 
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, time.elapsed/60, color=method, formula)) + 
+df %>%
+  mutate(method = factor(method, methods)) %>%
+  ggplot(aes(n, time.elapsed/60, color=method, formula)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
@@ -306,7 +309,9 @@ df = resTabl %>%
 
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, time.user/60, color=method)) + 
+df %>%
+  mutate(method = factor(method, methods)) %>%
+  ggplot(aes(n, time.user/60, color=method)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
@@ -329,7 +334,10 @@ df = resTabl %>%
 ymax = 1.02* max(df$nDE)
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, nDE, color=method)) + 
+
+df %>%
+  mutate(method = factor(method, methods)) %>%
+  gplot(aes(n, nDE, color=method)) + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
@@ -354,7 +362,9 @@ df = resTabl %>%
 ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, FPR, color=method)) + 
+df %>%
+  mutate(method = factor(method, methods)) %>%
+  ggplot(aes(n, FPR, color=method)) + 
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     geom_point() +
     theme_classic() +
@@ -374,14 +384,16 @@ ggplot(df, aes(n, FPR, color=method)) +
 df = resTabl %>%
   as_tibble %>%
   group_by(n, method, formula) %>%
-  summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value)))
-
-dim(df)
+  summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value))) %>%
+  as_tibble %>% 
+  tidyr::complete(n, method, formula, fill=list(FPR=0))
 
 ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(factor(n), FPR, fill=method)) + 
+df %>%
+  mutate(method = factor(method, methods)) %>%
+  ggplot(aes(factor(n), FPR, fill=method)) + 
     geom_bar(stat="identity", position="dodge2") +
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     theme_classic() +
@@ -391,28 +403,8 @@ ggplot(df, aes(factor(n), FPR, fill=method)) +
     xlab("# Subjects") + 
     ylab("False positive rate") +
     scale_fill_brewer(palette="Set1", name="Method") +
-    facet_wrap(~formula, scales = "free_x", space = "free_x")
+    facet_grid(~formula)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
 
 
 
