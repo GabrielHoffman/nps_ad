@@ -280,7 +280,7 @@ resTabl = rbind(resTabl1, resTabl2)
 ```
 
 ```{r plot.time, cache=FALSE}
-# methods = c("dreamlet", "limma-voom", "edgeR", "DESeq2", "glmer")
+methods = c("dreamlet", "limma-voom", "edgeR", "DESeq2", "glmer")
 df = resTabl %>%
   as_tibble 
 
