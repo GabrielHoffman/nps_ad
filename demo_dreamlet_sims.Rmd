@@ -41,6 +41,15 @@ R CMD INSTALL .
 --->
 
 
+- Simulate only 1 cohort
+  - problem with user vs elapsed times
+  - balanced vs unbalanced
+  - use *exact* same filtering criteria
+
+
+
+
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -68,6 +77,7 @@ library(tidyverse)
 library(ggplot2)
 library(gtools)
 library(DESeq2)
+library(variancePartition)
 library(parallel)
 library(edgeR)
 library(lme4)
@@ -130,7 +140,10 @@ for(CHRT in unique(pbObj.Donor$cohort)){
 }
 ```
 
-
+Evaluate balance
+```{r balance}
+canCorPairs( ~ Dxsim + BatchID, colData(pbObj.Donor))
+```
 
 
 ```{r define.methods}
@@ -253,11 +266,11 @@ run_analysis = function(n_batches, methods){
       message(method, ' ', nbatch )
       res1 = run_method( pbObj.Donor[,idx], ~ Dxsim, method)
       res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + BatchID, method)
-      # if( method %in% c("dreamlet", "glmer")){      
-      #   res3 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + (1|BatchID), method)
-      # }else{
+      if( method %in% c("dreamlet", "glmer")){      
+        res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
+      }else{
         res3 = data.frame()
-      # }
+      }
       gc()
       smartbind(res1, res2, res3)
     })
@@ -404,13 +417,6 @@ df %>%
     scale_fill_brewer(palette="Set1", name="Method") +
     facet_grid(~formula)
 ```
-
-- Simulate only 1 cohort
-  - problem with user vs elapsed times
-  - balanced vs unbalanced
-
-
-
 
 
 
