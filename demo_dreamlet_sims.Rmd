@@ -81,14 +81,17 @@ blas_set_num_threads(1)
 ```{r load.data}
 # includes replicates
 pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS")
+pb = pb[,pb$cohort == "MSSM"]
 
 # Completely collapsed
 pbObj.Donor = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj_Donor.RDS")
 pbObj.Donor$SubID = pbObj.Donor$Row.names 
+pbObj.Donor = pbObj.Donor[,pbObj.Donor$cohort == "MSSM"]
 
 # Full Data
 outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/ demo_dreamlet_sce_mod.RDS'
 sceFull = readRDS(outfolder)
+sceFull = sceFull[,sceFull$cohort == "MSSM"]
 
 # simulate balanced phenotype
 set.seed(1)
@@ -132,10 +135,6 @@ for(CHRT in unique(pbObj.Donor$cohort)){
 
 ```{r define.methods}
 run_method = function(pb, formula, method){
-  
-  library(RhpcBLASctl)
-  omp_set_num_threads(2)
-  blas_set_num_threads(2)
 
   if( method == "dreamlet"){
     res.time = system.time({
@@ -252,13 +251,13 @@ run_analysis = function(n_batches, methods){
 
     resTabl = lapply(methods, function(method){
       message(method, ' ', nbatch )
-      res1 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort, method)
-      res2 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort + BatchID, method)
-      if( method %in% c("dreamlet", "glmer")){      
-        res3 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + cohort + (1|BatchID), method)
-      }else{
+      res1 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim, method)
+      res2 = run_method( pbObj.Donor[1:200,idx], ~ Dxsim + BatchID, method)
+      # if( method %in% c("dreamlet", "glmer")){      
+      #   res3 = run_method( pbObj.Donor[1:2000,idx], ~ Dxsim + (1|BatchID), method)
+      # }else{
         res3 = data.frame()
-      }
+      # }
       gc()
       smartbind(res1, res2, res3)
     })
@@ -269,12 +268,12 @@ run_analysis = function(n_batches, methods){
 }
 
 n_batches = c(2, 3, 4, 5)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
+methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")#, "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12, 17, 29, 41)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
-resTabl2 = run_analysis(n_batches, methods)
+# n_batches = c(6, 12, 17, 29, 41)
+# methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
+# resTabl2 = run_analysis(n_batches, methods)
 
 resTabl = rbind(resTabl1, resTabl2)
 ```
@@ -406,6 +405,9 @@ df %>%
     facet_grid(~formula)
 ```
 
+- Simulate only 1 cohort
+  - problem with user vs elapsed times
+  - balanced vs unbalanced
 
 
 
