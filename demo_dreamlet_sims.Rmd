@@ -337,7 +337,7 @@ xmax = 1.02* max(df$n)
 
 df %>%
   mutate(method = factor(method, methods)) %>%
-  gplot(aes(n, nDE, color=method)) + 
+  ggplot(aes(n, nDE, color=method)) + 
     geom_point() + 
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
