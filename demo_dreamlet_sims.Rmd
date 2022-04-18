@@ -285,7 +285,7 @@ df = resTabl %>%
 
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, time.elapsed, color=method, formula)) + 
+ggplot(df, aes(n, time.elapsed/60, color=method, formula)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
@@ -294,7 +294,7 @@ ggplot(df, aes(n, time.elapsed, color=method, formula)) +
     scale_x_continuous(limits=c(0, xmax), expand=c(0,0)) +
     ggtitle("Run time") + 
     xlab("# Subjects") + 
-    ylab("Elapsed time (s)") +
+    ylab("Elapsed time (min)") +
     scale_color_brewer(palette="Set1", name="Method") +
     facet_wrap(~formula)
 ```
@@ -306,7 +306,7 @@ df = resTabl %>%
 
 xmax = 1.02* max(df$n)
 
-ggplot(df, aes(n, time.user, color=method)) + 
+ggplot(df, aes(n, time.user/60, color=method)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
@@ -315,7 +315,7 @@ ggplot(df, aes(n, time.user, color=method)) +
     scale_x_continuous(limits=c(0, xmax), expand=c(0,0)) +
     ggtitle("CPU time") + 
     xlab("# Subjects") + 
-    ylab("CPU time (s)") +
+    ylab("CPU time (min)") +
     scale_color_brewer(palette="Set1", name="Method") +
     facet_wrap(~formula)
 ```
@@ -376,6 +376,8 @@ df = resTabl %>%
   group_by(n, method, formula) %>%
   summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value)))
 
+dim(df)
+
 ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
@@ -389,7 +391,7 @@ ggplot(df, aes(factor(n), FPR, fill=method)) +
     xlab("# Subjects") + 
     ylab("False positive rate") +
     scale_fill_brewer(palette="Set1", name="Method") +
-    facet_wrap(~formula)
+    facet_wrap(~formula, scales = "free_x", space = "free_x")
 ```
 
 
