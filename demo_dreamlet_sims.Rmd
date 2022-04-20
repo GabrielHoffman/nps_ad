@@ -190,7 +190,7 @@ plotVarPart(vp.lst, label.angle=60)
 ```
 
 
-```{r vp.plt, fig.height=12, fig.width=8}
+```{r vp.plt2, fig.height=12, fig.width=8}
 vp.lst2 = fitVarPart( res.proc, ~ Dxsim, BPPARAM=SnowParam(12))
 
 # Summarize variance fractions genome-wide for each cell type
