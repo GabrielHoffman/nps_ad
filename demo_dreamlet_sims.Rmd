@@ -110,7 +110,7 @@ pb$SubID = droplevels(pb$SubID)
 # Full Data
 outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/ demo_dreamlet_sce_mod.RDS'
 sceFull = readRDS(outfolder)
-sceFull = sceFull[,sceFull$cohort == "MSSM"]
+sceFull = sceFull[,sceFull$SubID %in% pb$SubID]
 sceFull$BatchID = droplevels(sceFull$BatchID)
 sceFull$SubID = droplevels(sceFull$SubID)
 
