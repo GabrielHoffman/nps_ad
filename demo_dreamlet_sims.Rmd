@@ -89,19 +89,30 @@ blas_set_num_threads(1)
 ```
 
 ```{r load.data}
+# Completely collapsed
+######################
+pbObj.Donor = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj_Donor.RDS")
+pbObj.Donor$SubID = pbObj.Donor$Row.names 
+
+# only MSSM and only batches of >=4 samples
+pbObj.Donor = pbObj.Donor[,pbObj.Donor$cohort == "MSSM"]
+tab = table(pbObj.Donor$BatchID)
+pbObj.Donor = pbObj.Donor[,pbObj.Donor$BatchID %in% names(tab)[tab >=4]]
+pbObj.Donor$BatchID = droplevels(pbObj.Donor$BatchID)
+
 # includes replicates
 pb = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj.RDS")
 pb = pb[,pb$cohort == "MSSM"]
-
-# Completely collapsed
-pbObj.Donor = readRDS("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/demo_dreamlet_pbobj_Donor.RDS")
-pbObj.Donor$SubID = pbObj.Donor$Row.names 
-pbObj.Donor = pbObj.Donor[,pbObj.Donor$cohort == "MSSM"]
+pb = pb[,pb$BatchID %in% names(tab)[tab >=4]]
+pb$BatchID = droplevels(pb$BatchID)
+pb$SubID = droplevels(pb$SubID)
 
 # Full Data
 outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/ demo_dreamlet_sce_mod.RDS'
 sceFull = readRDS(outfolder)
 sceFull = sceFull[,sceFull$cohort == "MSSM"]
+
+sim.method = "unbal"
 
 # simulate balanced phenotype
 set.seed(1)
@@ -112,10 +123,26 @@ for( batch in levels(pb$BatchID)){
   # get Subject IDs in this batch
   ids = strsplit(batch, ',')[[1]]
 
-  a = ids[1:ceiling(length(ids)/2)]
-  # a = sample(ids, length(ids)/2)
+  # keep only ids in the dataset
+  ids = ids[ids %in% pb$SubID]
 
-  ids_ad = append(ids_ad, a)
+  if(sim.method == "balanced"){
+    # select number of samples to be AD
+    n = length(ids)
+
+    # if not even, randomly add -0.5 or 0.5
+    if( length(ids) %% 2 != 0){
+      n = n/2 + sample(c(-0.5, 0.5), 1)
+    }else{
+      n = n/2
+    }
+
+    ids.select = ids[1:n]
+  }else{
+    ids.select = ids[which(sample(0:1, length(ids), replace=TRUE)==1)]
+  }
+
+  ids_ad = append(ids_ad, ids.select)
 }
 
 pb$Dxsim = rep("Control", ncol(pb))
@@ -143,7 +170,11 @@ for(CHRT in unique(pbObj.Donor$cohort)){
 Evaluate balance
 ```{r balance}
 canCorPairs( ~ Dxsim + BatchID, colData(pbObj.Donor))
+
+tab = xtabs(~ BatchID + Dxsim, colData(pbObj.Donor))
+hist(tab[,1] / rowSums(tab), xlab="AD fraction")
 ```
+
 
 
 ```{r define.methods}
@@ -281,11 +312,11 @@ run_analysis = function(n_batches, methods){
 }
 
 n_batches = c(2, 3, 4, 5)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")#, "glmer")
+methods = c('dreamlet', "limma-voom)")#, "DESeq2", "edgeR")#, "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
 n_batches = c(6, 12, 17, 29, 41)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
+methods = c('dreamlet', "limma-voom")#, "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
 resTabl = rbind(resTabl1, resTabl2)
