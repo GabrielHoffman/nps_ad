@@ -177,6 +177,18 @@ tab = xtabs(~ BatchID + Dxsim, colData(pbObj.Donor))
 hist(tab[,1] / rowSums(tab), xlab="AD fraction")
 ```
 
+#### variancePartition
+```{r vp}
+res.proc = processAssays( pbObj.Donor, ~ 1)
+
+vp.lst = fitVarPart( res.proc, ~ (1|Dxsim) + (1|BatchID), BPPARAM=SnowParam(12))
+```
+
+```{r vp.plt}
+# Summarize variance fractions genome-wide for each cell type
+plotVarPart(vp.lst, label.angle=60)
+```
+
 
 
 ```{r define.methods}
