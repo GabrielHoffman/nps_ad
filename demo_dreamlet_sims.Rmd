@@ -111,6 +111,8 @@ pb$SubID = droplevels(pb$SubID)
 outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/ demo_dreamlet_sce_mod.RDS'
 sceFull = readRDS(outfolder)
 sceFull = sceFull[,sceFull$cohort == "MSSM"]
+sceFull$BatchID = droplevels(sceFull$BatchID)
+sceFull$SubID = droplevels(sceFull$SubID)
 
 sim.method = "unbal"
 
@@ -271,6 +273,8 @@ run_method = function(pb, formula, method){
     tab = do.call(rbind, res)
     tab$adj.P.Val = p.adjust(tab$P.Value, "BH")
     })    
+  }else{
+    stop("method not found:", method)
   }
 
   tab$n = ncol(pb)
@@ -297,11 +301,11 @@ run_analysis = function(n_batches, methods){
       message(method, ' ', nbatch )
       res1 = run_method( pbObj.Donor[,idx], ~ Dxsim, method)
       res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + BatchID, method)
-      if( method %in% c("dreamlet", "glmer")){      
-        res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
-      }else{
+      # if( method %in% c("dreamlet", "glmer")){      
+      #   res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
+      # }else{
         res3 = data.frame()
-      }
+      # }
       gc()
       smartbind(res1, res2, res3)
     })
@@ -312,10 +316,10 @@ run_analysis = function(n_batches, methods){
 }
 
 n_batches = c(2, 3, 4, 5)
-methods = c('dreamlet', "limma-voom)")#, "DESeq2", "edgeR")#, "glmer")
+methods = c('dreamlet', "limma-voom")#, "DESeq2", "edgeR")#, "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12, 17, 29, 41)
+n_batches = c(6, 12)#, 17, 29, 41)
 methods = c('dreamlet', "limma-voom")#, "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
