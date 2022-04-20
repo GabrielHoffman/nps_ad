@@ -178,7 +178,7 @@ hist(tab[,1] / rowSums(tab), xlab="AD fraction")
 ```
 
 #### variancePartition
-```{r vp}
+```{r vp, fig.height=12, fig.width=9}
 res.proc = processAssays( pbObj.Donor, ~ 1)
 
 vp.lst = fitVarPart( res.proc, ~ (1|Dxsim) + (1|BatchID), BPPARAM=SnowParam(12))
