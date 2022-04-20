@@ -141,7 +141,8 @@ for( batch in levels(pb$BatchID)){
 
     ids.select = ids[1:n]
   }else{
-    ids.select = ids[which(sample(0:1, length(ids), replace=TRUE)==1)]
+    prob = c(.7, .3)
+    ids.select = ids[which(sample(0:1, length(ids), replace=TRUE, prob=prob)==1)]
   }
 
   ids_ad = append(ids_ad, ids.select)
@@ -174,10 +175,14 @@ Evaluate balance
 canCorPairs( ~ Dxsim + BatchID, colData(pbObj.Donor))
 
 tab = xtabs(~ BatchID + Dxsim, colData(pbObj.Donor))
-hist(tab[,1] / rowSums(tab), xlab="AD fraction")
+frac = tab[,1] / rowSums(tab)
+mean(frac)
+hist(frac, xlab="AD fraction")
 ```
 
 #### variancePartition
+min.samples=6
+
 ```{r vp}
 res.proc = processAssays( pbObj.Donor, ~ 1)
 
@@ -191,7 +196,7 @@ plotVarPart(vp.lst, label.angle=60)
 
 
 ```{r vp.plt2, fig.height=12, fig.width=8}
-vp.lst2 = fitVarPart( res.proc, ~ Dxsim, BPPARAM=SnowParam(12))
+vp.lst2 = fitVarPart( res.proc, ~ Dxsim)
 
 # Summarize variance fractions genome-wide for each cell type
 plotVarPart(vp.lst2, label.angle=60)
