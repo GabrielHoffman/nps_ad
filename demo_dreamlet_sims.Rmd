@@ -115,6 +115,7 @@ sceFull$BatchID = droplevels(sceFull$BatchID)
 sceFull$SubID = droplevels(sceFull$SubID)
 
 sim.method = "unbal"
+# sim.method = "balanced"
 
 # simulate balanced phenotype
 set.seed(1)
@@ -141,7 +142,10 @@ for( batch in levels(pb$BatchID)){
 
     ids.select = ids[1:n]
   }else{
-    prob = c(.7, .3)
+    p = 0.9
+    prob = sample(c(p, 1-p), 1)
+    prob = c(prob, 1-prob)
+
     ids.select = ids[which(sample(0:1, length(ids), replace=TRUE, prob=prob)==1)]
   }
 
@@ -170,9 +174,15 @@ for(CHRT in unique(pbObj.Donor$cohort)){
 }
 ```
 
+*****Idea for creating confounding: need to random flip probs*******
+
+
 Evaluate balance
 ```{r balance}
 canCorPairs( ~ Dxsim + BatchID, colData(pbObj.Donor))
+
+fit = glm(Dxsim ~ BatchID, data=colData(pbObj.Donor), binomial())
+calcVarPart(fit)
 
 tab = xtabs(~ BatchID + Dxsim, colData(pbObj.Donor))
 frac = tab[,1] / rowSums(tab)
