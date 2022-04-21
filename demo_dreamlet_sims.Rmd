@@ -142,11 +142,15 @@ for( batch in levels(pb$BatchID)){
 
     ids.select = ids[1:n]
   }else{
-    p = 0.9
-    prob = sample(c(p, 1-p), 1)
-    prob = c(prob, 1-prob)
+    # p = 0.9
+    # prob = sample(c(p, 1-p), 1)
+    # prob = c(prob, 1-prob)
 
-    ids.select = ids[which(sample(0:1, length(ids), replace=TRUE, prob=prob)==1)]
+    # ids.select = ids[which(sample(0:1, length(ids), replace=TRUE, prob=prob)==1)]
+
+    n = sample(c(1, length(ids)-1), 1)
+
+    ids.select = ids[1:n]
   }
 
   ids_ad = append(ids_ad, ids.select)
@@ -191,10 +195,8 @@ hist(frac, xlab="AD fraction")
 ```
 
 #### variancePartition
-min.samples=6
-
 ```{r vp}
-res.proc = processAssays( pbObj.Donor, ~ 1)
+res.proc = processAssays( pbObj.Donor, ~ 1, min.samples=6)
 
 vp.lst = fitVarPart( res.proc, ~ (1|Dxsim) + (1|BatchID), BPPARAM=SnowParam(12))
 ```
