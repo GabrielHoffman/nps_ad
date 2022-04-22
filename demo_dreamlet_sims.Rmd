@@ -250,6 +250,7 @@ run_method = function(pb, formula, method){
 
         tab = lapply( names(res$table$DxsimAD), function(CT){
           tab = res$table$DxsimAD[[CT]]
+          tab$assay = CT,
           tab$ID = tab$gene
           tab$cluster_id = CT
           tab$AveExpr = tab$logCPM 
@@ -351,12 +352,12 @@ run_analysis = function(n_batches, methods){
   resTabl = do.call(rbind, resTabl)
 }
 
-n_batches = c(2, 3, 4, 5)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")#, "glmer")
+n_batches = c(2, 3)#, 4, 5)
+methods = c('dreamlet', "limma-voom")#), "DESeq2", "edgeR")#, "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12, 17, 29, 41)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
+n_batches = c(6)#, 12, 17, 29, 41)
+# methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
 resTabl = rbind(resTabl1, resTabl2)
@@ -417,7 +418,6 @@ df = resTabl %>%
 ymax = 1.02* max(df$nDE)
 xmax = 1.02* max(df$n)
 
-
 df %>%
   mutate(method = factor(method, methods)) %>%
   ggplot(aes(n, nDE, color=method)) + 
@@ -432,6 +432,12 @@ df %>%
     scale_color_brewer(palette="Set1", name="Method") +
     facet_wrap(~formula)
 ```
+
+df = resTabl %>%
+  as_tibble %>% 
+  group_by(assay, ID) %>% 
+  count()
+
 
 
 
