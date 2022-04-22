@@ -120,7 +120,7 @@ sim.method = "unbal"
 # sim.method = "balanced"
 
 # simulate balanced phenotype
-set.seed(1)
+set.seed(2)
 ids_ad = c()
 
 for( batch in levels(pb$BatchID)){
@@ -351,12 +351,12 @@ run_analysis = function(n_batches, methods){
   gc()
   resTabl = do.call(rbind, resTabl)
 }
-
+ 
 n_batches = c(2, 3, 4, 5)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")#, "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12, 17, 29, 41)
+n_batches = c(6, 12, 17, 29, 41, 50, 68)
 # methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
