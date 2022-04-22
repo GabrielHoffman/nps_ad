@@ -355,7 +355,7 @@ n_batches = c(2, 3, 4, 5)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")#, "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12)#, 17, 29, 41)
+n_batches = c(6, 12, 17, 29, 41)
 methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
