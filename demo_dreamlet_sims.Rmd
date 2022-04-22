@@ -411,8 +411,20 @@ resTabl %>%
 
 
 ```{r plot.FD, cache=FALSE, fig.width=8}
+# retain fixed set of assays and genes
+df = resTabl %>%
+  as_tibble %>% 
+  group_by(assay, ID) %>% 
+  count()
+maxValue = max(df$n)
+df_keepPairs = df %>%
+  filter(n==maxValue) %>%
+  mutate(pair = paste(assay, ID)) 
+
+
 df = resTabl %>%
   as_tibble %>%
+  filter(paste(assay, ID) %in% df_keepPairs$pair) %>%
   group_by(n, method, formula) %>%
   summarize( nDE = sum(adj.P.Val < 0.05, na.rm=TRUE), total = sum(!is.na(adj.P.Val))) 
 ymax = 1.02* max(df$nDE)
@@ -433,18 +445,12 @@ df %>%
     facet_wrap(~formula)
 ```
 
-df = resTabl %>%
-  as_tibble %>% 
-  group_by(assay, ID) %>% 
-  count()
-
-
-
 
 
 ```{r plot.FPR, cache=FALSE, fig.width=8}
 df = resTabl %>%
   as_tibble %>%
+  filter(paste(assay, ID) %in% df_keepPairs$pair) %>%
   group_by(n, method, formula) %>%
   summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value)))
 
@@ -472,6 +478,7 @@ df %>%
 ```{r plot.FPR.bar, cache=FALSE, fig.width=8}
 df = resTabl %>%
   as_tibble %>%
+  filter(paste(assay, ID) %in% df_keepPairs$pair) %>%
   group_by(n, method, formula) %>%
   summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value))) %>%
   as_tibble %>% 
