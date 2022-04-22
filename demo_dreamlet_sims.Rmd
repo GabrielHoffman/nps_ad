@@ -249,7 +249,7 @@ run_method = function(pb, formula, method){
         res = pbDS(pb, method=method, design = design, contrast=contrast, verbose=FALSE)
 
         tab = lapply( names(res$table$DxsimAD), function(CT){
-          tab = res$table$DxsimAD[[CT]]
+          tab = res$table$DxsimAD[[CT]],
           tab$assay = CT,
           tab$ID = tab$gene
           tab$cluster_id = CT
