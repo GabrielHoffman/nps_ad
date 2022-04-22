@@ -48,6 +48,8 @@ R CMD INSTALL .
 
 
 
+*****Idea for creating confounding: need to random flip probs*******
+- simulate with 1 gene
 
 
 
@@ -177,8 +179,6 @@ for(CHRT in unique(pbObj.Donor$cohort)){
   sceFull$cohort[sceFull$SubID %in% ids] = CHRT
 }
 ```
-
-*****Idea for creating confounding: need to random flip probs*******
 
 
 Evaluate balance
@@ -352,11 +352,11 @@ run_analysis = function(n_batches, methods){
 }
 
 n_batches = c(2, 3, 4, 5)
-methods = c('dreamlet', "limma-voom")#, "DESeq2", "edgeR")#, "glmer")
+methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")#, "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
 n_batches = c(6, 12)#, 17, 29, 41)
-methods = c('dreamlet', "limma-voom")#, "DESeq2", "edgeR")
+methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
 resTabl = rbind(resTabl1, resTabl2)
