@@ -116,8 +116,8 @@ sceFull = sceFull[,sceFull$SubID %in% pb$SubID]
 sceFull$BatchID = droplevels(sceFull$BatchID)
 sceFull$SubID = droplevels(sceFull$SubID)
 
-sim.method = "unbal"
-# sim.method = "balanced"
+# sim.method = "unbal"
+sim.method = "balanced"
 
 # simulate balanced phenotype
 set.seed(2)
@@ -338,11 +338,11 @@ run_analysis = function(n_batches, methods){
       message(method, ' ', nbatch )
       res1 = run_method( pbObj.Donor[,idx], ~ Dxsim, method)
       res2 = run_method( pbObj.Donor[,idx], ~ Dxsim + BatchID, method)
-      if( method %in% c("dreamlet", "glmer")){      
-        res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
-      }else{
+      # if( method %in% c("dreamlet", "glmer")){      
+      #   res3 = run_method( pbObj.Donor[,idx], ~ Dxsim + (1|BatchID), method)
+      # }else{
         res3 = data.frame()
-      }
+      # }
       gc()
       smartbind(res1, res2, res3)
     })
@@ -353,10 +353,10 @@ run_analysis = function(n_batches, methods){
 }
  
 n_batches = c(2, 3, 4, 5)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")#, "glmer")
+methods = c('dreamlet', "limma-voom")#, "DESeq2", "edgeR")#, "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
-n_batches = c(6, 12, 17, 29, 41, 50, 68)
+n_batches = c(6, 12)#, 17, 29, 41, 50, 68)
 # methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
