@@ -98,7 +98,7 @@ folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
 files = dir(folder, pattern="*.h5ad", full.names=TRUE)
 
-pbList = lapply(files[238:240], function(file){
+pbList = lapply(files, function(file){
 
   message( match(file, files))
   sce = readH5AD(file, use_hdf5=TRUE)
