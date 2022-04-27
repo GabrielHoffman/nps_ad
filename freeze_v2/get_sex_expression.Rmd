@@ -1,0 +1,103 @@
+
+--
+title: "Gene expression of XIST/UTY"
+subtitle: 'For concordance analysis'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+---
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v2
+ml python git
+R --vanilla
+
+system("git pull"); rmarkdown::render("get_sex_expression.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/eval_methods/dreamlet/mathys_Nature_2019.html
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(dreamlet)
+library(scater)
+library(tidyverse)
+library(kableExtra)
+
+setAutoBlockSize(5e9)
+```
+
+```{r read.files}
+folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
+
+files = dir(folder, pattern="*.h5ad", full.names=TRUE)
+
+sceList = lapply(files, function(file){
+  sce = readH5AD(file, use_hdf5=TRUE)
+  colnames(sce) = paste0(sce$SubID_cs[1], "_", colnames(sce))
+  sce
+})
+sce = do.call(cbind, sceList)
+
+sce$constant = "1"
+
+pb = aggregateToPseudoBulk(sce,
+  assay = "X",     
+  cluster_id = "constant",  
+  sample_id = "SubID_cs",
+  verbose = TRUE)
+
+pb <- computeLibraryFactors(pb, assay.type="1")
+pb <- logNormCounts(pb, assay.type="1")
+```
+
+
+# plot Sex
+data.frame(UTY = logcounts(pb)["ENSG00000183878_index",], 
+          XIST = logcounts(pb)["ENSG00000229807_index",]) %>%
+  ggplot(aes(XIST, UTY)) + 
+    geom_point() + 
+    theme_classic() + 
+    theme(aspect.ratio=1)
+
+
+
+
+
+
+
+
+
+
+
+
+
