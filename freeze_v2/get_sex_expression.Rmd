@@ -48,11 +48,9 @@ knitr::opts_chunk$set(
 #   unless the libraries are manually loaded within each fork
 library(SingleCellExperiment)
 library(zellkonverter)
-library(DelayedArray)
 library(dreamlet)
 library(scater)
 library(tidyverse)
-library(kableExtra)
 
 setAutoBlockSize(1e9)
 ```
