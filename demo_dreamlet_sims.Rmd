@@ -478,7 +478,7 @@ df %>%
 ```{r plot.FPR.bar, cache=FALSE, fig.width=8}
 df = resTabl %>%
   as_tibble %>%
-  filter(paste(assay, ID) %in% df_keepPairs$pair) %>%
+  # filter(paste(assay, ID) %in% df_keepPairs$pair) %>%
   group_by(n, method, formula) %>%
   summarize( FPR = sum(P.Value < 0.05, na.rm=TRUE) / sum(!is.na(P.Value))) %>%
   as_tibble %>% 
