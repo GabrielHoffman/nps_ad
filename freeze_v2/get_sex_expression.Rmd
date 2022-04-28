@@ -98,7 +98,7 @@ folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
 files = dir(folder, pattern="*.h5ad", full.names=TRUE)
 
-pbList = lapply(files[-1323], function(file){
+pbList = lapply(files, function(file){
 
   message( match(file, files))
   sce = readH5AD(file, use_hdf5=TRUE)
@@ -119,9 +119,16 @@ pbList = lapply(files[-1323], function(file){
   pb
 })
 
-# drop sample, colData must have same columns
+# colData must have same columns
+cols = lapply(pbList, function(x) colnames(colData(x)))
+cols = Reduce(intersect, cols)
+
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
-pb = do.call(cbind, lapply(pbList, function(x) x[genes,]))
+pb = do.call(cbind, lapply(pbList, function(x){
+  x = x[genes,]
+  colData(x) = colData(x)[,cols]
+  x
+  }))
 ```
 
 
@@ -146,6 +153,28 @@ ggplot(df_sex, aes(XIST, UTY)) +
     theme_classic() + 
     theme(aspect.ratio=1)
 ```
+
+
+
+```{r clustering}
+library(mclust)
+
+fit = Mclust( data.frame(df_sex$UTY, df_sex$XIST), G=2)
+
+ggplot(df_sex, aes(XIST, UTY, color=fit$z[,1])) + 
+    geom_point() + 
+    theme_classic() + 
+    scale_color_gradient("Male probability", low="red", high="blue") +
+    theme(aspect.ratio=1)
+```
+
+```{r compare, reps}
+df = merge(df_sex[df_sex$rep==1,], df_sex[df_sex$rep==2,], by="SubID")
+
+plot(df$UTY.x, df$UTY.y)
+plot(df$XIST.x, df$XIST.y)
+```
+
 
 
 
