@@ -106,22 +106,21 @@ pbList = lapply(files, function(file){
   sce$constant = "counts"
   sce$id = paste0(sce$SubID_cs, "_", sce$rep)
 
-  aggregateToPseudoBulk(sce,
+  pb = aggregateToPseudoBulk(sce,
     assay = "X",     
     cluster_id = "constant",  
     sample_id = "id",
     verbose=FALSE)
+
+  # normalize gene expression
+  pb <- computeLibraryFactors(pb)
+  pb <- logNormCounts(pb)
+
+  pb
 })
 
-# get shared genes
-genes = Reduce(intersect, lapply(pbList, rownames))
-
-# Create SCE using only shared genes
+genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 pb = do.call(cbind, lapply(pbList, function(x) x[genes,]))
-
-# normalize gene expression
-pb <- computeLibraryFactors(pb)
-pb <- logNormCounts(pb)
 ```
 
 
