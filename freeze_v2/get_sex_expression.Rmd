@@ -168,7 +168,8 @@ ggplot(df_sex, aes(XIST, UTY, color=fit$z[,1])) +
     theme(aspect.ratio=1)
 ```
 
-```{r compare, reps}
+
+```{r compare}
 df = merge(df_sex[df_sex$rep==1,], df_sex[df_sex$rep==2,], by="SubID")
 
 plot(df$UTY.x, df$UTY.y)
@@ -176,14 +177,42 @@ plot(df$XIST.x, df$XIST.y)
 ```
 
 
+df = data.frame(t(assay(sce, "X")[genes,]))
+
+with(df, plot(log2(ENSG00000183878_index+0.1), log2(ENSG00000229807_index+0.1)))
 
 
 
+sce <- computeLibraryFactors(sce, assay.type="X")
+sce <- logNormCounts(sce, assay.type="X")
+
+df = data.frame(t(logcounts(sce)[genes,]))
+colnames(df)[colnames(df)=='ENSG00000183878_index'] = "XIST"
+colnames(df)[colnames(df)=='ENSG00000229807_index'] = "UTY"
+
+genes = c('ENSG00000183878')
+df = data.frame(t(logcounts(sce)[genes,]))
+colnames(df)[colnames(df)=='ENSG00000183878'] = "XIST"
+colnames(df)[colnames(df)=='ENSG00000229807'] = "UTY"
 
 
 
+with(df, plot(XIST, UTY))
 
 
+
+library(mclust)
+
+fit = Mclust( df, G=2)
+
+
+ggplot(df, aes(XIST, UTY, color=fit$z[,1])) + 
+    geom_point() + 
+    theme_classic() + 
+    scale_color_gradient("Male probability", low="red", high="blue", limits=c(0,1)) +
+    theme(aspect.ratio=1)
+
+```
 
 
 
