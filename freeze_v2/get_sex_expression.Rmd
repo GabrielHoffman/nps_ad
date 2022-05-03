@@ -211,16 +211,18 @@ colnames(df_sex)[colnames(df_sex)=='ENSG00000229807_index'] = "UTY"
 ```{r plots.sex}
 # with(df_sex, plot(XIST, UTY))
 
+# res = kmeans(df_sex[,c("XIST", "UTY")], centers=df_known[,c("XIST", "UTY")])
+
 fit = Mclust( df_sex[,c("XIST", "UTY")], G=3)
 
-df_known = data.frame(id = c("Male", "Mixed", "Female"),
-                      XIST =c(0, 3, 3), 
-                      UTY =c(3, 3, 0))
+df_known = data.frame(id = c("Male", "Mixed", "Female", "Unknown"),
+                      XIST =c(0, 4, 4, 0), 
+                      UTY =c(4, 4, 0, 0))
 
-df_pred = predict(fit, df_known[,c(2,3)])
-df_known$predicted = df_known$id[df_pred$classification]
+df_pred = predict(fit, df_known[1:3,c(2,3)])
+df_known = df_known[df_pred$classification,]
 
-id_male = which(df_known$predicted == "Male")
+id_male = which(df_known$id == "Male")
 
 # Continuous
 ggplot(df_sex, aes(XIST, UTY, color=fit$z[,id_male])) + 
@@ -236,6 +238,8 @@ ggplot(df_sex, aes(XIST, UTY, color=col)) +
     scale_color_brewer("Male probability", palette="Set1") +
     theme(aspect.ratio=1)
 ```
+
+
 
 
 library(SingleCellExperiment)
