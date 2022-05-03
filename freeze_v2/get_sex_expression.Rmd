@@ -231,11 +231,11 @@ ggplot(df_sex, aes(XIST, UTY, color=fit$z[,id_male])) +
     scale_color_gradient("Male probability", low="red", high="blue", limits=c(0,1)) +
     theme(aspect.ratio=1)
 
-col = df_known$predicted[fit$classification]
+col = df_known$id[fit$classification]
 ggplot(df_sex, aes(XIST, UTY, color=col)) + 
     geom_point() + 
     theme_classic() + 
-    scale_color_brewer("Male probability", palette="Set1") +
+    scale_color_brewer("Class assignments", palette="Set1") +
     theme(aspect.ratio=1)
 ```
 
@@ -250,6 +250,9 @@ file = '/sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/CMC_annotat
 sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE)   
 
 
+sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, layers=FALSE)   
+
+
 h5ls /sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/UCLA-ASD_annotated.h5ad/layers/raw_new
 
 
@@ -262,12 +265,11 @@ a = h5read(file, "layers/raw_new/data")
 
 
 
+h5ls /sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/CMC_annotated.h5ad/layers/raw_new
 
 
 
-
-
-
+devtools::install_github("theislab/zellkonverter")
 
 
 
