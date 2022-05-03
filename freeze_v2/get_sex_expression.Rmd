@@ -187,7 +187,7 @@ files = dir(folder, pattern="*.h5ad", full.names=TRUE)
 
 genes = c('ENSG00000183878_index', 'ENSG00000229807_index')
 
-df_sex = lapply(files[1:3], function(file){
+df_sex = lapply(files[1:10], function(file){
 
   message( match(file, files))
 
@@ -208,7 +208,7 @@ colnames(df_sex)[colnames(df_sex)=='ENSG00000183878_index'] = "XIST"
 colnames(df_sex)[colnames(df_sex)=='ENSG00000229807_index'] = "UTY"
 ```
 
-```{r plots.sex}
+```{r plots.sex, cache=FALSE}
 # with(df_sex, plot(XIST, UTY))
 
 # res = kmeans(df_sex[,c("XIST", "UTY")], centers=df_known[,c("XIST", "UTY")])
@@ -230,7 +230,9 @@ ggplot(df_sex, aes(XIST, UTY, color=fit$z[,id_male])) +
     theme_classic() + 
     scale_color_gradient("Male probability", low="red", high="blue", limits=c(0,1)) +
     theme(aspect.ratio=1)
+```
 
+```{r plots.sex2, cache=FALSE}
 col = df_known$id[fit$classification]
 ggplot(df_sex, aes(XIST, UTY, color=col)) + 
     geom_point() + 
@@ -238,38 +240,6 @@ ggplot(df_sex, aes(XIST, UTY, color=col)) +
     scale_color_brewer("Class assignments", palette="Set1") +
     theme(aspect.ratio=1)
 ```
-
-
-
-
-library(SingleCellExperiment)
-library(zellkonverter)
-
-file = '/sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/CMC_annotated.h5ad'
-
-sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE)   
-
-
-sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, layers=FALSE)   
-
-
-h5ls /sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/UCLA-ASD_annotated.h5ad/layers/raw_new
-
-
-
-library(rhdf5)
-h5closeAll()
-
-a = h5read(file, "layers/raw_new/data")
-
-
-
-
-h5ls /sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/CMC_annotated.h5ad/layers/raw_new
-
-
-
-devtools::install_github("theislab/zellkonverter")
 
 
 
