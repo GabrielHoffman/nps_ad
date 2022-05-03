@@ -53,6 +53,7 @@ library(dreamlet)
 library(scater)
 library(mclust)
 library(tidyverse)
+library(coseq)
 
 setAutoBlockSize(1e9)
 ```
@@ -208,39 +209,62 @@ colnames(df_sex)[colnames(df_sex)=='ENSG00000183878_index'] = "XIST"
 colnames(df_sex)[colnames(df_sex)=='ENSG00000229807_index'] = "UTY"
 ```
 
-```{r plots.sex, cache=FALSE}
+```{r plots.sex.old, cache=FALSE, eval=FALSE}
 # with(df_sex, plot(XIST, UTY))
 
-# res = kmeans(df_sex[,c("XIST", "UTY")], centers=df_known[,c("XIST", "UTY")])
 
-fit = Mclust( df_sex[,c("XIST", "UTY")], G=3)
+# fit = Mclust( df_sex[,c("XIST", "UTY")], G=3)
 
 df_known = data.frame(id = c("Male", "Mixed", "Female", "Unknown"),
-                      XIST =c(0, 4, 4, 0), 
-                      UTY =c(4, 4, 0, 0))
+                      XIST =c(0, 3, 3, 0), 
+                      UTY =c(3, 3, 0, 0))
 
-df_pred = predict(fit, df_known[1:3,c(2,3)])
-df_known = df_known[df_pred$classification,]
+# res = kmeans(df_sex[,c("XIST", "UTY")], centers=df_known[1:3,c("XIST", "UTY")])
 
-# id_male = which(df_known$id == "Male")
+# kmeansProbaPost(df_known[1:3,c(2,3)])
 
-# # Continuous
-# ggplot(df_sex, aes(XIST, UTY, color=fit$z[,id_male])) + 
-#     geom_point() + 
-#     theme_classic() + 
-#     scale_color_gradient("Male probability", low="red", high="blue", limits=c(0,1)) +
+
+# df_pred = predict(fit, df_known[1:3,c(2,3)])
+# df_known = df_known[df_pred$classification,]
+# beta = do.call(rbind, fit@Means)
+# eta = as.matrix(df_known[,c(2,3)]) %*% t(beta)
+# apply(eta, 1, which.max)
+
+id_male = which(df_known$id == "Male")
+
+# Continuous
+df_known$id[fit@Assignments[,1]]
+ggplot(df_sex, aes(XIST, UTY, color=fit$z[,id_male])) + 
+    geom_point() + 
+    theme_classic() + 
+    scale_color_gradient("Male probability", low="red", high="blue", limits=c(0,1)) +
     theme(aspect.ratio=1)
+
 ```
 
-```{r plots.sex2, cache=FALSE}
-col = df_known$id[fit$classification]
+
+
+```{r sex.gmm}
+library(MGMM)
+
+df_known = data.frame(id = c("Male", "Mixed", "Female", "Unknown"),
+                      XIST =c(0, 3, 3, 0), 
+                      UTY =c(3, 3, 0, 0))
+
+init = as.list(as.data.frame(t(df_known[,c("XIST", "UTY")])))
+
+fit = FitGMM( as.matrix(df_sex[,c("XIST", "UTY")]), k=4, 
+  init_mean=init, fix_means=TRUE, eps=1, maxit=10)
+```
+
+
+```{r sex.gmm, cache=FALSE}
+col = df_known$id[fit@Assignments[,1]]
 ggplot(df_sex, aes(XIST, UTY, color=col)) + 
     geom_point() + 
     theme_classic() + 
     scale_color_brewer("Class assignments", palette="Set1") +
     theme(aspect.ratio=1)
 ```
-
-
 
 
