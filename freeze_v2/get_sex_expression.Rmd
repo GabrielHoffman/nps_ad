@@ -187,7 +187,7 @@ files = dir(folder, pattern="*.h5ad", full.names=TRUE)
 
 genes = c('ENSG00000183878_index', 'ENSG00000229807_index')
 
-df_sex = lapply(files[1:10], function(file){
+df_sex = lapply(files[1:100], function(file){
 
   message( match(file, files))
 
@@ -222,13 +222,13 @@ df_known = data.frame(id = c("Male", "Mixed", "Female", "Unknown"),
 df_pred = predict(fit, df_known[1:3,c(2,3)])
 df_known = df_known[df_pred$classification,]
 
-id_male = which(df_known$id == "Male")
+# id_male = which(df_known$id == "Male")
 
-# Continuous
-ggplot(df_sex, aes(XIST, UTY, color=fit$z[,id_male])) + 
-    geom_point() + 
-    theme_classic() + 
-    scale_color_gradient("Male probability", low="red", high="blue", limits=c(0,1)) +
+# # Continuous
+# ggplot(df_sex, aes(XIST, UTY, color=fit$z[,id_male])) + 
+#     geom_point() + 
+#     theme_classic() + 
+#     scale_color_gradient("Male probability", low="red", high="blue", limits=c(0,1)) +
     theme(aspect.ratio=1)
 ```
 
