@@ -209,8 +209,7 @@ colnames(df_sex)[colnames(df_sex)=='ENSG00000229807_index'] = "UTY"
 ```
 
 ```{r plots.sex}
-with(df_sex, plot(XIST, UTY))
-
+# with(df_sex, plot(XIST, UTY))
 
 fit = Mclust( df_sex[,c("XIST", "UTY")], G=3)
 
@@ -239,7 +238,32 @@ ggplot(df_sex, aes(XIST, UTY, color=col)) +
 ```
 
 
-file = /sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/CMC_annotated.h5ad
+library(SingleCellExperiment)
+library(zellkonverter)
+
+file = '/sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/CMC_annotated.h5ad'
+
+sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE)   
+
+
+h5ls /sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/UCLA-ASD_annotated.h5ad/layers/raw_new
+
+
+
+library(rhdf5)
+h5closeAll()
+
+a = h5read(file, "layers/raw_new/data")
+
+
+
+
+
+
+
+
+
+
 
 
 
