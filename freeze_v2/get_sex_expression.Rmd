@@ -51,6 +51,7 @@ library(zellkonverter)
 library(DelayedArray)
 library(dreamlet)
 library(scater)
+library(mclust)
 library(tidyverse)
 
 setAutoBlockSize(1e9)
@@ -209,9 +210,6 @@ colnames(df_sex)[colnames(df_sex)=='ENSG00000229807_index'] = "UTY"
 
 with(df_sex, plot(XIST, UTY))
 
-
-
-library(mclust)
 
 fit = Mclust( df_sex[,c("XIST", "UTY")], G=3)
 
