@@ -204,10 +204,11 @@ df_sex = lapply(files[1:3], function(file){
 })
 df_sex = do.call(rbind, df_sex)
 
-
 colnames(df_sex)[colnames(df_sex)=='ENSG00000183878_index'] = "XIST"
 colnames(df_sex)[colnames(df_sex)=='ENSG00000229807_index'] = "UTY"
+```
 
+```{r plots.sex}
 with(df_sex, plot(XIST, UTY))
 
 
@@ -238,7 +239,7 @@ ggplot(df_sex, aes(XIST, UTY, color=col)) +
 ```
 
 
-
+file = /sc/arion/projects/CommonMind/leed62/PEC/h5ad/Finalized_h5ad/CMC_annotated.h5ad
 
 
 
