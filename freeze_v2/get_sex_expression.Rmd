@@ -258,7 +258,7 @@ fit = FitGMM( as.matrix(df_sex[,c("XIST", "UTY")]), k=4,
 ```
 
 
-```{r sex.gmm, cache=FALSE}
+```{r plot.sex.gmm, cache=FALSE}
 col = df_known$id[fit@Assignments[,1]]
 ggplot(df_sex, aes(XIST, UTY, color=col)) + 
     geom_point() + 
