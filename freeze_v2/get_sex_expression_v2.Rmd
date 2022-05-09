@@ -71,11 +71,16 @@ sceSub <- logNormCounts(sceSub, assay.type="X", BPPARAM=bpp)
 genes = c("XIST", "UTY")
 
 step = 100000
-idx = c(seq(1, ncol(sceSub), by=step), ncol(sceSub))
 
-df = lapply( 2:length(idx) , function(i){
+values = seq(1, ncol(sceSub))
+idxLst = split(values,      
+      cut(seq_along(values),
+          step,
+          labels = FALSE))
+
+df = lapply( idxLst, function(idx){
   message(i)
-  data.frame(t(assay(sceSub[genes,seq(idx[i-1], idx[i])], 'logcounts')))
+  data.frame(t(assay(sceSub[genes,idx], 'logcounts')))
 })
 df = do.call(rbind, df)
 
