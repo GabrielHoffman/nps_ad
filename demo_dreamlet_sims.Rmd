@@ -45,6 +45,7 @@ R CMD INSTALL .
   - problem with user vs elapsed times
   - balanced vs unbalanced
   - use *exact* same filtering criteria
+  - scale up simulations
 
 
 
@@ -116,8 +117,8 @@ sceFull = sceFull[,sceFull$SubID %in% pb$SubID]
 sceFull$BatchID = droplevels(sceFull$BatchID)
 sceFull$SubID = droplevels(sceFull$SubID)
 
-# sim.method = "unbal"
-sim.method = "balanced"
+sim.method = "unbal"
+# sim.method = "balanced"
 
 # simulate balanced phenotype
 set.seed(2)
@@ -353,11 +354,11 @@ run_analysis = function(n_batches, methods){
 }
  
 n_batches = c(2, 3, 4)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR", "glmer")
+methods = c('dreamlet', "limma-voom")#, "DESeq2", "edgeR", "glmer")
 resTabl1 = run_analysis(n_batches, methods)
 
 n_batches = c(6, 12, 17, 29)#, 41, 50, 68)
-methods = c('dreamlet', "limma-voom", "DESeq2", "edgeR")
+methods = c('dreamlet', "limma-voom")#, "DESeq2", "edgeR")
 resTabl2 = run_analysis(n_batches, methods)
 
 resTabl = rbind(resTabl1, resTabl2)
