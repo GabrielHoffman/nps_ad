@@ -79,7 +79,9 @@ df = do.call(rbind, df)
 df$Sex = colData(sceSub)$Sex
 df$SubID = droplevels(colData(sceSub)$SubID)
 df$Channel = droplevels(colData(sceSub)$Channel)
+```
 
+```{r plot0}
 ggplot(df, aes(XIST, UTY, color=Sex)) + 
   geom_point() + 
   theme_classic() +
