@@ -363,6 +363,7 @@ resTabl2 = run_analysis(n_batches, methods)
 resTabl = rbind(resTabl1, resTabl2)
 ```
 
+Note that run time includes disk access to h5ad file
 ```{r plot.time, cache=FALSE, fig.width=8}
 methods = c("dreamlet", "limma-voom", "edgeR", "DESeq2", "glmer")
 
