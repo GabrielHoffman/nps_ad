@@ -70,7 +70,12 @@ sceSub <- logNormCounts(sceSub, assay.type="X", BPPARAM=bpp)
 ```{r get.genes}
 genes = c("XIST", "UTY")
 
-df = data.frame(t(assay(sceSub[genes,], 'logcounts')))
+step = 100000
+df = lapply( seq(1, ncol(sceSub), by=step), function(i){
+  data.frame(t(assay(sceSub[genes,seq(i, i+step-1)], 'logcounts')))
+})
+df = do.call(rbind, df)
+
 df$Sex = colData(sceSub)$Sex
 df$SubID = droplevels(colData(sceSub)$SubID)
 df$Channel = droplevels(colData(sceSub)$Channel)
