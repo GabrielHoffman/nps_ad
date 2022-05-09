@@ -339,11 +339,11 @@ run_analysis = function(n_batches, methods){
       message(method, ' ', nbatch )
       res1 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim, method)
       res2 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim + BatchID, method)
-      if( method %in% c("dreamlet", "glmer")){      
-        res3 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim + (1|BatchID), method)
-      }else{
+      # if( method %in% c("dreamlet", "glmer")){      
+      #   res3 = run_method( pbObj.Donor[1:1000,idx], ~ Dxsim + (1|BatchID), method)
+      # }else{
         res3 = data.frame()
-      }
+      # }
       gc()
       smartbind(res1, res2, res3)
     })
