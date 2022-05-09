@@ -79,7 +79,7 @@ idxLst = split(values,
           labels = FALSE))
 
 df = lapply( idxLst, function(idx){
-  message(i)
+  message(idx[1])
   data.frame(t(assay(sceSub[genes,idx], 'logcounts')))
 })
 df = do.call(rbind, df)
