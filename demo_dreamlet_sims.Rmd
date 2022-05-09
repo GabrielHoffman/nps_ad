@@ -371,10 +371,10 @@ xmax = 1.02* max(resTabl$n)
 resTabl %>% 
   as_tibble %>% 
   group_by(n, method, formula) %>% 
-  summarize( seconds = max(time.elapsed)) %>%
+  summarize( minutes = max(time.elapsed)/60) %>%
   mutate(method = factor(method, unique(methods)),
         formula = factor(formula, unique(formula))) %>%
-  ggplot(aes(n, seconds/60, color=method, formula)) + 
+  ggplot(aes(n, minutes, color=method, formula)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
@@ -394,10 +394,10 @@ xmax = 1.02* max(resTabl$n)
 
 resTabl %>% 
   group_by(n, method, formula) %>% 
-  summarize( seconds = max(time.user)) %>% 
+  summarize( minutes = max(time.user)/60) %>% 
   mutate(method = factor(method, unique(methods)),
         formula = factor(formula, unique(formula))) %>%
-  ggplot(aes(n, seconds/60, color=method)) + 
+  ggplot(aes(n, minutes, color=method)) + 
     geom_line() + 
     geom_point() + 
     theme_classic() +
