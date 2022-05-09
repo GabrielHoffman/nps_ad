@@ -372,7 +372,8 @@ resTabl %>%
   as_tibble %>% 
   group_by(n, method, formula) %>% 
   summarize( seconds = max(time.elapsed)) %>%
-  mutate(method = factor(method, methods)) %>%
+  mutate(method = factor(method, unique(methods)),
+        formula = factor(formula, unique(formula))) %>%
   ggplot(aes(n, seconds/60, color=method, formula)) + 
     geom_line() + 
     geom_point() + 
@@ -394,7 +395,8 @@ xmax = 1.02* max(resTabl$n)
 resTabl %>% 
   group_by(n, method, formula) %>% 
   summarize( seconds = max(time.user)) %>% 
-  mutate(method = factor(method, methods)) %>%
+  mutate(method = factor(method, unique(methods)),
+        formula = factor(formula, unique(formula))) %>%
   ggplot(aes(n, seconds/60, color=method)) + 
     geom_line() + 
     geom_point() + 
@@ -431,7 +433,8 @@ ymax = 1.02* max(df$nDE)
 xmax = 1.02* max(df$n)
 
 df %>%
-  mutate(method = factor(method, methods)) %>%
+  mutate(method = factor(method, unique(methods)),
+        formula = factor(formula, unique(formula))) %>%
   ggplot(aes(n, nDE, color=method)) + 
     geom_point() + 
     theme_classic() +
@@ -458,7 +461,8 @@ ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
 df %>%
-  mutate(method = factor(method, methods)) %>%
+  mutate(method = factor(method, unique(methods)),
+        formula = factor(formula, unique(formula))) %>%
   ggplot(aes(n, FPR, color=method)) + 
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
     geom_point() +
@@ -488,7 +492,8 @@ ymax = 1.02* max(df$FPR)
 xmax = 1.02* max(df$n)
 
 df %>%
-  mutate(method = factor(method, methods)) %>%
+  mutate(method = factor(method, unique(methods)),
+        formula = factor(formula, unique(formula))) %>%
   ggplot(aes(factor(n), FPR, fill=method)) + 
     geom_bar(stat="identity", position="dodge2") +
     geom_hline(yintercept = 0.05, linetype="dashed", color="grey") +
