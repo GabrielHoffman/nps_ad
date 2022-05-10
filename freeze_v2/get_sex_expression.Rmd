@@ -62,7 +62,7 @@ setAutoBlockSize(1e9)
 # Evaluate pseudobulk on each H5AD
 folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
-files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:10]
+files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:200]
 
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 
@@ -92,7 +92,7 @@ df_merge$Sex = factor(df_merge$Sex, c("Female", "Male"))
 ```
 
 
-```{r predictor}
+```{r predictor, cache=FALSE}
 fit = glm(Sex ~ XIST*UTY, df_merge, family=binomial())
 
 calcVarPart(fit)
@@ -102,8 +102,8 @@ df_merge$pred = predict(fit, dsgn, type="response")
 ```
 
 
-```{r plot3, fig.width=7, fig.height=7}
-fig = df_merge %>%
+```{r plot3, fig.width=7, fig.height=7, cache=FALSE}
+df_merge %>%
   as_tibble %>%
   group_by(SubID) %>%
   summarize( Sex=Sex[1], Predicted.sex = mean(pred))  %>%
@@ -114,8 +114,7 @@ fig = df_merge %>%
     theme_classic() +
     theme(aspect.ratio=1) + 
     scale_fill_manual(name="Labled sex", values=c("red", "blue")) + 
-    scale_y_continuous(limits=c(0,1), expand=c(0,0)) 
-ggsave("~/www/work/figures/test.png", fig)
+    scale_y_continuous(limits=c(0,1), expand=c(0,0))
 ```
 
 
