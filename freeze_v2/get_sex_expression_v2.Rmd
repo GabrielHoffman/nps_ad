@@ -89,12 +89,12 @@ df$SubID = droplevels(colData(sceSub)$SubID)
 df$Channel = droplevels(colData(sceSub)$Channel)
 ```
 
-```{r plot0}
+```{r plot0, fig.width=20, fig.height=40}
 ggplot(df, aes(XIST, UTY, color=Sex)) + 
   geom_point() + 
   theme_classic() +
   theme(aspect.ratio=1) +
-  facet_wrap(~SubID)
+  facet_wrap(~SubID, ncol=5)
 ```
 
 ```{r predictor}
@@ -106,16 +106,16 @@ dsgn = data.frame(model.matrix(~ XIST*UTY, df))
 df$pred = predict(fit, dsgn, type="response")
 ```
 
-```{r plot1}
+```{r plot1, fig.width=20, fig.height=40}
 ggplot(df, aes(XIST, UTY, color=pred)) + 
   geom_point() + 
   theme_classic() +
   theme(aspect.ratio=1) + 
   scale_color_gradient(name="Sex prob", high="blue", low="red", limits=c(0,1)) +
-  facet_wrap(~SubID)
+  facet_wrap(~SubID, ncol=5)
 ```
 
-```{r plot2}
+```{r plot2, fig.width=20, fig.height=40}
 df %>%
   as_tibble %>%
   group_by(Channel) %>%
