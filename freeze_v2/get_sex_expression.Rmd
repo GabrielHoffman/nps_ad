@@ -62,7 +62,7 @@ setAutoBlockSize(1e9)
 # Evaluate pseudobulk on each H5AD
 folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
-files = dir(folder, pattern="*.h5ad", full.names=TRUE)
+files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:20]
 
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 
@@ -145,13 +145,14 @@ df_merge %>%
 
 ## Compare replicates
 ```{r reps, cache=FALSE}
-df_merge %>%
+df_conford = df_merge %>%
   as_tibble %>%
   group_by(SubID, rep) %>%
   summarize( Sex=Sex[1], Predicted.sex = mean(Sex.pred)) %>%
   pivot_wider( names_from=rep, values_from=Predicted.sex) %>%
-  mutate(rep1 = `1`, rep2 = `2`) %>%
-  ggplot(aes(rep1, rep2, color=Sex)) +
+  mutate(rep1 = `1`, rep2 = `2`, `1` = NULL, `2` = NULL)
+
+ ggplot(df_conford, aes(rep1, rep2, color=Sex)) +
     geom_abline(linetype="dashed", color='grey50') +   
     geom_point() +
     theme_classic() +
@@ -162,6 +163,10 @@ df_merge %>%
     xlab("Mean predicted sex (rep 1)") +
     ylab("Mean predicted sex (rep 2)") +
     ggtitle("Concordance between replicates")
+
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v2/sc_sex_concordance.csv"
+write.table(df_conford, file=file, row.names=FALSE, quote=FALSE, sep=',')
+R.utils::gzip(file, overwrite=TRUE)
 # ggsave("~/www/work/figures/test.png", fig)
 ```
 
