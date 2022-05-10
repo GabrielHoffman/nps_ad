@@ -91,10 +91,12 @@ df_merge$Sex = factor(df_merge$Sex, c("Female", "Male"))
 ```
 
 # Logistic classifier
-GLM uses formula `Sex ~ XIST + UTY + XIST:UTY` at the single cell level using sex from metadata.  Also shows variance partitioning
+GLM uses formula `Sex ~ XIST + UTY + XIST:UTY` at the single cell level using sex from metadata.  Coefs on `logNormCounts` scale, and variance partitioning.
 ```{r predictor, cache=FALSE}
 # df_merge$Sex[with(df_merge, which((UTY < 0.5) & (XIST < 0.5)))] = NA
 fit = glm(Sex ~ XIST*UTY, df_merge, family=binomial())
+
+coef(fit)
 
 calcVarPart(fit)
 
