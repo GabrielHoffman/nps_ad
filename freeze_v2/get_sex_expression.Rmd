@@ -115,7 +115,7 @@ R.utils::gzip(file, overwrite=TRUE)
 
 Color each cell by predicted sex
 ```{r prediction.map, fig.width=7, fig.height=7, cache=FALSE} 
-ggplot(df_merge, aes(XIST, UTY, color=pred)) + 
+ggplot(df_merge, aes(XIST, UTY, color=Sex.pred)) + 
     geom_point(alpha=.01) +
     theme_classic() +
     theme(aspect.ratio=1) + 
