@@ -1,5 +1,4 @@
-
---
+---
 title: "Gene expression of XIST/UTY"
 subtitle: 'For concordance analysis'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
@@ -91,7 +90,8 @@ df_merge = left_join(df_all, df_meta[,c('SubID', 'Brain_bank', 'Sex')], by='SubI
 df_merge$Sex = factor(df_merge$Sex, c("Female", "Male"))
 ```
 
-
+# Logistic classifier
+GLM uses formula `Sex ~ XIST + UTY + XIST:UTY` at the single cell level using sex from metadata.  Also shows variance partitioning
 ```{r predictor, cache=FALSE}
 # df_merge$Sex[with(df_merge, which((UTY < 0.5) & (XIST < 0.5)))] = NA
 fit = glm(Sex ~ XIST*UTY, df_merge, family=binomial())
@@ -103,8 +103,7 @@ df_merge$pred = predict(fit, dsgn, type="response")
 ```
 
 
-
-
+Color each cell by predicted sex
 ```{r prediction.map, fig.width=7, fig.height=7, cache=FALSE} 
 ggplot(df_merge, aes(XIST, UTY, color=pred)) + 
     geom_point(alpha=.05) +
@@ -115,7 +114,7 @@ ggplot(df_merge, aes(XIST, UTY, color=pred)) +
 ```
 
 
-
+For each sample, report the mean prediected sex averaged over all cells
 ```{r plot3, fig.width=7, fig.height=7, cache=FALSE}
 df_merge %>%
   as_tibble %>%
@@ -128,7 +127,8 @@ df_merge %>%
     theme_classic() +
     theme(aspect.ratio=1) + 
     scale_fill_manual(name="Labled sex", values=c("red", "blue")) + 
-    scale_y_continuous(limits=c(0,1), expand=c(0,0))
+    scale_y_continuous(limits=c(0,1), expand=c(0,0)) +
+    ylab("Mean predicted sex")
 ```
 
 
