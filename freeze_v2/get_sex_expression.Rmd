@@ -85,7 +85,7 @@ df_all = mclapply(files, function(file){
   df$barcode = rownames(df)
   rm(sce)
   df
-}, mc.cores=12)
+}, mc.cores=8)
 df_all = do.call(rbind, df_all)
 
 # read metadata
