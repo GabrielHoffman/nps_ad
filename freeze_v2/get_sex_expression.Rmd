@@ -144,7 +144,7 @@ df_merge %>%
 
 
 ```{r exit, cache=FALSE}
-knitr::knit_exit(1)
+knitr::knit_exit()
 ```
 
 
