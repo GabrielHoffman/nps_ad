@@ -67,7 +67,7 @@ files = dir(folder, pattern="*.h5ad", full.names=TRUE)
 
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 
-df_all = mclapply(files, function(file){
+df_all = lapply(files, function(file){
 
   message( match(file, files))
   sce = readH5AD(file, use_hdf5=TRUE)
@@ -85,7 +85,7 @@ df_all = mclapply(files, function(file){
   df$barcode = rownames(df)
   rm(sce)
   df
-}, mc.cores=8)
+})
 df_all = do.call(rbind, df_all)
 
 # read metadata
