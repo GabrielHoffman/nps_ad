@@ -124,7 +124,7 @@ df %>%
   ggplot(aes(Channel, Predicted.sex, fill=Sex)) + 
     geom_bar(stat="identity") +
     theme_classic() +
-    theme(aspect.ratio=1) + 
+    theme(aspect.ratio=10) + 
     scale_fill_manual(name="Labled sex", values=c("red", "blue")) + 
     scale_y_continuous(limits=c(0,1), expand=c(0,0)) +
     coord_flip() 
