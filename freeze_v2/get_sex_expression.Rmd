@@ -62,7 +62,7 @@ setAutoBlockSize(1e9)
 # Evaluate pseudobulk on each H5AD
 folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
-files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:10]
+files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:200]
 
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 
@@ -93,6 +93,7 @@ df_merge$Sex = factor(df_merge$Sex, c("Female", "Male"))
 
 
 ```{r predictor, cache=FALSE}
+# df_merge$Sex[with(df_merge, which((UTY < 0.5) & (XIST < 0.5)))] = NA
 fit = glm(Sex ~ XIST*UTY, df_merge, family=binomial())
 
 calcVarPart(fit)
@@ -102,17 +103,15 @@ df_merge$pred = predict(fit, dsgn, type="response")
 ```
 
 
-```{r prediction.map, fig.width=7, fig.height=7, cache=FALSE}
- 
-fig = ggplot(df_merge, aes(XIST, UTY, color=pred)) + 
-    geom_point() +
+
+
+```{r prediction.map, fig.width=7, fig.height=7, cache=FALSE} 
+ggplot(df_merge, aes(XIST, UTY, color=pred)) + 
+    geom_point(alpha=.05) +
     theme_classic() +
     theme(aspect.ratio=1) + 
     scale_color_gradient(name="Predicted sex", low="red", high="blue", limits=c(0,1)) 
-
-ggsave("~/www/work/figures/test.png")
-
-
+# ggsave("~/www/work/figures/test.png")
 ```
 
 
