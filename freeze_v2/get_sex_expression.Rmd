@@ -62,7 +62,7 @@ setAutoBlockSize(1e9)
 # Evaluate pseudobulk on each H5AD
 folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
-files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:200]
+files = dir(folder, pattern="*.h5ad", full.names=TRUE)
 
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 
@@ -84,7 +84,7 @@ df_all = mclapply(files, function(file){
   df$barcode = rownames(df)
   rm(sce)
   df
-}, mc.cores=8)
+}, mc.cores=12)
 df_all = do.call(rbind, df_all)
 
 # read metadata
