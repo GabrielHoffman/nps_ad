@@ -61,7 +61,7 @@ setAutoBlockSize(1e9)
 # Evaluate pseudobulk on each H5AD
 folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
-files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:10]
+files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:200]
 
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 
@@ -103,13 +103,13 @@ coef(fit)
 calcVarPart(fit)
 
 dsgn = data.frame(model.matrix(~ XIST*UTY, df_merge))
-df_merge$pred = predict(fit, dsgn, type="response")
+df_merge$Sex.pred = predict(fit, dsgn, type="response")
 ```
 
 ```{r write.result, cache=FALSE}
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v2/sc_sex.csv"
 write.table(df_merge, file=file, row.names=FALSE, quote=FALSE, sep=',')
-R.utils::gzip(file)
+R.utils::gzip(file, overwrite=TRUE)
 ```
 
 Color each cell by predicted sex
@@ -129,7 +129,7 @@ For each sample, report the mean prediected sex averaged over all cells
 df_merge %>%
   as_tibble %>%
   group_by(SubID) %>%
-  summarize( Sex=Sex[1], Predicted.sex = mean(pred))  %>%
+  summarize( Sex=Sex[1], Predicted.sex = mean(Sex.pred))  %>%
   arrange(Sex) %>%
   ggplot(aes(Sex, Predicted.sex)) + 
     geom_violin(aes(fill=Sex), scale="width") +
@@ -141,6 +141,27 @@ df_merge %>%
     ylab("Mean predicted sex")
 ```
 
+## Compare replicates
+```{r reps, cache=FALSE}
+df_merge %>%
+  as_tibble %>%
+  group_by(SubID, rep) %>%
+  summarize( Sex=Sex[1], Predicted.sex = mean(Sex.pred)) %>%
+  pivot_wider( names_from=rep, values_from=Predicted.sex) %>%
+  mutate(rep1 = `1`, rep2 = `2`) %>%
+  ggplot(aes(rep1, rep2, color=Sex)) +
+    geom_abline(linetype="dashed", color='grey50') +   
+    geom_point() +
+    theme_classic() +
+    scale_color_manual(name="Labled sex", values=c("red", "blue")) + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+    scale_x_continuous(limits=c(0,1), expand=c(0,0)) + 
+    scale_y_continuous(limits=c(0,1), expand=c(0,0)) +
+    xlab("Mean predicted sex (rep 1)") +
+    ylab("Mean predicted sex (rep 2)") +
+    ggtitle("Concordance between replicates")
+# ggsave("~/www/work/figures/test.png", fig)
+```
 
 
 
