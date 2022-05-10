@@ -70,7 +70,7 @@ sceSub <- logNormCounts(sceSub, assay.type="X", BPPARAM=bpp)
 ```{r get.genes}
 genes = c("XIST", "UTY")
 
-n_chunks = 1000
+n_chunks = 100
 
 values = seq(1, ncol(sceSub))
 idxLst = split(values,      
