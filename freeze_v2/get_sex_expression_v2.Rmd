@@ -128,7 +128,7 @@ df[df$SubID %in% lvl,] %>%
     scale_fill_manual(name="Labled sex", values=c("red", "blue")) + 
     scale_y_continuous(limits=c(0,1), expand=c(0,0)) +
     coord_flip() 
-
+```
 
 
 ```{r plot3, fig.width=7, fig.height=7}
