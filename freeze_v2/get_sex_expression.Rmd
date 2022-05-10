@@ -63,7 +63,7 @@ setAutoBlockSize(1e9)
 # Evaluate pseudobulk on each H5AD
 folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
-files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:20]
+files = dir(folder, pattern="*.h5ad", full.names=TRUE)
 
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 
