@@ -62,7 +62,7 @@ setAutoBlockSize(1e9)
 # Evaluate pseudobulk on each H5AD
 folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad-by-donor/"
 
-files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:200]
+files = dir(folder, pattern="*.h5ad", full.names=TRUE)[1:10]
 
 genes = c("ENSG00000183878_index", "ENSG00000229807_index")
 
@@ -73,7 +73,7 @@ df_all = lapply(files, function(file){
     
   # normalize gene expression
   sce <- computeLibraryFactors(sce, assay.type="X")
-  sce <- logNormCounts(sce, assay.type="X")
+  sce <- logNormCounts(sce, assay.type="X", pseudo.count=1.01)
 
   df = data.frame(t(assay(sce[genes,], "logcounts")))
   colnames(df)[colnames(df) == 'ENSG00000183878_index'] = 'UTY'
@@ -100,6 +100,21 @@ calcVarPart(fit)
 dsgn = data.frame(model.matrix(~ XIST*UTY, df_merge))
 df_merge$pred = predict(fit, dsgn, type="response")
 ```
+
+
+```{r prediction.map, fig.width=7, fig.height=7, cache=FALSE}
+ 
+fig = ggplot(df_merge, aes(XIST, UTY, color=pred)) + 
+    geom_point() +
+    theme_classic() +
+    theme(aspect.ratio=1) + 
+    scale_color_gradient(name="Predicted sex", low="red", high="blue", limits=c(0,1)) 
+
+ggsave("~/www/work/figures/test.png")
+
+
+```
+
 
 
 ```{r plot3, fig.width=7, fig.height=7, cache=FALSE}
