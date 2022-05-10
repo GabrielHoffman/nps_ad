@@ -21,8 +21,7 @@ R --vanilla
 
 system("git pull"); rmarkdown::render("get_sex_expression_v2.Rmd");
 
-
-# https://hoffmg01.u.hpc.mssm.edu/eval_methods/dreamlet/mathys_Nature_2019.html
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/freeze_v2/get_sex_expression_v2.html
 
 --->
 
@@ -90,7 +89,8 @@ df$Channel = droplevels(colData(sceSub)$Channel)
 ```
 
 ```{r plot0, fig.width=20, fig.height=40}
-ggplot(df, aes(XIST, UTY, color=Sex)) + 
+lvl = levels(df$SubID)[1:10]
+ggplot(df[df$SubID %in% lvl,], aes(XIST, UTY, color=Sex)) + 
   geom_point() + 
   theme_classic() +
   theme(aspect.ratio=1) +
@@ -107,7 +107,7 @@ df$pred = predict(fit, dsgn, type="response")
 ```
 
 ```{r plot1, fig.width=20, fig.height=80}
-ggplot(df, aes(XIST, UTY, color=pred)) + 
+ggplot(df[df$SubID %in% lvl,], aes(XIST, UTY, color=pred)) + 
   geom_point() + 
   theme_classic() +
   theme(aspect.ratio=1) + 
@@ -116,7 +116,7 @@ ggplot(df, aes(XIST, UTY, color=pred)) +
 ```
 
 ```{r plot2, fig.width=20, fig.height=40}
-df %>%
+df[df$SubID %in% lvl,] %>%
   as_tibble %>%
   group_by(Channel) %>%
   summarize( Sex=Sex[1], Predicted.sex = mean(pred))  %>%
@@ -128,7 +128,22 @@ df %>%
     scale_fill_manual(name="Labled sex", values=c("red", "blue")) + 
     scale_y_continuous(limits=c(0,1), expand=c(0,0)) +
     coord_flip() 
-# ggsave('~/www/work/figures/test.png', fig)
+
+
+
+```{r plot3, fig.width=7, fig.height=7}
+df %>%
+  as_tibble %>%
+  group_by(Channel) %>%
+  summarize( Sex=Sex[1], Predicted.sex = mean(pred))  %>%
+  arrange(Sex) %>%
+  ggplot(aes(Sex, Predicted.sex)) + 
+    geom_violin(aes(fill=Sex), scale="width") +
+    geom_boxplot(width=0.07, fill="grey", outlier.colour='black') +
+    theme_classic() +
+    theme(aspect.ratio=1) + 
+    scale_fill_manual(name="Labled sex", values=c("red", "blue")) + 
+    scale_y_continuous(limits=c(0,1), expand=c(0,0)) 
 ```
 
 
