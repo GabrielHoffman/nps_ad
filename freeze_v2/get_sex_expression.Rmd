@@ -21,7 +21,7 @@ R --vanilla
 system("git pull"); rmarkdown::render("get_sex_expression.Rmd");
 
 
-# https://hoffmg01.u.hpc.mssm.edu/eval_methods/dreamlet/mathys_Nature_2019.html
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/freeze_v2/get_sex_expression.html
 
 --->
 
