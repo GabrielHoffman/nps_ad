@@ -117,13 +117,13 @@ R.utils::gzip(file, overwrite=TRUE)
 
 Color each cell by predicted sex
 ```{r prediction.map, fig.width=7, fig.height=7, cache=FALSE} 
-fig = ggplot(df_merge, aes(XIST, UTY, color=Sex.pred)) + 
+ggplot(df_merge, aes(XIST, UTY, color=Sex.pred)) + 
     geom_scattermore(alpha=.01, pointsize=1) +
     theme_classic() +
     theme(aspect.ratio=1) + 
     scale_color_gradient(name="Predicted sex", low="red", high="blue", limits=c(0,1)) + 
     geom_abline(linetype="dashed", color="grey50")
-ggsave("~/www/work/figures/test.png", fig)
+# ggsave("~/www/work/figures/test.png", fig)
 ```
 
 
