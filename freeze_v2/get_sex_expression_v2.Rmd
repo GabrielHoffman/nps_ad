@@ -18,6 +18,7 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v2
 ml python git
 git pull
 R --vanilla
+# rm -rf get_sex_expression_v2_cache
 
 system("git pull"); rmarkdown::render("get_sex_expression_v2.Rmd");
 
@@ -64,7 +65,11 @@ sce = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
 bpp = SnowParam(8, progressbar=TRUE)
 sceSub <- computeLibraryFactors(sce, assay.type="X", BPPARAM=bpp)
 sceSub <- logNormCounts(sceSub, assay.type="X", BPPARAM=bpp)
+sceSub = sceSub[,!sceSub$pred_dbl]
 ```
+
+
+
 
 ```{r get.genes}
 genes = c("XIST", "UTY")
