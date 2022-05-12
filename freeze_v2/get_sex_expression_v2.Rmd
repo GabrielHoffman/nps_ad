@@ -155,7 +155,7 @@ df %>%
 
 Color each cell by predicted sex
 ```{r prediction.map, fig.width=7, fig.height=7, cache=FALSE} 
-ggplot(df, aes(XIST, UTY, color=Predicted.sex)) + 
+ggplot(df, aes(XIST, UTY, color=pred)) + 
     geom_scattermore(alpha=.01, pointsize=1) +
     theme_classic() +
     theme(aspect.ratio=1) + 
