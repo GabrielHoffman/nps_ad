@@ -66,7 +66,7 @@ sce = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
 bpp = SnowParam(8, progressbar=TRUE)
 sceSub <- computeLibraryFactors(sce, assay.type="X", BPPARAM=bpp)
 sceSub <- logNormCounts(sceSub, assay.type="X", BPPARAM=bpp)
-sceSub = sceSub[,!sceSub$pred_dbl]
+# sceSub.clean = sceSub[,!sceSub$pred_dbl]
 ```
 
 
@@ -92,6 +92,7 @@ df = do.call(rbind, df)
 df$Sex = colData(sceSub)$Sex
 df$SubID = droplevels(colData(sceSub)$SubID)
 df$Channel = droplevels(colData(sceSub)$Channel)
+df$Channel = colData(sceSub)$pred_dbl
 ```
 
 ```{r plot0, fig.width=20, fig.height=40}
@@ -153,14 +154,16 @@ df %>%
 ```
 
 
-Color each cell by predicted sex
+###Color each cell by predicted sex
+
 ```{r prediction.map, fig.width=7, fig.height=7, cache=FALSE} 
 ggplot(df, aes(XIST, UTY, color=pred)) + 
     geom_scattermore(alpha=.01, pointsize=1) +
     theme_classic() +
     theme(aspect.ratio=1) + 
     scale_color_gradient(name="Predicted sex", low="red", high="blue", limits=c(0,1)) + 
-    geom_abline(linetype="dashed", color="grey50")
+    geom_abline(linetype="dashed", color="grey50") +
+    facet_wrap(~pred_dbl)
 # ggsave("~/www/work/figures/test.png", fig)
 ```
 
