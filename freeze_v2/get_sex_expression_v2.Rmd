@@ -92,7 +92,7 @@ df = do.call(rbind, df)
 df$Sex = colData(sceSub)$Sex
 df$SubID = droplevels(colData(sceSub)$SubID)
 df$Channel = droplevels(colData(sceSub)$Channel)
-df$Channel = colData(sceSub)$pred_dbl
+df$pred_dbl = colData(sceSub)$pred_dbl
 ```
 
 ```{r plot0, fig.width=20, fig.height=40}
@@ -163,7 +163,7 @@ ggplot(df, aes(XIST, UTY, color=pred)) +
     theme(aspect.ratio=1) + 
     scale_color_gradient(name="Predicted sex", low="red", high="blue", limits=c(0,1)) + 
     geom_abline(linetype="dashed", color="grey50") +
-    facet_wrap(~pred_dbl)
+    facet_wrap(~pred_dbl) 
 # ggsave("~/www/work/figures/test.png", fig)
 ```
 
