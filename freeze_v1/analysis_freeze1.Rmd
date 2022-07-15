@@ -112,6 +112,7 @@ if( file.exists(datafile) ){
   sceCombine = swapAltExp(sce_in, "raw")
   rowData(sceCombine) = rowData(sce_in)
   rownames(sceCombine) = rownames(sce_in)
+  reducedDim(sceCombine) = reducedDim(sce_in)
   counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
   assay(sceCombine, 'X') = NULL          # free X  
 
@@ -133,11 +134,6 @@ if( file.exists(datafile) ){
 ```
 
 Data freeze 1.5 includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
-
-```{r dx}
-df = with(colData(sceCombine), unique(data.frame(SubID, dx)))
-sort(table(df$dx))
-```
 
 
 # Joint UMAP
@@ -182,10 +178,10 @@ colData(sceCombine)$SubID %>%
 
 # Number of cells observed per Channel
 colData(sceCombine) %>%
-  xtabs( ~ Channel + celltype8,.) %>%
+  xtabs( ~ Channel + celltype,.) %>%
   as_tibble %>%
   pivot_longer(cols=Channel) %>%
-  ggplot(aes(celltype8, n, fill=celltype8)) + 
+  ggplot(aes(celltype, n, fill=celltype)) + 
     geom_violin(color = NA) + 
     geom_boxplot(width=.1, outlier.size=.1) +
     theme_classic() + 
@@ -198,10 +194,10 @@ colData(sceCombine) %>%
 
 # Number of cells observed per Subject
 colData(sceCombine) %>%
-  xtabs( ~ SubID + celltype8,.) %>%
+  xtabs( ~ SubID + celltype,.) %>%
   as_tibble %>%
   pivot_longer(cols=SubID) %>%
-  ggplot(aes(celltype8, n, fill=celltype8)) + 
+  ggplot(aes(celltype, n, fill=celltype)) + 
     geom_violin(color = NA) + 
     geom_boxplot(width=.1, outlier.size=.1) +
     theme_classic() + 
@@ -220,7 +216,7 @@ outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_
 # update block size for reading h5ad file from disk
 setAutoBlockSize(1e9)
 
-annotation = c("celltype", 'celltype8', "subtype")
+annotation = c("celltype", "subtype")
 
 for( annot in annotation){
   message(annot)
@@ -230,11 +226,6 @@ for( annot in annotation){
       fun = "sum",
       cluster_id = annot,
       sample_id  = "Channel")
-
-  # Set levels for Dx2
-  lvls = sort(unique(as.character(colData(pb)$dx)))
-  lvls = lvls[-which(lvls=="Control")]
-  colData(pb)$dx = factor(colData(pb)$dx, c("Control", lvls))
 
   file = paste0(outfolder, 'pbObj_', annot, '.RDS')
   saveRDS(pb, file=file)
