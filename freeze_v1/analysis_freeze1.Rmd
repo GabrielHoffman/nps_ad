@@ -208,10 +208,6 @@ colData(sceCombine) %>%
 ```
 
 
-```{r exit1, cache=FALSE}
-knitr::knit_exit()
-```
-
 ```{r combineData, message=TRUE}
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
 
@@ -327,6 +323,10 @@ inner_join(df_counts, df_rate, by=c("celltype", "ID")) %>%
 ## examine total reads and reads per cluster
 
 
+
+```{r exit1, cache=FALSE}
+knitr::knit_exit()
+```
 
 
 
