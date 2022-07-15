@@ -112,7 +112,8 @@ if( file.exists(datafile) ){
   sceCombine = swapAltExp(sce_in, "raw")
   rowData(sceCombine) = rowData(sce_in)
   rownames(sceCombine) = rownames(sce_in)
-  reducedDims(sceCombine) = reducedDims(sce_in)
+  # reducedDims(sceCombine) = reducedDims(sce_in)
+  reducedDim(sceCombine, "X_UMAP") = reducedDim(sce_in, "X_UMAP")[,1:5]
   counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
   assay(sceCombine, 'X') = NULL          # free X  
 
