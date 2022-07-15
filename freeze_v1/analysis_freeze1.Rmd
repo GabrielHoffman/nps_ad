@@ -112,7 +112,7 @@ if( file.exists(datafile) ){
   sceCombine = swapAltExp(sce_in, "raw")
   rowData(sceCombine) = rowData(sce_in)
   rownames(sceCombine) = rownames(sce_in)
-  reducedDim(sceCombine) = reducedDim(sce_in)
+  reducedDims(sceCombine) = reducedDims(sce_in)
   counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
   assay(sceCombine, 'X') = NULL          # free X  
 
@@ -142,11 +142,11 @@ Data freeze 1.5 includes `r length(table(sceCombine$Channel))` samples, `r lengt
 df = cbind(reducedDim(sceCombine, "X_umap"), colData(sceCombine)[,c("anno", "celltype", "class", "subtype", "leiden_labels")])
 df = data.frame(df)
 
-ggplot(df, aes(V1, V2, color=anno)) + geom_point(size=.05) + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+ggplot(df, aes(V1, V2, color=anno)) + geom_scattermore() + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
 ```{r umap2, dev="png"}
-ggplot(df, aes(V1, V2, color=celltype)) + geom_scattermore( + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
+ggplot(df, aes(V1, V2, color=celltype)) + geom_scattermore() + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
 ```{r umap3, dev="png"}
