@@ -21,11 +21,11 @@ vignette: >
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
 ml python git
 git pull
+~/.r420
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
 R --vanilla
 
-system("git pull")
-rmarkdown::render("analysis_freeze1.Rmd");
+system("git pull"); rmarkdown::render("analysis_freeze1.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
@@ -117,7 +117,6 @@ if( file.exists(datafile) ){
 
   # merge with new metadata
   df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1.5_rc/metadata/syn26527784_latest.csv")
-  df_meta$snRNAseq_ID[1:4]
 
   # get order of matching
   i = match(sceCombine$SubID, df_meta$SubID)
@@ -133,7 +132,7 @@ if( file.exists(datafile) ){
 }
 ```
 
-Data freeze includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
+Data freeze 1.5 includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
 ```{r dx}
 df = with(colData(sceCombine), unique(data.frame(SubID, dx)))
@@ -216,7 +215,7 @@ colData(sceCombine) %>%
 
 
 ```{r combineData, message=TRUE}
-outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
 
 # update block size for reading h5ad file from disk
 setAutoBlockSize(1e9)
@@ -227,7 +226,7 @@ for( annot in annotation){
   message(annot)
   # Create pseudo-bulk SingleCellExperiment
   pb <- aggregateToPseudoBulk(sceCombine,
-      assay = "X", 
+      assay = "counts", 
       fun = "sum",
       cluster_id = annot,
       sample_id  = "Channel")
