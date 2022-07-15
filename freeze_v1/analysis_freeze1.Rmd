@@ -113,7 +113,7 @@ if( file.exists(datafile) ){
   rowData(sceCombine) = rowData(sce_in)
   rownames(sceCombine) = rownames(sce_in)
   # reducedDims(sceCombine) = reducedDims(sce_in)
-  reducedDim(sceCombine, "X_UMAP") = reducedDim(sce_in, "X_UMAP")[,1:5]
+  reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
   counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
   assay(sceCombine, 'X') = NULL          # free X  
 
@@ -208,6 +208,10 @@ colData(sceCombine) %>%
 ```
 
 
+```{r exit1, cache=FALSE}
+knitr::knit_exit()
+```
+
 ```{r combineData, message=TRUE}
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
 
@@ -255,9 +259,6 @@ for( annot in annotation){
 ```
 
 
-```{r exit1, cache=FALSE}
-knitr::knit_exit()
-```
 
 
 ```{r read.pb}
