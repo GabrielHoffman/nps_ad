@@ -161,9 +161,6 @@ ggplot(df, aes(V1, V2, color=subtype)) + geom_scattermore() + theme_classic() + 
 ggplot(df, aes(V1, V2, color=leiden_labels)) + geom_scattermore() + theme_classic() + theme(aspect.ratio=1) + guides(colour = guide_legend(override.aes = list(size = 1.5))) + xlab("UMAP1") + ylab("UMAP2")
 ```
 
-```{r exit1, cache=FALSE}
-knitr::knit_exit()
-```
 
 ## Summarize cell counts
 ```{r summarize.cell.counts}
@@ -216,8 +213,9 @@ outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_
 # update block size for reading h5ad file from disk
 setAutoBlockSize(1e9)
 
-annotation = c("celltype", "subtype")
+annotation = c("celltype")#, "subtype")
 
+# Pseudobulk by Channel
 for( annot in annotation){
   message(annot)
   # Create pseudo-bulk SingleCellExperiment
@@ -225,37 +223,28 @@ for( annot in annotation){
       assay = "counts", 
       fun = "sum",
       cluster_id = annot,
-      sample_id  = "Channel")
+      sample_id  = "Channel",
+      BPPARAM = SnowParam(12, progressbar=TRUE))
 
   file = paste0(outfolder, 'pbObj_', annot, '.RDS')
   saveRDS(pb, file=file)
+  rm(pb)
+  gc()
 }
-rm(pb)
 ```
 
 
-
-```{r combineData.2, message=TRUE}
-outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
-
-# update block size for reading h5ad file from disk
-setAutoBlockSize(1e9)
-
-annotation = c("celltype", 'celltype8', "subtype")
-
+```{r combineData.2, message=TRUE, eval=FALSE}
+# Pseudobulk by SubID
 for( annot in annotation){
   message(annot)
   # Create pseudo-bulk SingleCellExperiment
   pb <- aggregateToPseudoBulk(sceCombine,
-      assay = "X", 
+      assay = "counts", 
       fun = "sum",
       cluster_id = annot,
-      sample_id  = "SubID")
-
-  # Set levels for Dx2
-  lvls = sort(unique(as.character(colData(pb)$dx)))
-  lvls = lvls[-which(lvls=="Control")]
-  colData(pb)$dx = factor(colData(pb)$dx, c("Control", lvls))
+      sample_id  = "SubID",
+      BPPARAM = SnowParam(12, progressbar=TRUE))
 
   file = paste0(outfolder, 'pbObj_SubID', annot, '.RDS')
   saveRDS(pb, file=file)
@@ -265,9 +254,13 @@ for( annot in annotation){
 ```
 
 
+```{r exit1, cache=FALSE}
+knitr::knit_exit()
+```
+
 
 ```{r read.pb}
-annot = "celltype8"
+annot = "celltype"
 file = paste0(outfolder, 'pbObj_', annot, '.RDS')
 pbObj = readRDS(file)
 ```
