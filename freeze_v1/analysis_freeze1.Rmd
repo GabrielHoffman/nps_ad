@@ -89,16 +89,17 @@ library(org.Hs.eg.db)
 
 
 ```{r load.data, cache=FALSE}
-outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1_results/"
-datafile = paste0(outfolder, "sceCombine_f1.RDS")
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
+datafile = paste0(outfolder, "sceCombine_f1.5.RDS")
 
 if( file.exists(datafile) ){
   # reading data from RDS is much faster:
   #   especially good for pipeline development
   sceCombine = readRDS( datafile )
 }else{
-  # read snRNA-seq data with annotations build in
-  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1_proc/freeze1/211120_NPS-AD_roundMerged_pass2_res20_anno_meta_fixed.h5ad"
+
+  # FREEZE 1.5
+  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1.5_rc/h5ad/220701_NPS-AD_freeze1.5_anno_meta_clean.h5ad"
 
   # read raw/* from h5ad file
   sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
@@ -106,22 +107,26 @@ if( file.exists(datafile) ){
   # only keep singlets
   sce_in = sce_in[,sce_in$demux_type == "singlet"]
 
-  # extract raw counts
-  sceCombine = altExp( sce_in, "raw", withDimnames=TRUE, withColData=TRUE)
+  # use `raw` as counts
+  sceCombine = swapAltExp(sce_in, "raw")
+  rowData(sceCombine) = rowData(sce_in)
+  rownames(sceCombine) = rownames(sce_in)
+  counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
+  assay(sceCombine, 'X') = NULL          # free X  
 
-  sceCombine = as(sceCombine, "SingleCellExperiment")
-  reducedDims(sceCombine) <- reducedDims(sce_in)
-  rownames(sceCombine) <- rownames(sce_in)
-  rowData(sceCombine) <- rowData(sce_in)
+  # merge with new metadata
+  df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1.5_rc/metadata/syn26527784_latest.csv")
+  df_meta$snRNAseq_ID[1:4]
 
-  # collapse GABAergic neurons
-  sceCombine$celltype8 = sceCombine$celltype %>%
-      as.character %>% 
-      recode( 
-      "GABAergic SST interneuron" = 'GABAergic neuron',
-      "GABAergic VIP interneuron" = 'GABAergic neuron',
-      "GABAergic PVALB interneuron" = 'GABAergic neuron') %>% 
-      as.factor
+  # get order of matching
+  i = match(sceCombine$SubID, df_meta$SubID)
+
+  # get colums of H5AD data to exclude
+  variables = c("Age","Sex", "Ethnicity")
+  exclude = match( variables, colnames(colData(sceCombine)))
+
+  # Assign new metadata
+  colData(sceCombine) = cbind(colData(sceCombine)[,-exclude], df_meta[i,])
 
   saveRDS(sceCombine, file=datafile)
 }
