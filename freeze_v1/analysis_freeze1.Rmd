@@ -21,7 +21,7 @@ vignette: >
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
 ml python git
 git pull
-~/.r420
+source ~/.r420
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
 R --vanilla
 
