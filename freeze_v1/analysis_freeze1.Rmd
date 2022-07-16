@@ -401,8 +401,11 @@ df_gene =  AnnotationDbi::select(org.Hs.eg.db, keys=c("XIST", "UTY"), keytype="S
 df_sex = lapply( names(res.proc), function(CT){
   geneExpr = res.proc[[CT]]
   df = NULL
-  if( sum(df_gene$ENSEMBL %in% rownames(geneExpr)) == 2){  
-    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), XIST = geneExpr$E[df_gene$ENSEMBL[1],], UTY = geneExpr$E[df_gene$ENSEMBL[2],])
+  # if( sum(df_gene$ENSEMBL %in% rownames(geneExpr)) == 2){  
+  #   df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), XIST = geneExpr$E[df_gene$ENSEMBL[1],], UTY = geneExpr$E[df_gene$ENSEMBL[2],])
+  # }
+  if( sum(df_gene$SYMBOL %in% rownames(geneExpr)) == 2){
+    df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), XIST = geneExpr$E['XIST',], UTY = geneExpr$E['UTY',])
   }
   df
 })
