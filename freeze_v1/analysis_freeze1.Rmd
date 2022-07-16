@@ -324,10 +324,6 @@ inner_join(df_counts, df_rate, by=c("celltype", "ID")) %>%
 
 
 
-```{r exit1, cache=FALSE}
-knitr::knit_exit()
-```
-
 
 
 ## Cell type specificity
@@ -369,7 +365,9 @@ dreamlet::plotHeatmap(df_sub, genes=unique(genes))
 ```
 
 
-```{r Dx.summary}
+
+
+```{r Dx.summary, eval=FALSE}
 df = unique(data.frame(Dx = pbObj$dx, Donor = pbObj$SubID))
 
 sort(table(df$dx), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE)
@@ -457,6 +455,9 @@ ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + sc
 
 
 
+```{r exit1, cache=FALSE}
+knitr::knit_exit()
+```
 
 ```{r varPart.plain}
 form = ~ (1|SubID)
