@@ -130,7 +130,11 @@ if( file.exists(datafile) ){
   # Assign new metadata
   colData(sceCombine) = cbind(colData(sceCombine)[,-exclude], df_meta[i,])
 
-  saveRDS(sceCombine, file=datafile)
+  # only save genes with unique names
+  tab = table(rownames(sceCombine))
+  keep = rownames(sceCombine) %in% names(tab[tab==1])
+
+  saveRDS(sceCombine[keep,], file=datafile)
 }
 ```
 
@@ -462,7 +466,7 @@ ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + sc
 ```{r varPart.plain}
 form = ~ (1|SubID)
 
-res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE), assay='Glutamatergic neuron')
 ```
 
 ```{r vp.plot.plain, fig.height=15, fig.width=10, cache=FALSE}
