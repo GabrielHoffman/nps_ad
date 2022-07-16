@@ -357,11 +357,11 @@ df_sub = df[rownames(df) %in% df_genes$ENSEMBL,]
 idx = match(rownames(df_sub), df_genes$ENSEMBL)
 rownames(df_sub) = df_genes$SYMBOL[idx]
 
-plotPercentBars(df_sub, genes=unique(genes))
+plotPercentBars(df, genes=unique(genes))
 ```
 
 ```{r heatmap, fig.height=7, fig.width=7}
-dreamlet::plotHeatmap(df_sub, genes=unique(genes))
+dreamlet::plotHeatmap(df, genes=unique(genes))
 ```
 
 
