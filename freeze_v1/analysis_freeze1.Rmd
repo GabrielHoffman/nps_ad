@@ -583,18 +583,18 @@ eval_within_across_donor( res.proc, "SubID" )
 
 
 ```{r dreamlet.fit.many}
-form = ~ Sex #+ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + scale(Age)
+form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + scale(Age)
 
 test.traits = c('AD', 'MCI', 'Dementia', 'PD', 'PD_uncertain_plus_encephalitic', 'DLBD', 'FTD','ALS')
 
-fitList = lapply( test.traits[1:2], function(x){
+fitList = lapply( test.traits, function(x){
 
   # test trait term at end
   formula = update.formula(form, paste(' ~ . + ',x))
 
   dreamlet( res.proc, formula, BPPARAM = SnowParam(12) )
   })
-names(fitList) = test.traits[1:2]
+names(fitList) = test.traits
 ```
 
 
@@ -605,7 +605,7 @@ tabList = lapply( names(fitList), function(x){
 
   topTable(fit, coef=x, number=Inf)
 })
-names(tabList) = ames(fitList)
+names(tabList) = names(fitList)
 ```
 
 
