@@ -23,6 +23,7 @@ ml python git
 git pull
 source ~/.r420
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
+# rm -f /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/*
 R --vanilla
 
 system("git pull"); rmarkdown::render("analysis_freeze1.Rmd");
@@ -133,8 +134,9 @@ if( file.exists(datafile) ){
   # only save genes with unique names
   tab = table(rownames(sceCombine))
   keep = rownames(sceCombine) %in% names(tab[tab==1])
+  sceCombine = sceCombine[keep,]
 
-  saveRDS(sceCombine[keep,], file=datafile)
+  saveRDS(sceCombine, file=datafile)
 }
 ```
 
@@ -265,6 +267,10 @@ for( annot in annotation){
 annot = "celltype"
 file = paste0(outfolder, 'pbObj_', annot, '.RDS')
 pbObj = readRDS(file)
+
+tab = table(rownames(pbObj))
+keep = rownames(pbObj) %in% names(tab[tab==1])
+pbObj = pbObj[keep,]
 ```
 
 
