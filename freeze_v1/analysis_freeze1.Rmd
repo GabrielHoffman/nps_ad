@@ -541,7 +541,7 @@ res = lapply( unique(res.vp$assay), function(key){
   names(statistic) = df$gene
 
   # convert GeneSetCollection to list
-  geneSets.lst = recodeToList( geneSets )
+  geneSets.lst = geneIds( geneSets )
 
   # Map from Ensembl genes in geneSets_GO to 
   # from trimmed Ensembl names from RNA-seq data 
