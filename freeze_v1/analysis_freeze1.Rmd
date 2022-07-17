@@ -388,20 +388,18 @@ sort(table(df$dx), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE
 res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution), 
   min.cells = 5,
   min.count = 10, 
-  # pmetadata = df_collapse,  
-  # pkeys=c('ID', 'anno'),
   BPPARAM = SnowParam(6, progressbar=TRUE))
   
 res.proc
 ```
 
 ```{r voom.plot, fig.height=10, fig.width=10, cache=TRUE}
-plotVoom( res.proc )
+plotVoom( res.proc ) 
 ```
 
 
 ```{r voom.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
-plotVoom( res.proc[7:9] )
+plotVoom( res.proc[7:9] ) 
 ```
 
 
@@ -418,7 +416,7 @@ df_sex = lapply( names(res.proc), function(CT){
     df = data.frame(cellType = CT, IDS = colnames(geneExpr$E), XIST = geneExpr$E['XIST',], UTY = geneExpr$E['UTY',])
   }
   df
-})
+}) 
 df_sex = do.call(rbind, df_sex)
 
 df_sex = merge(df_sex, colData(pbObj)[,"Sex",drop=FALSE], by.x="IDS", by.y="row.names")
@@ -434,7 +432,7 @@ df_totalReads = data.frame(totalReads, Channel=sceCombine$Channel) %>%
   group_by(Channel) %>%
   summarise(LibSize = sum(totalReads))
 
-rm(totalReads)
+rm(totalReads) 
 gc()
 
 # sum across cells for each Donor
@@ -471,7 +469,7 @@ ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + sc
 
 ```{r varPart.plain}
 form = ~ (1|SubID)
-
+ 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE), assay='Glutamatergic neuron')
 ```
 
