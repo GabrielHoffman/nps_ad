@@ -533,6 +533,8 @@ geneSets = go.gs
 
 res = lapply( unique(res.vp$assay), function(key){
   
+  message(key)
+
   # subset by assay
   df = res.vp[res.vp$assay == key,]
 
@@ -549,10 +551,15 @@ res = lapply( unique(res.vp$assay), function(key){
      
   # filter by size of gene set
   index = index[vapply(index, length, FUN.VALUE=numeric(1)) >= n_genes_min]
+  if( length(index) == 0){
+    ret = NULL
+  }else{
+    res = cameraPR( statistic, index, use.ranks=TRUE)
 
-  res = cameraPR( statistic, index, use.ranks=TRUE)
+    ret = DataFrame( assay = key, Geneset = rownames(res), res)
+  }
 
-  DataFrame( assay = key, Geneset = rownames(res), res)
+  ret
 })
 res = do.call(rbind, res)
 
@@ -572,6 +579,53 @@ source("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/common_analyses
 
 eval_within_across_donor( res.proc, "SubID" )
 ```
+
+
+
+```{r dreamlet.fit.many}
+form = ~ Sex #+ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + scale(Age)
+
+test.traits = c('AD', 'MCI', 'Dementia', 'PD', 'PD_uncertain_plus_encephalitic', 'DLBD', 'FTD','ALS')
+
+fitList = mclapply( test.traits[1:2], function(x){
+
+  # test trait term at end
+  formula = update.formula(form, paste(' ~ . + ',x))
+
+  dreamlet( res.proc, formula )
+  }, mc.cores=12)
+names(fitList) = test.traits[1:2]
+```
+
+
+```{r topTable.fit.many}
+tabList = lapply( names(fitList), function(x){
+
+  fit = fitList[[x]]
+
+  topTable(fit, coef=x, number=Inf)
+})
+names(tabList) = ames(fitList)
+```
+
+
+
+# zenith for gene set analysis
+```{r zenith.many}
+# Load Gene Ontology database 
+go.gs = get_GeneOntology(to="SYMBOL")
+
+ngenes = sapply(go.gs, function(gs) length(geneIds(gs)))
+go.gs = go.gs[(ngenes > 20) & (ngenes < 2000)]
+
+res.gsa = lapply( names(fitList), function(x){
+
+  zenith_gsa(fitList[[x]], coefs=x, go.gs)
+})
+names(res.gsa) = names(fitList)
+```
+
+
 
 
 ```{r exit1, cache=FALSE}
