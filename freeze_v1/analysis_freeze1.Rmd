@@ -523,7 +523,7 @@ plot_grid( plotlist=figList, nrow=2 )
 ```
 
 ## Batch effects and gen sets
-```{r DE.batch}
+```{r DE.batch, eval=FALSE}
 library(zenith)
 go.gs = get_GeneOntology(to="ENSEMBL")
 
@@ -574,7 +574,7 @@ res$FDR = p.adjust(res$PValue, "fdr")
 
 
 # Correlation with and between donors
-```{r within_btw, fig.height=10, fig.width=10}
+```{r within_btw, fig.height=10, fig.width=10, eval=FALSE}
 source("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/common_analyses.R")
 
 eval_within_across_donor( res.proc, "SubID" )
@@ -587,13 +587,13 @@ form = ~ Sex #+ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution
 
 test.traits = c('AD', 'MCI', 'Dementia', 'PD', 'PD_uncertain_plus_encephalitic', 'DLBD', 'FTD','ALS')
 
-fitList = mclapply( test.traits[1:2], function(x){
+fitList = lapply( test.traits[1:2], function(x){
 
   # test trait term at end
   formula = update.formula(form, paste(' ~ . + ',x))
 
-  dreamlet( res.proc, formula )
-  }, mc.cores=12)
+  dreamlet( res.proc, formula, BPPARAM = SnowParam(12) )
+  })
 names(fitList) = test.traits[1:2]
 ```
 
