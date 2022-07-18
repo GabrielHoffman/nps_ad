@@ -26,13 +26,13 @@ source ~/.r420
 # rm -f /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/*
 R --vanilla
 
-system("git pull"); rmarkdown::render("analysis_freeze1.Rmd");
+system("git pull"); rmarkdown::render("analysis_freeze1.5.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
 
 
-echo "echo \"rmarkdown::render('analysis_freeze1.Rmd');\" | R" > script.sh
+echo "echo \"rmarkdown::render('analysis_freeze1.5.Rmd');\" | R" > script.sh
 
 
 bsub -Is -q interactive -R "span[hosts=1]" -W 12:00 -P acc_CommonMind -n 24 bash
@@ -385,7 +385,7 @@ sort(table(df$dx), decreasing=TRUE) %>% kbl() %>% kable_styling(full_width=FALSE
 
 ```{r voom}
 # Normalize and apply voom
-res.proc = processAssays( pbObj, ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution), 
+res.proc = processAssays( pbObj, ~ (1|batch) + (1|round_num) + (1|HTO) + (1|Institution), 
   min.cells = 5,
   min.count = 10, 
   BPPARAM = SnowParam(6, progressbar=TRUE))
@@ -467,18 +467,9 @@ ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + sc
 
 
 
-```{r varPart.plain}
-form = ~ (1|SubID)
- 
-res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE), assay='Glutamatergic neuron')
-```
-
-```{r vp.plot.plain, fig.height=15, fig.width=10, cache=FALSE}
-plotVarPart( sortCols(res.vp) )
-```
 
 ```{r varPart}
-form = ~ (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + scale(Age)
+form = ~ (1|batch) + (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + scale(Age)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
 ```
@@ -487,7 +478,7 @@ res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
 
 colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
 colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
-colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
+# colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
 
 plotVarPart( sortCols(res.vp), label.angle=45 )
 ```
@@ -513,7 +504,7 @@ plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
 
 Examples
 
-```{r vp.examine2, fig.height=6, fig.width=8, cache=TRUE}      
+```{r vp.examine2, fig.height=6, fig.width=8, cache=TRUE, eval=FALSE}      
 figList = lapply( df$gene[i], function(geneName){
   df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
 
@@ -581,21 +572,35 @@ eval_within_across_donor( res.proc, "SubID" )
 ```
 
 
+when data is non-missing from only 1 Institution, dreamlet returns empty result
+is model singular?
 
-```{r dreamlet.fit.many}
-form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + scale(Age)
+```{r dreamlet.fit.many.faster}
+form = ~ Sex + scale(Age) # + Institution
 
-test.traits = c('AD', 'MCI', 'Dementia', 'PD', 'PD_uncertain_plus_encephalitic', 'DLBD', 'FTD','ALS')
+test.traits = colnames(colData(res.proc))[c(29:66, 74:111)]
+test.traits = c(test.traits, 'CERAD', "BRAAK_AD", "BRAAK_PD" ,  "CDRScore",  "Plq_Mn", "ApoE_gt")
+
+values = sort(apply(colData(res.proc)[,test.traits], 2, var, na.rm=TRUE))
+
+test.traits = names(values)[values > 0.1]
 
 fitList = lapply( test.traits, function(x){
+
+  message(x)
+
+  if( is.logical(colData(res.proc)[,x]) ){
+     res.proc@data[,x] = as.numeric(colData(res.proc)[,x] )
+   }
 
   # test trait term at end
   formula = update.formula(form, paste(' ~ . + ',x))
 
-  dreamlet( res.proc, formula, BPPARAM = SnowParam(12) )
+  fit = dreamlet( res.proc, formula, BPPARAM = SnowParam(24), quiet=TRUE )
   })
 names(fitList) = test.traits
 ```
+
 
 
 ```{r topTable.fit.many}
@@ -632,38 +637,6 @@ names(res.gsa) = names(fitList)
 knitr::knit_exit()
 ```
 
-
-# when data is non-missing from only 1 Institution, dreamlet returns empty result
-# is model singular?
-
-```{r dreamlet.fit.many.faster}
-form = ~ Sex + (1|SubID) + (1|batch) + scale(Age) # + Institution
-
-test.traits = colnames(colData(res.proc))[c(29:66, 74:111)]
-test.traits = c(test.traits, 'CERAD', "BRAAK_AD", "BRAAK_PD" ,  "CDRScore",  "Plq_Mn", "ApoE_gt")
-
-values = sort(apply(colData(res.proc)[,test.traits], 2, var, na.rm=TRUE))
-
-test.traits = names(values)[values > 0.1]
-
-fitList = lapply( test.traits, function(x){
-
-  message(x)
-
-  if( is.logical(colData(res.proc)[,x]) ){
-     res.proc@data[,x] = as.numeric(colData(res.proc)[,x] )
-   }
-
-  # test trait term at end
-  formula = update.formula(form, paste(' ~ . + ',x))
-
-  fit = dreamlet( res.proc, formula, BPPARAM = SnowParam(24), quiet=TRUE )
-  })
-names(fitList) = test.traits
-
-file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1/fitList.test.RDS"
-saveRDS(fitList, file=file)
-```
 
 
 
