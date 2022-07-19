@@ -18,14 +18,13 @@ vignette: >
 
 <!---
 
-cd /Users/gabrielhoffman/workspace/repos/secoia/vignettes
 
-# rm -rf secoia_cache/
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
+ml python git
+git pull
 
 rmarkdown::render("secoia.Rmd")
 
-
-devtools::reload("/Users/gabrielhoffman/workspace/repos/secoia")
 
 --->
 
@@ -68,7 +67,7 @@ sceAggr = readRDS(paste0(outfolder, "/sceAggr.RDS"))
 ```
 
 ```{r run.model}
-formula = count ~ (1|SubID) + (1|batch)
+formula = count ~ 1 #(1|SubID) + (1|batch)
 
 res = secoia(formula, sceAggr[1:3,], "celltype", BPPARAM=SnowParam(12, progressbar=TRUE))
 ```
