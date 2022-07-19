@@ -82,6 +82,17 @@ table(res$result$fdr_up < 0.05)
 qqplot(res)
 ```
 
+```{r plotPercentBars}
+plotPercentBars(res)
+```
+
+```{r plot_resid_pred}
+plot_resid_pred(res)
+```
+
+```{r plot_effect_size}
+plot_effect_size(res)
+```
 
 ```{r plot.res2}
 res2 = fitEmpiricalNull(res)
