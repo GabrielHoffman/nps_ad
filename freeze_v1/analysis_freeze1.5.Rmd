@@ -585,7 +585,7 @@ values = sort(apply(colData(res.proc)[,test.traits,drop=FALSE], 2, var, na.rm=TR
 
 test.traits = names(values)[values > 0]
 
-fitList = lapply( test.traits, function(x){
+fitList = lapply( test.traits[1:4], function(x){
 
   message(x)
 
