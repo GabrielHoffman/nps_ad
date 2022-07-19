@@ -614,6 +614,123 @@ names(tabList) = names(fitList)
 ```
 
 
+# Number DE genes
+```{r n.de}
+df_tab = lapply( names(tabList), function(trait){
+
+  tab = tabList[[trait]]
+  tab$trait = trait
+  as_tibble(tab)
+  })
+df_tab = bind_rows(df_tab)
+
+df = df_tab %>%
+  group_by(trait, assay) %>%
+  summarise( nGenes = length(adj.P.Val), 
+              nDE = sum(adj.P.Val < 0.05))
+
+keep = df %>% 
+  group_by(trait) %>% 
+  summarise(nDE=sum(nDE)) %>%
+  arrange(nDE) %>%
+  tail(8) %>%
+  select(trait) %>%
+  array %>%
+  unlist
+
+keep = keep[!keep%in% c('Anxiety', 'ADHD')]
+
+fig = df %>%
+  # filter(trait %in% keep) %>%
+  filter(nDE > 0) %>%
+  ggplot(aes(assay, nDE, fill=assay)) +
+    geom_bar(stat='identity') + 
+    facet_wrap(~ trait) +
+    theme_classic() +
+    theme(aspect.ratio=1, legend.position="none") +
+    ylab("Number DE genes") +
+    coord_flip() +
+    ylim(0, 300)
+
+
+ggsave(fig, file="~/www/test.png")
+
+
+apply(colData(pbObj)[,keep], 2, table)
+
+
+
+# dcast as wide matrix
+df2 = df_tab %>%      
+  filter(trait %in% keep[1:3]) %>%      
+  reshape2::dcast(ID ~ trait + assay , value.var="z.std")
+
+C = cor(df2[,-1], use='pairwise.complete.obs')
+
+col = colorRampPalette(c("blue3", "white","red3"))(200)
+
+png("~/www/test.png", height=1024, width=1024)
+corrplot(C, col=col, tl.col="black")
+dev.off()
+
+
+png("~/www/test.png", height=1024, width=1024)
+corrplot(C, order="hclust", col=col, tl.col="black")
+dev.off()
+
+
+# dcast as wide matrix
+df2 = df_tab %>%           
+  reshape2::dcast(ID ~ trait + assay , value.var="z.std") 
+
+C = cor(df2[,2:13], df2[,-c(1:13)], use='pairwise.complete.obs')
+
+
+df_cor = reshape2::melt(C) %>%
+  as_tibble %>%
+  mutate(trait = gsub("_(.*)$", "", Var2))
+
+df_keep = df_cor %>%
+  group_by(trait)  %>%
+  summarize(mean = mean(abs(value))) %>%
+  arrange(mean) %>%
+  tail(12)
+
+df_use = df_cor %>%
+        filter(trait %in% c("MCI", "DLBD", 'ApoE')) 
+
+ratio = with(df_use, length(unique(Var2)) / length(unique(Var1)))
+
+fig = df_use %>% 
+  ggplot(aes(Var1, Var2, fill=value)) +
+  geom_tile() +
+  theme_classic() +
+  theme(aspect.ratio=ratio ,axis.text.x=element_text(angle = 90, hjust = 1)) +
+  scale_fill_gradient2(low="blue", mid="white", high="red", limits=c(-1,1), name="Correlation") +
+  xlab("") + ylab('')
+
+
+ggsave(fig, file="~/www/test.png", width=6, height=7)
+
+
+cor(as.data.frame(colData(pbObj)[,c("AD", "MCI")]), use='pairwise.complete.obs')
+
+
+
+res.gsa[["AD"]]
+
+
+```
+
+
+
+
+devtools::reload("/hpc/users/hoffmg01/.Rlib/R_420/zenith")
+
+
+
+```
+
 
 # zenith for gene set analysis
 ```{r zenith.many}
@@ -623,11 +740,26 @@ go.gs = get_GeneOntology(to="SYMBOL")
 ngenes = sapply(go.gs, function(gs) length(geneIds(gs)))
 go.gs = go.gs[(ngenes > 20) & (ngenes < 2000)]
 
-res.gsa = lapply( names(fitList), function(x){
+traits = c("AD", "MCI", "DLBD", 'ApoE_gt', "BD", "SZC")
+
+res.gsa = mclapply( traits, function(x){
 
   zenith_gsa(fitList[[x]], coefs=x, go.gs)
-})
-names(res.gsa) = names(fitList)
+}, mc.cores=4)
+names(res.gsa) = traits
+
+# saveRDS(res.gsa, file="res.gsa.RDS")
+# res.gsa = readRDS("res.gsa.RDS")
+
+trait = "DLBD"
+
+fig = plotZenithResults( res.gsa[[trait]], 2, 1 ) + ggtitle(trait)
+ggsave(fig, file="~/www/test.png", width=10, height=10)
+
+
+
+
+
 ```
 
 
