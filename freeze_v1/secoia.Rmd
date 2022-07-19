@@ -84,7 +84,7 @@ qqplot(res)
 
 ```{r plotPercentBars}
 plotPercentBars(res)
-```
+``` 
 
 ```{r plot_resid_pred}
 plot_resid_pred(res)
