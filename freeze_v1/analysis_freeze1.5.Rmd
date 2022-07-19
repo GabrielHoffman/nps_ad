@@ -468,96 +468,96 @@ ggplot(df_sex2, aes(XIST, UTY, color=Sex)) + geom_point() + theme_classic() + sc
 
 
 
-```{r varPart}
-form = ~ (1|batch) #+ (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + scale(Age)
+# ```{r varPart}
+# form = ~ (1|batch) #+ (1|round_num) + (1|HTO) + (1|Sex) + (1|Institution) + scale(Age)
 
-res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
-```
+# res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
+# ```
 
-```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
+# ```{r vp.plot, fig.height=15, fig.width=10, cache=TRUE}
 
-colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
-colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
-# colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
+# colnames(res.vp) = gsub("scale\\.", "", colnames(res.vp))
+# colnames(res.vp) = gsub("\\.", "", colnames(res.vp))
+# # colnames(res.vp) = gsub("SubID", "Donor", colnames(res.vp))
 
-plotVarPart( sortCols(res.vp), label.angle=45 )
-```
+# plotVarPart( sortCols(res.vp), label.angle=45 )
+# ```
 
-```{r vp.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
-idx = res.vp$assay %in% c('GABAergic neuron', 'Glutamatergic neuron', 'Microglia')
-plotVarPart( sortCols(res.vp[idx,]), label.angle=70 )
-```
+# ```{r vp.plot_sub, fig.height=4, fig.width=10, cache=TRUE}
+# idx = res.vp$assay %in% c('GABAergic neuron', 'Glutamatergic neuron', 'Microglia')
+# plotVarPart( sortCols(res.vp[idx,]), label.angle=70 )
+# ```
 
 
 
-### Examine variancePartition results
-```{r vp.examine, fig.height=3, fig.width=7}
-CT = "Astrocyte"
+# ### Examine variancePartition results
+# ```{r vp.examine, fig.height=3, fig.width=7}
+# CT = "Astrocyte"
 
-i = 1:3
-df = sortCols(res.vp)[res.vp$assay == CT,]
-rownames(df) = df$gene
-i = c(i, which.max(df$Donor), which.max(df$Batch), which.max(df$Residuals))
+# i = 1:3
+# df = sortCols(res.vp)[res.vp$assay == CT,]
+# rownames(df) = df$gene
+# i = c(i, which.max(df$Donor), which.max(df$Batch), which.max(df$Residuals))
 
-plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
-```
+# plotPercentBars( data.frame(df[i,-c(1,2)])) + ggtitle(CT)
+# ```
 
-Examples
+# Examples
 
-```{r vp.examine2, fig.height=6, fig.width=8, cache=TRUE, eval=FALSE}      
-figList = lapply( df$gene[i], function(geneName){
-  df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
+# ```{r vp.examine2, fig.height=6, fig.width=8, cache=TRUE, eval=FALSE}      
+# figList = lapply( df$gene[i], function(geneName){
+#   df = merge( as.data.frame(t(assay(res.proc, CT)$E[geneName,,drop=FALSE])), colData(res.proc), by="row.names")
 
-  plotStratifyBy(df, 'SubID', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
-})
-plot_grid( plotlist=figList, nrow=2 )
-```
+#   plotStratifyBy(df, 'SubID', geneName, colorBy=NULL, main=geneName) + theme(aspect.ratio=1)
+# })
+# plot_grid( plotlist=figList, nrow=2 )
+# ```
 
-## Batch effects and gen sets
-```{r DE.batch, eval=FALSE}
-library(zenith)
-go.gs = get_GeneOntology(to="ENSEMBL")
+# ## Batch effects and gen sets
+# ```{r DE.batch, eval=FALSE}
+# library(zenith)
+# go.gs = get_GeneOntology(to="ENSEMBL")
 
-coef = "batch"
-n_genes_min = 10
-geneSets = go.gs
+# coef = "batch"
+# n_genes_min = 10
+# geneSets = go.gs
 
-res = lapply( unique(res.vp$assay), function(key){
+# res = lapply( unique(res.vp$assay), function(key){
   
-  message(key)
+#   message(key)
 
-  # subset by assay
-  df = res.vp[res.vp$assay == key,]
+#   # subset by assay
+#   df = res.vp[res.vp$assay == key,]
 
-  # get variance statistic
-  statistic = df[,coef]
-  names(statistic) = df$gene
+#   # get variance statistic
+#   statistic = df[,coef]
+#   names(statistic) = df$gene
 
-  # convert GeneSetCollection to list
-  geneSets.lst = geneIds( geneSets )
+#   # convert GeneSetCollection to list
+#   geneSets.lst = geneIds( geneSets )
 
-  # Map from Ensembl genes in geneSets_GO to 
-  # from trimmed Ensembl names from RNA-seq data 
-  index = ids2indices( geneSets.lst, names(statistic))
+#   # Map from Ensembl genes in geneSets_GO to 
+#   # from trimmed Ensembl names from RNA-seq data 
+#   index = ids2indices( geneSets.lst, names(statistic))
      
-  # filter by size of gene set
-  index = index[vapply(index, length, FUN.VALUE=numeric(1)) >= n_genes_min]
-  if( length(index) == 0){
-    ret = NULL
-  }else{
-    res = cameraPR( statistic, index, use.ranks=TRUE)
+#   # filter by size of gene set
+#   index = index[vapply(index, length, FUN.VALUE=numeric(1)) >= n_genes_min]
+#   if( length(index) == 0){
+#     ret = NULL
+#   }else{
+#     res = cameraPR( statistic, index, use.ranks=TRUE)
 
-    ret = DataFrame( assay = key, Geneset = rownames(res), res)
-  }
+#     ret = DataFrame( assay = key, Geneset = rownames(res), res)
+#   }
 
-  ret
-})
-res = do.call(rbind, res)
+#   ret
+# })
+# res = do.call(rbind, res)
 
-res$FDR = p.adjust(res$PValue, "fdr")
+# res$FDR = p.adjust(res$PValue, "fdr")
 
-# table(res$FDR < 0.05)
-```
+# # table(res$FDR < 0.05)
+# ```
 
 
 
@@ -578,12 +578,12 @@ is model singular?
 ```{r dreamlet.fit.many.faster}
 form = ~ Sex + scale(Age) # + Institution
 
-test.traits = colnames(colData(res.proc))[c(29:66, 74:111)]
+test.traits = colnames(colData(res.proc))[c(22:59, 67:104)]
 test.traits = c(test.traits, 'CERAD', "BRAAK_AD", "BRAAK_PD" ,  "CDRScore",  "Plq_Mn", "ApoE_gt")
 
-values = sort(apply(colData(res.proc)[,test.traits], 2, var, na.rm=TRUE))
+values = sort(apply(colData(res.proc)[,test.traits,drop=FALSE], 2, var, na.rm=TRUE))
 
-test.traits = names(values)[values > 0.1]
+test.traits = names(values)[values > 0]
 
 fitList = lapply( test.traits, function(x){
 
@@ -596,7 +596,7 @@ fitList = lapply( test.traits, function(x){
   # test trait term at end
   formula = update.formula(form, paste(' ~ . + ',x))
 
-  fit = dreamlet( res.proc, formula, BPPARAM = SnowParam(24), quiet=TRUE )
+  dreamlet( res.proc, formula, BPPARAM = SnowParam(6), quiet=TRUE )
   })
 names(fitList) = test.traits
 ```
