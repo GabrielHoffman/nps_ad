@@ -1,0 +1,92 @@
+---
+title: 'secoia'
+subtitle: '<u>S</u>ingl<u>e</u> <u>C</u>ell <u>O</u>utlier <u>I</u>dentification <u>A</u>nalysis'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{secoia}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!---
+
+cd /Users/gabrielhoffman/workspace/repos/secoia/vignettes
+
+# rm -rf secoia_cache/
+
+rmarkdown::render("secoia.Rmd")
+
+
+devtools::reload("/Users/gabrielhoffman/workspace/repos/secoia")
+
+--->
+
+
+<style>
+body {
+text-align: justify}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load}
+library(scater)
+library(secoia)
+library(BiocParallel)
+library(SingleCellExperiment)
+
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
+
+# sceCombine = readRDS( datafile )
+
+# # aggregate genes on chromosomes
+# sceAggr = aggregateAcrossFeatures(sceCombine, rowData(sceCombine)$gene_chrom)
+ 
+# saveRDS(sceAggr, paste0(outfolder, "/sceAggr.RDS"))
+
+sceAggr = readRDS(paste0(outfolder, "/sceAggr.RDS"))
+```
+
+```{r run.model}
+formula = count ~ (1|SubID) + (1|batch)
+
+res = secoia(formula, sceAggr[1:3,], "celltype", BPPARAM=SnowParam(12, progressbar=TRUE))
+```
+
+```{r plot.res}
+table(res$result$fdr_down < 0.05)
+table(res$result$fdr_up < 0.05)
+
+qqplot(res)
+```
+
+
+```{r plot.res2}
+res2 = fitEmpiricalNull(res)
+
+table(res2$result$fdr_down < 0.05)
+table(res2$result$fdr_up < 0.05)
+
+qqplot(res2)
+```
+
