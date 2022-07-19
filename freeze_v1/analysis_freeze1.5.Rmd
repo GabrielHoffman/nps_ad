@@ -585,7 +585,7 @@ values = sort(apply(colData(res.proc)[,test.traits,drop=FALSE], 2, var, na.rm=TR
 
 test.traits = names(values)[values > 0]
 
-fitList = lapply( test.traits[1:4], function(x){
+fitList = lapply( test.traits, function(x){
 
   message(x)
 
@@ -598,7 +598,7 @@ fitList = lapply( test.traits[1:4], function(x){
 
   dreamlet( res.proc, formula, BPPARAM = SnowParam(6), quiet=TRUE )
   })
-names(fitList) = test.traits[1:4]
+names(fitList) = test.traits
 ```
 
 
