@@ -598,7 +598,7 @@ fitList = lapply( test.traits[1:4], function(x){
 
   dreamlet( res.proc, formula, BPPARAM = SnowParam(6), quiet=TRUE )
   })
-names(fitList) = test.traits
+names(fitList) = test.traits[1:4]
 ```
 
 
