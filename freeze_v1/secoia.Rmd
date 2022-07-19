@@ -23,7 +23,10 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
 ml python git
 git pull
 
-rmarkdown::render("secoia.Rmd")
+R
+system("git pull"); rmarkdown::render("secoia.Rmd")
+
+https://hoffmg01.u.hpc.mssm.edu/nps_ad/freeze_v1/secoia.html
 
 
 --->
@@ -67,9 +70,9 @@ sceAggr = readRDS(paste0(outfolder, "/sceAggr.RDS"))
 ```
 
 ```{r run.model}
-formula = count ~ 1 #(1|SubID) + (1|batch)
+formula = count ~ (1|SubID) + (1|batch)
 
-res = secoia(formula, sceAggr[1:3,], "celltype", BPPARAM=SnowParam(12, progressbar=TRUE))
+res = secoia(formula, sceAggr, "celltype", BPPARAM=SnowParam(12, progressbar=TRUE))
 ```
 
 ```{r plot.res}
