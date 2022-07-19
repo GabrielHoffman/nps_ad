@@ -78,14 +78,14 @@ res = secoia(formula, sceAggr, "celltype", BPPARAM=SnowParam(12, progressbar=TRU
 ```{r plot.res}
 table(res$result$fdr_down < 0.05)
 table(res$result$fdr_up < 0.05)
-
+ 
 qqplot(res)
 ```
 
 
 ```{r plot.res2}
 res2 = fitEmpiricalNull(res)
-
+ 
 table(res2$result$fdr_down < 0.05)
 table(res2$result$fdr_up < 0.05)
 
