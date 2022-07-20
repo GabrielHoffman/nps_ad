@@ -26,6 +26,8 @@ git pull
 R
 system("git pull"); rmarkdown::render("secoia.Rmd")
 
+# rm -rf secoia_cache/ secoia_files/
+
 https://hoffmg01.u.hpc.mssm.edu/nps_ad/freeze_v1/secoia.html
 
 
@@ -70,10 +72,15 @@ sceAggr = readRDS(paste0(outfolder, "/sceAggr.RDS"))
 ```
 
 ```{r run.model}
-formula = count ~ (1|SubID) + (1|batch)
+# formula = ~ (1|SubID) + (1|batch)
+formula = ~ 1
 
-res = secoia(formula, sceAggr, "celltype", BPPARAM=SnowParam(12, progressbar=TRUE))
+res = secoia(sceAggr, "celltype", formula, 
+          BPPARAM = SnowParam(12, progressbar=TRUE), 
+          includeVariables = c("AD", "Sex", "SubID"))
 ```
+
+
 
 ```{r plot.res}
 table(res$result$fdr_down < 0.05)
@@ -82,7 +89,7 @@ table(res$result$fdr_up < 0.05)
 qqplot(res)
 ```
 
-```{r plotPercentBars}
+```{r plotPercentBars, eval=FALSE}
 plotPercentBars(res)
 ``` 
 
@@ -102,4 +109,30 @@ table(res2$result$fdr_up < 0.05)
 
 qqplot(res2)
 ```
+
+
+```{r plot.res3}
+# learn null only from AD controls
+include = (res$results$AD == 0)
+res3 = fitEmpiricalNull(res, include)
+ 
+table(res3$result$fdr_down < 0.05)
+table(res3$result$fdr_up < 0.05)
+```
+
+```{r qqplot3}
+qqplot(res3)
+```
+
+```{r qqplot.grid}
+qqplot(res3, facet_by = ~ chrom + celltype, 10, legend.position="none") + facet_grid( chrom ~ celltype ) 
+```
+
+
+
+
+
+
+
+
 
