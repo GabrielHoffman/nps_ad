@@ -771,19 +771,19 @@ df %>%
     scale_alpha_manual(values = c(1, .5)) +
      guides(fill = FALSE)
 
-merge(resTab.fixed, resTab.mixed, by=c('assay.x', 'coef')) %>%
-  ggplot(aes(estimate.x, estimate.y, color=assay.x)) +  
-  geom_abline(linetype="dashed", color="grey50") +
-  geom_errorbar(aes(xmin = estimate.x - 1.96*se.x, xmax = estimate.x + 1.96*se.x)) +
-  geom_errorbar(aes(ymin = estimate.y - 1.96*se.y, ymax = estimate.y + 1.96*se.y)) +
-  geom_point() +
-  facet_wrap(~coef) +
-  theme_classic() + 
-  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
-  coord_fixed(xlim=c(0, .6), ylim=c(0, .6), expand=FALSE) +
-  scale_color_discrete(name = "Cell type") +
-  xlab("dreamlet: fixed") +
-  ylab("dreamlet: mixed") 
+# merge(resTab.fixed, resTab.mixed, by="key") %>%
+#   ggplot(aes(estimate.x, estimate.y, color=assay.x)) +  
+#   geom_abline(linetype="dashed", color="grey50") +
+#   geom_errorbar(aes(xmin = estimate.x - 1.96*se.x, xmax = estimate.x + 1.96*se.x)) +
+#   geom_errorbar(aes(ymin = estimate.y - 1.96*se.y, ymax = estimate.y + 1.96*se.y)) +
+#   geom_point() +
+#   facet_wrap(~coef) +
+#   theme_classic() + 
+#   theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+#   coord_fixed(xlim=c(0, .6), ylim=c(0, .6), expand=FALSE) +
+#   scale_color_discrete(name = "Cell type") +
+#   xlab("dreamlet: fixed") +
+#   ylab("dreamlet: mixed") 
 ```
 
 
