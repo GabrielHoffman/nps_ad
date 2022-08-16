@@ -58,6 +58,7 @@ library(scater)
 library(secoia)
 library(BiocParallel)
 library(SingleCellExperiment)
+library(dplyr)
 
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
 
@@ -101,6 +102,67 @@ plot_resid_pred(res)
 plot_effect_size(res)
 ```
 
+```{r predict.sex}
+library(PRROC)
+
+status = c("Sex", "Male", "Female")
+# status = c("AD", 0, 1)
+
+getpref = function(df, status){
+  idx1 = df[[status[1]]] == status[2]
+  idx2 = df[[status[1]]] == status[3]
+
+  idx1 = idx1[!is.na(idx1)]
+  idx2 = idx2[!is.na(idx2)]
+
+  pr = pr.curve(df$residuals[idx1], 
+                df$residuals[idx2], 
+                rand=TRUE)
+
+  data.frame(AUPR = pr$auc.integral, 
+            AUPR.rand=pr$rand$auc.integral)
+}
+
+df_aupr = res$results %>%
+  group_by(celltype, chrom) %>%
+  summarize(getpref(.data,status))
+
+fig = ggplot(df_aupr, aes(celltype, AUPR, fill=celltype)) +
+  geom_bar(stat="identity") +
+  geom_point(aes(celltype, AUPR.rand)) + 
+  theme_classic() +
+  theme(aspect.ratio=1, legend.position="none", plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(limits=c(0,1), expand=c(0,0)) +
+  coord_flip() +
+  ggtitle(paste("Classify", status[2])) +
+  facet_wrap(~chrom)
+ggsave('~/www/test.pdf', fig, height=8, width=9)
+
+res$results %>%
+  filter(chrom=='Y') %>%
+    ggplot(aes(celltype, residuals, fill=Sex)) +
+    geom_violin() + 
+  theme_classic() +
+  coord_flip() +
+  theme(aspect.ratio=1, legend.position="none", plot.title = element_text(hjust = 0.5)) +
+  scale_fill_manual("Sex", values=c("red", "blue"))
+```
+
+
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
+datafile = paste0(outfolder, 'sceCombine_f1.5.RDS')
+sceCombine = readRDS( datafile )
+
+
+incl = sceAggr$celltype %in% c("Astrocyte", 'GABAergic neuron')
+res = secoia(sceAggr[,incl], "celltype", 
+          BPPARAM = SnowParam(12, progressbar=TRUE),
+          includeVariables = c("AD", "Sex", "SubID"),
+          method = "cpm")
+
+
+
+
 ```{r plot.res2}
 res2 = fitEmpiricalNull(res)
  
@@ -127,6 +189,16 @@ qqplot(res3)
 ```{r qqplot.grid, fig.width=12, fig.height=20}
 qqplot(res3, facet_by = ~ chrom + celltype, 10, legend.position="none") + facet_grid( chrom ~ celltype ) 
 ```
+
+MT
+Error in solve.default(res$hessian) :
+  system is computationally singular: reciprocal condition number = 1.72252e-18
+
+ fit = fitdistr(df$residuals, "t", lower = c(-Inf, 1e-3, 1), control = list(maxit=1))
+
+
+
+
 
 
 ```{r plot.res4}
