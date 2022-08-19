@@ -53,13 +53,17 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-```{r load}
+
+```{r packages, cache=FALSE}
 library(scater)
 library(secoia)
 library(BiocParallel)
 library(SingleCellExperiment)
 library(dplyr)
+library(PRROC)
+```
 
+```{r load}
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
 
 # sceCombine = readRDS( datafile )
@@ -78,7 +82,7 @@ formula = ~ 1
 
 res = secoia(sceAggr, "celltype", formula, 
           BPPARAM = SnowParam(12, progressbar=TRUE), 
-          includeVariables = c("AD", "Sex", "SubID"))
+          includeVariables = c("AD", "Sex", "SubID", "Age", "Channel", "batch"))
 ```
 
 
@@ -95,16 +99,14 @@ plotPercentBars(res)
 ``` 
 
 ```{r plot_resid_pred}
-plot_resid_pred(res)
+plotResidPred(res)
 ```
 
 ```{r plot_effect_size}
-plot_effect_size(res)
+plotEffectSize(res)
 ```
 
 ```{r predict.sex}
-library(PRROC)
-
 status = c("Sex", "Male", "Female")
 # status = c("AD", 0, 1)
 
@@ -127,7 +129,7 @@ df_aupr = res$results %>%
   group_by(celltype, chrom) %>%
   summarize(getpref(.data,status))
 
-fig = ggplot(df_aupr, aes(celltype, AUPR, fill=celltype)) +
+ggplot(df_aupr, aes(celltype, AUPR, fill=celltype)) +
   geom_bar(stat="identity") +
   geom_point(aes(celltype, AUPR.rand)) + 
   theme_classic() +
@@ -136,7 +138,7 @@ fig = ggplot(df_aupr, aes(celltype, AUPR, fill=celltype)) +
   coord_flip() +
   ggtitle(paste("Classify", status[2])) +
   facet_wrap(~chrom)
-ggsave('~/www/test.pdf', fig, height=8, width=9)
+# ggsave('~/www/test.pdf', fig, height=8, width=9)
 
 res$results %>%
   filter(chrom=='Y') %>%
@@ -148,7 +150,7 @@ res$results %>%
   scale_fill_manual("Sex", values=c("red", "blue"))
 ```
 
-
+<!---
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
 datafile = paste0(outfolder, 'sceCombine_f1.5.RDS')
 sceCombine = readRDS( datafile )
@@ -159,7 +161,7 @@ res = secoia(sceAggr[,incl], "celltype",
           BPPARAM = SnowParam(12, progressbar=TRUE),
           includeVariables = c("AD", "Sex", "SubID"),
           method = "cpm")
-
+--->
 
 
 
@@ -190,9 +192,6 @@ qqplot(res3)
 qqplot(res3, facet_by = ~ chrom + celltype, 10, legend.position="none") + facet_grid( chrom ~ celltype ) 
 ```
 
-# MT gives Error in solve.default(res$hessian) :
-  system is computationally singular: reciprocal condition number = 1.72252e-18
-
 ```{r plot.res4, eval=FALSE}
 # learn null only from AD controls
 include = (res$results$AD == 0)
@@ -206,9 +205,71 @@ table(res4$result$fdr_up < 0.05)
 qqplot(res4, facet_by = ~ chrom + celltype, 10, legend.position="none") + facet_grid( chrom ~ celltype ) 
 ```
 
+```{r eval.mean.resids, eval=FALSE}
+
+# Transformation scores 
+res3$results$z.loss = -pmin(res3$results$residuals, 0)
+res3$results$z.gain = pmax(res3$results$residuals, 0)
+
+table(res3$results$fdr_up < 0.05)
+table(res3$results$fdr_down < 0.05)
+
+df = res3$results %>%
+  as_tibble %>%
+  filter(celltype %in% c("Unknown", 'GABAergic SST interneuron')) %>%
+  group_by(SubID, celltype, AD, chrom) %>%
+  summarize( meanResid = mean(residuals))
+
+fig = ggplot(df, aes(celltype, meanResid, fill=as.character(AD))) +
+  geom_violin() +
+  theme_classic() +
+  theme(aspect.ratio=1) +
+  facet_wrap(~chrom) +
+  coord_flip()
+
+ggsave("~/www/test.png", fig)
+
+library(lme4)
+library(lmerTest)
+library(broom)
+library(broom.mixed)
+
+df_lm = res3$results %>%
+  as_tibble %>%
+  group_by(celltype, chrom) %>%
+  do(broom.mixed::tidy(lmer(pmax(residuals,0) ~ AD + Sex + (1|SubID), .data)))
 
 
 
+fig = df_lm %>% 
+  # filter(term == "AD") %>%
+  filter(term == "SexMale") %>%
+  mutate(chrom = factor(chrom, rownames(sceAggr))) %>%
+  mutate(fdr = p.adjust(p.value, "BH")) %>%
+  ggplot(aes(celltype, estimate, color=pmin(4, -log10(fdr)*sign(estimate)))) +
+    geom_point(size=.5) +
+    geom_errorbar(aes(ymin=estimate - 1.96*std.error,ymax=estimate + 1.96*std.error), width=0) +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    facet_wrap(~chrom) +
+    geom_hline(yintercept=0, color="grey", linetype="dashed") +
+    coord_flip() +
+    scale_color_gradient2(name = "FDR", high="red", mid="grey", low="blue", limits=c(-4,4))
+
+ggsave("~/www/test.png", fig)
+
+# size factors
+# batch effects and channel
+# compare replicates
+# how did old version work?
+
+
+
+
+```
+
+
+# Correlation in gain/loss scores across chromosomes
 
 
 
