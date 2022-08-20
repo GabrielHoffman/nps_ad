@@ -111,6 +111,7 @@ status = c("Sex", "Male", "Female")
 # status = c("AD", 0, 1)
 
 getpref = function(df, status){
+
   idx1 = df[[status[1]]] == status[2]
   idx2 = df[[status[1]]] == status[3]
 
@@ -126,8 +127,9 @@ getpref = function(df, status){
 }
 
 df_aupr = res$results %>%
+  filter(!is.nan(residuals)) %>%
   group_by(celltype, chrom) %>%
-  summarize(getpref(.data,status))
+  summarize(getpref(.,status))
 
 ggplot(df_aupr, aes(celltype, AUPR, fill=celltype)) +
   geom_bar(stat="identity") +
