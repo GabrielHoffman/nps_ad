@@ -78,7 +78,7 @@ sceAggr = readRDS(paste0(outfolder, "/sceAggr.RDS"))
 ```
 
 ```{r run.model}
-formula = ~ (1|SubID) + (1|batch) + (1|Channel)
+formula = ~ (1|batch)
 # formula = ~ 1
 
 res = secoia(sceAggr, "celltype", formula, 
