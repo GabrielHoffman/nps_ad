@@ -200,7 +200,7 @@ qqplot(res3, facet_by = ~ chrom + celltype, 10, legend.position="none") + facet_
 plotExpectedObserved(res3)
 ```
 
-```{r plotExpectedObserved2}
+```{r plotExpectedObserved2, eval=FALSE}
 plotExpectedObserved(res3) + facet_wrap(~chom)
 ```
 
