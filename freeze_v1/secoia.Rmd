@@ -108,8 +108,8 @@ plotEffectSize(res)
 ```
 
 ```{r predict.sex}
-status = c("Sex", "Male", "Female")
-# status = c("AD", 0, 1)
+# status = c("Sex", "Male", "Female")
+status = c("AD", 0, 1)
 
 getpref = function(df, status){
 
