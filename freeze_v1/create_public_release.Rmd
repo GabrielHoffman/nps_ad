@@ -144,15 +144,18 @@ Includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))
 sce$static = "all"
 pb <- aggregateToPseudoBulk(sce,
       cluster_id = "static",
-      sample_id  = "SubID",
-      BPPARAM=SnowParam(6))
+      sample_id  = "SubID")
 ```
 
 ```{r plot.sex, eval=FALSE}
 # Process assays to compute log2 CPM
 res.proc = processAssays( pb, ~1) 
 
-# Createa data.frame of UTY and XIST
+# Extract merged expression and meta-data
+df = extractdData(res.proc, "all")
+
+
+# Create a data.frame of UTY and XIST
 geneID = c("XIST", "UTY")
 df = counts(pb)[,geneID]
 df = data.frame(Sex = pb$Sex, t(df))
