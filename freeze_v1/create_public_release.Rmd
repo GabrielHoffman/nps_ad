@@ -1,13 +1,13 @@
 ---
 title: "Analysis of NPS/AD"
-subtitle: 'Create public freeze 0 from internal 1.5 merged h5ad'
+subtitle: 'Create Public Freeze 0 from Internal Freeze 1.5'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r Sys.time()`"
 documentclass: article
 output: 
   html_document:
-  toc: true
-  smart: false
+    toc: true
+    smart: false
 ---
 
 
@@ -27,7 +27,7 @@ system("git pull"); rmarkdown::render("create_public_release.Rmd");
 
 --->
 
-
+# Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -137,10 +137,10 @@ Public Data Freeze 0 includes `r length(table(sce$Channel))` samples, `r length(
 
 
 # Sex check
-```{r pb.sex, cache=TRUE}
+```{r pb.sex, cache=TRUE, message=TRUE}
 # Sum all reads for each individual
 sce$static = "all"
-pb <- aggregateToPseudoBulk(sce,
+pb <- aggregateToPseudoBulk(sce[,1:100000],
       assay = "counts", 
       cluster_id = "static",
       sample_id  = "SubID",
