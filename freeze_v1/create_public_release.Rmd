@@ -16,8 +16,6 @@ output:
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
 ml python git
 git pull
-# rm -rf analysis_freeze1_cache/ analysis_freeze1_files
-# rm -f /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/*
 R --vanilla
 
 system("git pull"); rmarkdown::render("create_public_release.Rmd");
@@ -45,13 +43,15 @@ knitr::opts_chunk$set(
 library(SingleCellExperiment)
 library(zellkonverter)
 library(DelayedArray)
-library(DelayedMatrixStats)
 library(HDF5Array)
 library(dreamlet)
 library(scater)
 library(tidyverse)
 library(kableExtra)
 library(org.Hs.eg.db)
+
+# update block size for reading h5ad file from disk
+setAutoBlockSize(1e9)
 ```
 
 # Load full Internal Data Freeze 1.5
@@ -105,7 +105,8 @@ if( file.exists(datafile) ){
 }
 ```
 
-Internal Data Freeze 1.5 includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
+## Internal Data Freeze 1.5 
+Includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
 # Create subset based on AD and round_num
 ```{r subset}
@@ -133,19 +134,33 @@ table(tab$Sex)
 xtabs(~AD + Sex, tab)
 ```
 
-Public Data Freeze 0 includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))` rounds, `r length(table(sce$batch))` 10X batches, `r length(table(sce$SubID))` donors, and `r format(ncol(sce), big.mark=',')` cells passing QC.
+## Public Data Freeze 0 
+Includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))` rounds, `r length(table(sce$batch))` 10X batches, `r length(table(sce$SubID))` donors, and `r format(ncol(sce), big.mark=',')` cells passing QC.
 
 
 # Sex check
-```{r pb.sex, cache=TRUE, message=TRUE}
+```{r pb.sex, cache=TRUE}
 # Sum all reads for each individual
 sce$static = "all"
-pb <- aggregateToPseudoBulk(sce,
-      assay = "counts", 
+pb <- aggregateToPseudoBulk(sce[, 1:10000],
       cluster_id = "static",
-      sample_id  = "SubID",
-      BPPARAM = SnowParam(6, progressbar=TRUE))
+      sample_id  = "SubID")
 ```
+
+```{r plot.sex}
+
+res.proc = processAssays( pb, ~1) 
+
+# Createa data.frame of UTY and XIST
+geneID = c("XIST", "UTY")
+df = counts(pb)[,geneID]
+df = data.frame(Sex = pb$Sex, t(df))
+
+
+
+```
+
+
 
 
 # Write H5AD for public release
