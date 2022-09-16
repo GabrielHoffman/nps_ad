@@ -140,7 +140,7 @@ Public Data Freeze 0 includes `r length(table(sce$Channel))` samples, `r length(
 ```{r pb.sex, cache=TRUE, message=TRUE}
 # Sum all reads for each individual
 sce$static = "all"
-pb <- aggregateToPseudoBulk(sce[,1:100000],
+pb <- aggregateToPseudoBulk(sce,
       assay = "counts", 
       cluster_id = "static",
       sample_id  = "SubID",
