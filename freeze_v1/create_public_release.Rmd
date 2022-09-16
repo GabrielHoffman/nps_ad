@@ -144,7 +144,8 @@ Includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))
 sce$static = "all"
 pb <- aggregateToPseudoBulk(sce,
       cluster_id = "static",
-      sample_id  = "SubID")
+      sample_id  = "SubID",
+      BPPARAM=SnowParam(6))
 ```
 
 ```{r plot.sex, eval=FALSE}
