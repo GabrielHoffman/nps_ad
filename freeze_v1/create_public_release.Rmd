@@ -1,0 +1,171 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'Create public freeze 0 from internal 1.5 merged h5ad'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+---
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
+ml python git
+git pull
+source ~/.r420
+# rm -rf analysis_freeze1_cache/ analysis_freeze1_files
+# rm -f /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/*
+R --vanilla
+
+system("git pull"); rmarkdown::render("analysis_freeze1.5.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+# Use cache=FALSE so that package are fully loaded each time
+# This ensures that forks within mclapply() have these loaded
+# Othewise, mclapply() not have access to these libraries and will fail 
+#   unless the libraries are manually loaded within each fork
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(DelayedMatrixStats)
+library(HDF5Array)
+library(dreamlet)
+library(scater)
+library(tidyverse)
+library(kableExtra)
+library(org.Hs.eg.db)
+```
+
+# Load full Internal Data Freeze 1.5
+```{r load.data, cache=FALSE}
+outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
+datafile = paste0(outfolder, "sceCombine_f1.5.RDS")
+
+if( file.exists(datafile) ){
+  # reading data from RDS is much faster:
+  #   especially good for pipeline development
+  sceCombine = readRDS( datafile )
+}else{
+
+  # FREEZE 1.5
+  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1.5_rc/h5ad/220701_NPS-AD_freeze1.5_anno_meta_clean.h5ad"
+
+  # read raw/* from h5ad file
+  sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
+
+  # only keep singlets
+  sce_in = sce_in[,sce_in$demux_type == "singlet"]
+
+  # use `raw` as counts
+  sceCombine = swapAltExp(sce_in, "raw")
+  rowData(sceCombine) = rowData(sce_in)
+  rownames(sceCombine) = rownames(sce_in)
+  # reducedDims(sceCombine) = reducedDims(sce_in)
+  reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
+  counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
+  assay(sceCombine, 'X') = NULL          # free X  
+
+  # merge with new metadata
+  df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1.5_rc/metadata/syn26527784_latest.csv")
+
+  # get order of matching
+  i = match(sceCombine$SubID, df_meta$SubID)
+
+  # get colums of H5AD data to exclude
+  variables = c("Age","Sex", "Ethnicity")
+  exclude = match( variables, colnames(colData(sceCombine)))
+
+  # Assign new metadata
+  colData(sceCombine) = cbind(colData(sceCombine)[,-exclude], df_meta[i,])
+
+  # only save genes with unique names
+  tab = table(rownames(sceCombine))
+  keep = rownames(sceCombine) %in% names(tab[tab==1])
+  sceCombine = sceCombine[keep,]
+
+  saveRDS(sceCombine, file=datafile)
+}
+```
+
+Internal Data Freeze 1.5 includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
+
+# Create subset based on AD and round_num
+```{r subset}
+# Subset based on AD status and round_num
+sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:4]
+
+# Remove columns for public release
+keep = c('Sex', 'Age', 'AD', 'SubID', 'Channel', 'round_num', 'Institution')
+colData(sce) = droplevels(colData(sce)[,keep])
+
+# number of donors
+length(table(droplevels(sce$SubID)))
+
+# number of donors
+table(droplevels(sce$round_num))
+
+# cells based on Dx
+table(sce$AD)
+
+# AD cases and controls
+tab = with(colData(sce), unique(data.frame(SubID, AD, Sex)))
+table(tab$AD)
+table(tab$Sex)
+
+xtabs(~AD + Sex, tab)
+```
+
+Public Data Freeze 0 includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))` rounds, `r length(table(sce$batch))` 10X batches, `r length(table(sce$SubID))` donors, and `r format(ncol(sce), big.mark=',')` cells passing QC.
+
+
+# Sex check
+```{r pb.sex, eval=FALSE}
+sce$static = "all"
+
+pb <- aggregateToPseudoBulk(sce,
+      assay = "counts", 
+      cluster_id = "static",
+      sample_id  = "SubID",
+      BPPARAM = SnowParam(1, progressbar=TRUE))
+```
+
+
+# Write H5AD for public release
+```{r write, eval=FALSE}
+h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
+
+writeH5AD(sce, writeH5AD, compression="lzf")
+```
+
+
+
+
+
+
+
+
+
+
