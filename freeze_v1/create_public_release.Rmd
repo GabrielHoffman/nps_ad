@@ -16,12 +16,11 @@ output:
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
 ml python git
 git pull
-source ~/.r420
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
 # rm -f /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/*
 R --vanilla
 
-system("git pull"); rmarkdown::render("analysis_freeze1.5.Rmd");
+system("git pull"); rmarkdown::render("create_public_release.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
@@ -38,15 +37,11 @@ knitr::opts_chunk$set(
   tidy = FALSE,
   dev = c("png", "pdf"),
   package.startup.message = FALSE,
-  cache = TRUE,
+  cache = FALSE,
   cache.lazy = FALSE)
 ```
 
 ```{r load.packages, cache=FALSE}
-# Use cache=FALSE so that package are fully loaded each time
-# This ensures that forks within mclapply() have these loaded
-# Othewise, mclapply() not have access to these libraries and will fail 
-#   unless the libraries are manually loaded within each fork
 library(SingleCellExperiment)
 library(zellkonverter)
 library(DelayedArray)
