@@ -177,7 +177,7 @@ ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
 
 
 # Write H5AD for public release
-```{r write, eval=FALSE}
+```{r write}
 outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
 
 sce = sce[,sce$SubID %in% df$Row.names[!drop]]
