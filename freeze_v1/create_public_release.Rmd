@@ -153,7 +153,7 @@ sex.prob = predict(fit, type="response")
 # score sex mislabeling
 dfSub$score = as.integer(dfSub$Sex) -1 - sex.prob
 
-fig = ggplot(dfSub[order(abs(dfSub$score)),], 
+ggplot(dfSub[order(abs(dfSub$score)),], 
   aes(XIST, UTY, color=abs(score))) +
     geom_point() +
     theme_classic() +
