@@ -116,7 +116,76 @@ sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:4]
 # Remove columns for public release
 keep = c('Sex', 'Age', 'AD', 'SubID', 'Channel', 'round_num', 'Institution', "batch")
 colData(sce) = droplevels(colData(sce)[,keep])
+```
 
+
+# Sex check and filtering
+```{r pb.sex, cache=TRUE}
+# Sum all reads for each individual
+sce$static = "all"
+pb <- aggregateToPseudoBulk(sce,
+      cluster_id = "static",
+      sample_id  = "SubID")
+```
+
+```{r plot.sex, eval=FALSE}
+# Process assays to compute log2 CPM
+res.proc = processAssays( pb, ~1) 
+
+# Extract merged expression and meta-data
+df = extractData(res.proc, "all")
+
+# Create a data.frame of UTY and XIST
+geneID = c("Sex", "XIST", "UTY")
+dfSub = df[,geneID] 
+dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
+
+ggplot(dfSub, aes(XIST, UTY, color=Sex)) +
+    geom_point() +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    scale_color_manual(values=c("red", "blue"))
+
+# predict sex based on gene expression
+fit = glm(Sex ~ XIST + UTY, dfSub, family="binomial")
+sex.prob = predict(fit, type="response")
+
+# score sex mislabeling
+dfSub$score = as.integer(dfSub$Sex) -1 - sex.prob
+
+ggplot(dfSub, aes(XIST, UTY, color=abs(score))) +
+    geom_point() +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    scale_color_gradient(low="black", high="orange", limits=c(0, 1))
+
+drop = abs(dfSub$score) > 0.5
+table(drop)
+
+ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
+    geom_point() +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    scale_color_gradient(low="black", high="orange", limits=c(0, 1))
+```
+
+
+# Write H5AD for public release
+```{r write, eval=FALSE}
+outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
+
+sce = sce[,sce$SubID %in% df$Row.names[!drop]]
+colData(sce) = droplevels(colData(sce))
+
+writeH5AD(sce[1:4, 1:4], outfile, compression="lzf")
+```
+
+
+# Public Data Freeze 0 
+Includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))` rounds, `r length(table(sce$batch))` 10X batches, `r length(table(sce$SubID))` donors, and `r format(ncol(sce), big.mark=',')` cells passing QC.
+
+## Properties
+```{r proerties}
 # number of donors
 length(table(droplevels(sce$SubID)))
 
@@ -133,50 +202,6 @@ table(tab$Sex)
 
 xtabs(~AD + Sex, tab)
 ```
-
-## Public Data Freeze 0 
-Includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))` rounds, `r length(table(sce$batch))` 10X batches, `r length(table(sce$SubID))` donors, and `r format(ncol(sce), big.mark=',')` cells passing QC.
-
-
-# Sex check
-```{r pb.sex, cache=TRUE}
-# Sum all reads for each individual
-sce$static = "all"
-pb <- aggregateToPseudoBulk(sce,
-      cluster_id = "static",
-      sample_id  = "SubID")
-```
-
-```{r plot.sex, eval=FALSE}
-# Process assays to compute log2 CPM
-res.proc = processAssays( pb, ~1) 
-
-# Extract merged expression and meta-data
-df = extractdData(res.proc, "all")
-
-
-# Create a data.frame of UTY and XIST
-geneID = c("XIST", "UTY")
-df = counts(pb)[,geneID]
-df = data.frame(Sex = pb$Sex, t(df))
-
-
-
-```
-
-
-
-
-# Write H5AD for public release
-```{r write, eval=FALSE}
-outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
-
-writeH5AD(sce[1:4, 1:4], outfile, compression="lzf")
-```
-
-
-
-
 
 
 
