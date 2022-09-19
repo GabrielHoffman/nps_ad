@@ -183,7 +183,7 @@ outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_
 sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
 
-# writeH5AD(sce, outfile, compression="lzf")
+writeH5AD(sce, outfile, compression="lzf")
 ```
 
 
