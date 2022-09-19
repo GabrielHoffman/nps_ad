@@ -23,6 +23,9 @@ system("git pull"); rmarkdown::render("create_public_release.Rmd");
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
 
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=8000] -W 12:00 -P acc_CommonMind -n 36 bash
+
+
 --->
 
 # Load packages
