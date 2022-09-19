@@ -131,7 +131,7 @@ pb <- aggregateToPseudoBulk(sce,
 ```{r plot.sex}
 # Process assays to compute log2 CPM
 res.proc = processAssays( pb, ~1) 
-
+ 
 # Extract merged expression and meta-data
 df = extractData(res.proc, "all")
 
