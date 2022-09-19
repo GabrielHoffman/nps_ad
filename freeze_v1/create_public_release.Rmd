@@ -128,7 +128,7 @@ pb <- aggregateToPseudoBulk(sce,
       sample_id  = "SubID")
 ```
 
-```{r plot.sex, eval=FALSE}
+```{r plot.sex}
 # Process assays to compute log2 CPM
 res.proc = processAssays( pb, ~1) 
 
