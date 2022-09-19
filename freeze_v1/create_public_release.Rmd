@@ -148,7 +148,8 @@ ggplot(dfSub, aes(XIST, UTY, color=Sex)) +
     scale_color_manual(values=c("red", "blue"))
 ```
 
-## Mislabeliing scpore
+## Mislabeliing score
+Show all and dropped donors
 ```{r sex.score}
 # predict sex based on gene expression
 fit = glm(Sex ~ XIST + UTY, dfSub, family="binomial")
@@ -182,7 +183,7 @@ outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_
 sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
 
-writeH5AD(sce[1:4, 1:4], outfile, compression="lzf")
+# writeH5AD(sce, outfile, compression="lzf")
 ```
 
 
@@ -190,7 +191,7 @@ writeH5AD(sce[1:4, 1:4], outfile, compression="lzf")
 Includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))` rounds, `r length(table(sce$batch))` 10X batches, `r length(table(sce$SubID))` donors, and `r format(ncol(sce), big.mark=',')` cells passing QC.
 
 ## Properties
-```{r proerties}
+```{r proerties, cache=FALSE}
 # number of donors
 length(table(droplevels(sce$SubID)))
 
