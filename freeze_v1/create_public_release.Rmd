@@ -23,7 +23,7 @@ system("git pull"); rmarkdown::render("create_public_release.Rmd");
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
 
-bsub -Is -q premium -R span[hosts=1] -R rusage[mem=12000] -W 24:00 -P acc_CommonMind -n 48 bash
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=48000] -W 24:00 -P acc_CommonMind -n 12 bash
 
 
 --->
@@ -184,13 +184,17 @@ ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
 sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
 
-outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22_cells.tsv"
-write(colnames(sce), file=outfile)
+outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept20_22.RDS"
+saveRDS(sce, outfile)
 
-outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
+# outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
 # writeH5AD(sce, outfile, compression="lzf")
 ```
 
+```{r save}
+# outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22_cells.tsv"
+# write(colnames(sce), file=outfile)
+```
 
 # Public Data Freeze 0 
 Includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))` rounds, `r length(table(sce$batch))` 10X batches, `r length(table(sce$SubID))` donors, and `r format(ncol(sce), big.mark=',')` cells passing QC.
