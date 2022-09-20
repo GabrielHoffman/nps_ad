@@ -184,11 +184,13 @@ ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
 sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
 
+# write RDS
 outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept20_22.RDS"
 saveRDS(sce, outfile)
 
-# outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
-# writeH5AD(sce, outfile, compression="lzf")
+# write H5AD
+outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
+writeH5AD(sce, outfile, compression="lzf")
 ```
 
 ```{r save}
