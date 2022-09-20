@@ -185,13 +185,21 @@ sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
 
 # write RDS
-outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept20_22.RDS"
-saveRDS(sce, outfile)
+# outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept20_22.RDS"
+# saveRDS(sce, outfile)
 
-# write H5AD
-outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
-writeH5AD(sce, outfile, compression="lzf")
+# # write H5AD
+# outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
+# writeH5AD(sce, outfile, compression="lzf")
 ```
+
+my_vec = 1:100
+chunk_length <- 20       
+
+split(my_vec, ceiling(seq_along(my_vec) / chunk_length))
+
+
+
 
 ```{r save}
 # outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22_cells.tsv"
