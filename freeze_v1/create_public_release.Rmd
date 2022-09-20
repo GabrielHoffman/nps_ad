@@ -23,7 +23,7 @@ system("git pull"); rmarkdown::render("create_public_release.Rmd");
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
 
-bsub -Is -q premium -R span[hosts=1] -R rusage[mem=8000] -W 12:00 -P acc_CommonMind -n 36 bash
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=12000] -W 24:00 -P acc_CommonMind -n 48 bash
 
 
 --->
@@ -181,12 +181,14 @@ ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
 
 # Write H5AD for public release
 ```{r write}
-outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
-
 sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
 
-writeH5AD(sce, outfile, compression="lzf")
+outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22_cells.tsv"
+write(colnames(sce), file=outfile)
+
+outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
+# writeH5AD(sce, outfile, compression="lzf")
 ```
 
 
