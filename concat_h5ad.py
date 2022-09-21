@@ -51,8 +51,7 @@ def main(argv):
 
    # Write to disk
    print(" Writing to H5AD...")
-   adata.write( outfile )
-
+   adata.write( outfile, compression="lzf" )
 
 if __name__ == "__main__":
    main(sys.argv[1:])
