@@ -111,6 +111,27 @@ if( file.exists(datafile) ){
 ## Internal Data Freeze 1.5 
 Includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
+
+## Properties
+```{r proerties.combine, cache=FALSE}
+# number of donors
+length(table(droplevels(sceCombine$SubID)))
+
+# number of donors
+table(droplevels(sceCombine$round_num))
+
+# cells based on Dx
+table(sceCombine$AD)
+
+# AD cases and controls
+tab = with(colData(sceCombine), unique(data.frame(SubID, AD, Sex)))
+table(sceCombine$AD)
+table(sceCombine$Sex)
+
+xtabs(~AD + Sex, tab)
+```
+
+
 # Create subset based on AD and round_num
 ```{r subset}
 # Subset based on AD status and round_num
@@ -193,11 +214,37 @@ colData(sce) = droplevels(colData(sce))
 # writeH5AD(sce, outfile, compression="lzf")
 ```
 
-my_vec = 1:100
-chunk_length <- 20       
+```{r write.chunks}
+vec = seq(1, ncol(sce))
+chunk_length <- 500000       
+chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
-split(my_vec, ceiling(seq_along(my_vec) / chunk_length))
+outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22"
 
+res = lapply(names(chunks), function(id){
+  message(id)
+  outfile = paste0(outprefix, '_chunk', id, ".h5ad")
+  sceSub = sce[,chunks[[id]]]
+  writeH5AD(sceSub, outfile, compression="lzf")
+  })
+```
+
+## Bash code to combine H5AD files
+```{python cat, eval=FALSE}
+# zellkonverter::writeH5AD() fails with 1.5M cells
+# So write in batches.
+# Later, concatenate the chunks in python
+# Do on high memory node
+conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
+
+SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
+
+cd /sc/arion/projects/psychAD/NPS-AD/public_release_0/ 
+echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22_chunk*.h5ad) | tr ' ' '\n' > list.txt
+
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad 
+python $SRC -i list.txt -o $OUTFILE
+```
 
 
 
