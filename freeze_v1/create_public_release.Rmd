@@ -214,7 +214,7 @@ colData(sce) = droplevels(colData(sce))
 # writeH5AD(sce, outfile, compression="lzf")
 ```
 
-```{r write.chunks}
+```{r write.chunks, eval=FALSE}
 vec = seq(1, ncol(sce))
 chunk_length <- 500000       
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
