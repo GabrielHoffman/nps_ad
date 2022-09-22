@@ -226,12 +226,12 @@ colData(sce) = droplevels(colData(sce))
 # writeH5AD(sce, outfile, compression="lzf")
 ```
 
-```{r write.chunks, eval=FALSE}
+```{r write.chunks}
 vec = seq(1, ncol(sce))
 chunk_length <- 500000       
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
-outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22"
+outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept22_22"
 
 res = lapply(names(chunks), function(id){
   message(id)
