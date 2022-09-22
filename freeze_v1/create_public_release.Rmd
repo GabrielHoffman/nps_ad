@@ -280,7 +280,7 @@ table(droplevels(sce$round_num))
 table(sce$AD)
 
 # AD cases and controls
-tab = with(colData(sce), unique(data.frame(SubID, AD, Sex, Institution)))
+tab = with(colData(sce), unique(data.frame(SubID, AD, Sex, Institution, Age)))
 table(tab$AD)
 table(tab$Sex)
 table(tab$Institution)
