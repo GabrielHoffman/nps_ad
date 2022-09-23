@@ -16,7 +16,7 @@ output:
 <!--- 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
-ml python git
+ml python git pandoc
 git pull
 R --vanilla
 
@@ -226,9 +226,9 @@ colData(sce) = droplevels(colData(sce))
 # writeH5AD(sce, outfile, compression="lzf")
 ```
 
-```{r write.chunks}
+```{r write.chunks, eval=FALSE}
 vec = seq(1, ncol(sce))
-chunk_length <- 500000       
+chunk_length <- 50000     
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
 outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept22_22"
@@ -252,7 +252,7 @@ conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
 
 cd /sc/arion/projects/psychAD/NPS-AD/public_release_0/ 
-echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22_chunk*.h5ad) | tr ' ' '\n' > list.txt
+echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept22_22_chunk*.h5ad) | tr ' ' '\n' > list.txt
 
 OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad 
 python $SRC -i list.txt -o $OUTFILE
