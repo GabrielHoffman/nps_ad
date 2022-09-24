@@ -4,7 +4,7 @@ subtitle: 'Create Public Freeze 0 from Internal Freeze 1.5'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r Sys.time()`"
 output:
-  rmdformats::downcute:
+  rmdformats::html_docco:
     self_contained: true
     thumbnails: true
     lightbox: true
@@ -25,7 +25,11 @@ system("git pull"); rmarkdown::render("create_public_release.Rmd");
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
 
-bsub -Is -q premium -R span[hosts=1] -R rusage[mem=48000] -W 24:00 -P acc_CommonMind -n 12 bash
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=96000] -W 24:00 -P acc_CommonMind -n 12 bash
+
+
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
+
 
 
 --->
@@ -57,6 +61,10 @@ library(org.Hs.eg.db)
 
 # update block size for reading h5ad file from disk
 setAutoBlockSize(1e9)
+```
+
+```{r exit, cache=FALSE}
+knitr::knit_exit()
 ```
 
 # Load full Internal Data Freeze 1.5
@@ -151,7 +159,7 @@ sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:4]
 sce = sce[,(sce$Age >= 65) & (sce$Institution=="MSSM")]
 
 # Remove columns for public release
-keep = c('Sex', 'Age', 'AD', 'SubID', 'Channel', 'round_num', 'Institution', "batch")
+keep = c('Sex', 'Age', 'AD', 'SubID', 'Channel', 'round_num', 'Institution', "batch", "anno", "class", "celltype", "subtype")
 colData(sce) = droplevels(colData(sce)[,keep])
 ```
 
@@ -237,7 +245,7 @@ res = lapply(names(chunks), function(id){
   message(id)
   outfile = paste0(outprefix, '_chunk', id, ".h5ad")
   sceSub = sce[,chunks[[id]]]
-  writeH5AD(sceSub, outfile, compression="lzf")
+  writeH5AD(sceSub, outfile, compression="none")
   })
 ```
 
@@ -247,6 +255,7 @@ res = lapply(names(chunks), function(id){
 # So write in batches.
 # Later, concatenate the chunks in python
 # Do on high memory node
+# Need to use AnnData > 0.8.0
 conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 
 SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
@@ -254,10 +263,15 @@ SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
 cd /sc/arion/projects/psychAD/NPS-AD/public_release_0/ 
 echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept22_22_chunk*.h5ad) | tr ' ' '\n' > list.txt
 
+cd /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/pkgs/
 OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad 
-python $SRC -i list.txt -o $OUTFILE
+python $SRC -i /sc/arion/projects/psychAD/NPS-AD/public_release_0/list.txt -o $OUTFILE
 ```
 
+Remove X
+Remove static
+UMAP
+annotation
 
 
 ```{r save}
