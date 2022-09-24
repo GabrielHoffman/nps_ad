@@ -4,7 +4,7 @@ subtitle: 'Create Public Freeze 0 from Internal Freeze 1.5'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r Sys.time()`"
 output:
-  rmdformats::material
+  rmdformats::robobook
 ---
 
 
