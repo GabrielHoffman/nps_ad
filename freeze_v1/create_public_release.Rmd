@@ -57,10 +57,6 @@ library(org.Hs.eg.db)
 setAutoBlockSize(1e9)
 ```
 
-```{r exit, cache=FALSE}
-knitr::knit_exit()
-```
-
 # Load full Internal Data Freeze 1.5
 ```{r load.data, cache=FALSE}
 outfolder = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze1.5_results/"
