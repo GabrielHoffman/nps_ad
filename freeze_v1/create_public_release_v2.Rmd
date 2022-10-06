@@ -80,7 +80,7 @@ counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
 assay(sceCombine, 'X') = NULL          # free X  
 
 # merge with new metadata
-df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1.5_rc/metadata/syn26527784_latest.csv")
+df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/syn26527784_latest.csv")
 table(df_meta$Sex)
 table(is.na(df_meta$Sex))
 
@@ -88,7 +88,7 @@ table(is.na(df_meta$Sex))
 i = match(sceCombine$SubID, df_meta$SubID)
 
 # get colums of H5AD data to exclude
-variables = c("Age", "Ethnicity")
+variables = c("Sex", "Age", "Ethnicity")
 exclude = match( variables, colnames(colData(sceCombine)))
 
 # Assign new metadata
