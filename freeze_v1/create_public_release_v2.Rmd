@@ -17,7 +17,7 @@ ml python git pandoc
 git pull
 R --vanilla
 
-system("git pull"); rmarkdown::render("create_public_release.Rmd");
+system("git pull"); rmarkdown::render("create_public_release_v2.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
@@ -73,6 +73,7 @@ sceCombine = swapAltExp(sce_in, "raw")
 rowData(sceCombine) = rowData(sce_in)
 rownames(sceCombine) = rownames(sce_in)
 reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
+reducedDim(sceCombine, "X_pca") = reducedDim(sce_in, "X_pca")
 counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
 assay(sceCombine, 'X') = NULL          # free X  
 
