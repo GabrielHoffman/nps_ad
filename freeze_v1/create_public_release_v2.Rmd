@@ -60,7 +60,7 @@ setAutoBlockSize(1e9)
 # Load full Internal Data Freeze 1.5
 ```{r load.data, cache=FALSE}
 # FREEZE 1.5 public
-h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/220928_NPS-AD_public0_pass2_anno.h5ad"
+h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze1.5_proc/220928_NPS-AD_public0_pass2_anno.h5ad"
 
 # read raw/* from h5ad file
 sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
@@ -74,11 +74,15 @@ rowData(sceCombine) = rowData(sce_in)
 rownames(sceCombine) = rownames(sce_in)
 reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
 reducedDim(sceCombine, "X_pca") = reducedDim(sce_in, "X_pca")
+reducedDim(sceCombine, "X_pca_regressed") = reducedDim(sce_in, "X_pca_regressed")
+reducedDim(sceCombine, "X_pca_regressed_harmony") = reducedDim(sce_in, "X_pca_regressed_harmony")
 counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
 assay(sceCombine, 'X') = NULL          # free X  
 
 # merge with new metadata
 df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1.5_rc/metadata/syn26527784_latest.csv")
+table(df_meta$Sex)
+table(is.na(df_meta$Sex))
 
 # get order of matching
 i = match(sceCombine$SubID, df_meta$SubID)
@@ -240,10 +244,10 @@ conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
 
 cd /sc/arion/projects/psychAD/NPS-AD/public_release_0/ 
-echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept24_2022_chunk*.h5ad) | tr ' ' '\n' > list.txt
+echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Oct_06_2022_chunk*.h5ad) | tr ' ' '\n' > list.txt
 
 cd /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/pkgs/
-OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept24_2022.h5ad 
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Oct_06_2022.h5ad 
 python $SRC -i /sc/arion/projects/psychAD/NPS-AD/public_release_0/list.txt -o $OUTFILE
 ```
 
