@@ -84,7 +84,7 @@ df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1.5_rc/metadata/syn2
 i = match(sceCombine$SubID, df_meta$SubID)
 
 # get colums of H5AD data to exclude
-variables = c("Age","Sex", "Ethnicity")
+variables = c("Age", "Ethnicity")
 exclude = match( variables, colnames(colData(sceCombine)))
 
 # Assign new metadata
