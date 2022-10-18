@@ -68,3 +68,25 @@ eval_within_across_donor = function( pbObj, Donor ){
 
 
 
+# Compute correlation and standard error for Pearson and Spearman
+cor.se = function(x,y, method = c("pearson", "kendall", "spearman"),...){
+
+  method = match.arg(method)
+
+  if( method == "pearson"){
+    df <- cor.test(x,y, method=method,...) %>%
+      tidy %>%
+      mutate(se = sqrt((1 - estimate^2)/parameter))
+    res = data.frame(rho = df$estimate, rho.se = df$se)
+  }else if(method == "spearman"){
+    # https://stats.stackexchange.com/questions/18887/how-to-calculate-a-confidence-interval-for-spearmans-rank-correlation
+    rho <- cor(x,y, method=method,...)
+    n <- sum(complete.cases(x, y))
+    rho.se <- sqrt((1+rho^2/2)/(n-3))
+
+    res <- data.frame(rho = rho, rho.se = rho.se)
+  }
+
+  return(res) 
+}
+
