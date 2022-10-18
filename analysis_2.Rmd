@@ -96,7 +96,7 @@ if( file.exists(datafile) ){
   h5ad_file = "/sc/arion/projects/CommonMind/leed62/NPS-AD/analysis_solo/NPS-AD_roundMerged_pass2_anno.h5ad"
 
   # read raw/* from h5ad file
-  sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE)
+  sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE)
 
   # extract raw counts
   sceCombine = altExp( sce_in, "raw", withDimnames=TRUE, withColData=TRUE)

@@ -143,6 +143,18 @@ if( file.exists(datafile) ){
 Data freeze 1.5 includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
 
+sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:4]
+
+length(table(droplevels(sce$SubID)))
+table(droplevels(sce$round_num))
+table(sce$AD)
+
+tab = with(colData(sce), unique(data.frame(SubID, AD)))
+table(tab$AD)
+
+
+
+
 # Joint UMAP
 ```{r umap, dev="png"}
 # extract UMAP coordinates and annotations
@@ -602,6 +614,11 @@ names(fitList) = test.traits
 ```
 
 
+form = ~ Sex + scale(Age) + CERAD + Institution
+fit = dreamlet( res.proc, form, BPPARAM = SnowParam(6), assays='Astrocyte' )
+
+
+
 
 ```{r topTable.fit.many}
 tabList = lapply( names(fitList), function(x){
@@ -616,6 +633,20 @@ names(tabList) = names(fitList)
 
 # Number DE genes
 ```{r n.de}
+library(tidyverse)
+library(qvalue)
+
+get_pi1 = function(p){
+
+  res <- tryCatch( pi0est(p), error = function(e) NULL)
+
+  pi1 = NA
+  if( ! is.null(res)){
+    pi1 = 1 - res$pi0
+  }
+  pi1
+}
+
 df_tab = lapply( names(tabList), function(trait){
 
   tab = tabList[[trait]]
@@ -627,7 +658,8 @@ df_tab = bind_rows(df_tab)
 df = df_tab %>%
   group_by(trait, assay) %>%
   summarise( nGenes = length(adj.P.Val), 
-              nDE = sum(adj.P.Val < 0.05))
+              nDE = sum(adj.P.Val < 0.05), 
+              pi1 = get_pi1(P.Value))
 
 keep = df %>% 
   group_by(trait) %>% 
@@ -641,19 +673,37 @@ keep = df %>%
 keep = keep[!keep%in% c('Anxiety', 'ADHD')]
 
 fig = df %>%
-  # filter(trait %in% keep) %>%
-  filter(nDE > 0) %>%
+  filter(trait %in% keep) %>%
+  # filter(nDE > 0) %>%
   ggplot(aes(assay, nDE, fill=assay)) +
     geom_bar(stat='identity') + 
-    facet_wrap(~ trait) +
+    facet_wrap(~ trait, ncol=5) +
     theme_classic() +
     theme(aspect.ratio=1, legend.position="none") +
     ylab("Number DE genes") +
-    coord_flip() +
-    ylim(0, 300)
+    coord_flip()#ylim=c(0, 300)) 
+
+ggsave(fig, file="~/www/test.png", width=10, height=15)
 
 
-ggsave(fig, file="~/www/test.png")
+
+
+fig = df %>%
+  # filter(trait %in% keep) %>%
+  ggplot(aes(assay, pi1, fill=assay)) +
+    geom_bar(stat='identity') + 
+    facet_wrap(~ trait) +
+    theme_classic() +
+    theme(aspect.ratio=1, legend.position="none", strip.text = element_text(size=6)) +
+    ylab("pi1") +
+    coord_flip(ylim=c(0,1))
+
+ggsave(fig, file="~/www/test.png", width=15, height=25)
+
+
+
+
+
 
 
 apply(colData(pbObj)[,keep], 2, table)
@@ -679,9 +729,40 @@ corrplot(C, order="hclust", col=col, tl.col="black")
 dev.off()
 
 
+
+
+keep = c('nps_DelCurValue', 'nps_FatCurValue', 'nps_LifeCurValue', 'nps_WtGainCurValue', "AD", "BRAAK_AD", "CERAD", "Plq_Mn")
+
+
+# dcast as wide matrix
+df2 = df_tab %>%      
+  filter(trait %in% keep) %>%      
+  reshape2::dcast(ID ~ trait + assay , value.var="z.std")
+
+
+C = cor(df2[,-1], use='pairwise.complete.obs')
+C = C[order(colnames(C)), order(colnames(C))]
+
+# i = grep("Gluta", colnames(C))
+cols =  c('AD_Glutamatergic neuron','BRAAK_AD_Glutamatergic neuron','CERAD_Glutamatergic neuron','Plq_Mn_Glutamatergic neuron','nps_DelCurValue_Glutamatergic neuron','nps_FatCurValue_Glutamatergic neuron','nps_LifeCurValue_Glutamatergic neuron','nps_WtGainCurValue_Glutamatergic neuron')
+
+col = colorRampPalette(c("blue3", "white","red3"))(200)
+
+png("~/www/test.png")#, height=1024, width=1024)
+corrplot(C[cols, cols], col=col, tl.col="black")
+dev.off()
+
+
+
+
+
 # dcast as wide matrix
 df2 = df_tab %>%           
   reshape2::dcast(ID ~ trait + assay , value.var="z.std") 
+
+
+
+
 
 C = cor(df2[,2:13], df2[,-c(1:13)], use='pairwise.complete.obs')
 
@@ -740,7 +821,9 @@ go.gs = get_GeneOntology(to="SYMBOL")
 ngenes = sapply(go.gs, function(gs) length(geneIds(gs)))
 go.gs = go.gs[(ngenes > 20) & (ngenes < 2000)]
 
-traits = c("AD", "MCI", "DLBD", 'ApoE_gt', "BD", "SZC")
+# traits = c("AD", "MCI", "DLBD", 'ApoE_gt', "BD", "SZC")
+
+traits = c('nps_DelCurValue', 'nps_FatCurValue', 'nps_LifeCurValue', 'nps_WtGainCurValue')
 
 res.gsa = mclapply( traits, function(x){
 
@@ -751,7 +834,7 @@ names(res.gsa) = traits
 # saveRDS(res.gsa, file="res.gsa.RDS")
 # res.gsa = readRDS("res.gsa.RDS")
 
-trait = "DLBD"
+trait = traits[4]
 
 fig = plotZenithResults( res.gsa[[trait]], 2, 1 ) + ggtitle(trait)
 ggsave(fig, file="~/www/test.png", width=10, height=10)

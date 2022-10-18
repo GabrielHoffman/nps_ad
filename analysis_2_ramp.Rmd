@@ -96,7 +96,7 @@ names(vobjList) = names(methods)
 
 
 ```{r test.batch}
-fitFull = fitVarPArt( vobjList[['mixed']], ~ (1|SubID) + batch, 
+fitFull = fitVarPart( vobjList[['mixed']], ~ (1|SubID) + batch, 
     assays = "Astrocyte",
     BPPARAM = SnowParam(16, progressbar=TRUE))
 
@@ -133,7 +133,7 @@ res = cameraPR( statistic, index, use.ranks=TRUE)
 
 head(res)
 
-
+```
 
 
 

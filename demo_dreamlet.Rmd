@@ -522,6 +522,42 @@ corrplot(C, col=col, tl.col="black")
 corrplot(C, order="hclust", col=col, tl.col="black")
 ```
 
+### heivr
+```{r heivr}
+library(heivr)
+
+tab = topTable(fit.dl, coef="Dx2AD", number=Inf)
+
+
+df.logFC = tab %>% 
+          as.data.frame %>%
+          reshape2::dcast(ID ~ assay, value.var="logFC")
+
+df.var = tab %>% 
+        as.data.frame %>%
+        mutate(se = (logFC/t)^2) %>%
+        reshape2::dcast(ID ~ assay, value.var="se")
+
+
+B = df.logFC[,-1]
+V = df.var[,-1]
+
+res.heivr = heivrPairs(B, V)
+
+C = pairsToMatrix(res.heivr, "rho")
+
+# C = cor(B, use='pairwise.complete.obs')
+
+png("~/www/test.png")
+plotCorrMatrix(C)
+dev.off()
+
+
+
+
+
+
+```
 
 
 # zenith for gene set analysis

@@ -111,7 +111,7 @@ pb$BatchID = droplevels(pb$BatchID)
 pb$SubID = droplevels(pb$SubID)
 
 # Full Data
-outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/ demo_dreamlet_sce_mod.RDS'
+outfolder = '/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/demo/results/demo_dreamlet_sce_mod.RDS'
 sceFull = readRDS(outfolder)
 sceFull = sceFull[,sceFull$SubID %in% pb$SubID]
 sceFull$BatchID = droplevels(sceFull$BatchID)
@@ -181,6 +181,8 @@ for(CHRT in unique(pbObj.Donor$cohort)){
 }
 ```
 
+load('/sc/arion/scratch/hoffmg01/dreamlet/data_balanced_1.RDATA')
+load('/sc/arion/scratch/hoffmg01/dreamlet/data_unbal_1.RDATA')
 
 Evaluate balance
 ```{r balance}
@@ -188,6 +190,7 @@ canCorPairs( ~ Dxsim + BatchID, colData(pbObj.Donor))
 
 fit = glm(Dxsim ~ BatchID, data=colData(pbObj.Donor), binomial())
 calcVarPart(fit)
+summary(fit)
 
 tab = xtabs(~ BatchID + Dxsim, colData(pbObj.Donor))
 frac = tab[,1] / rowSums(tab)
@@ -425,7 +428,6 @@ maxValue = max(df$n)
 df_keepPairs = df %>%
   filter(n==maxValue) %>%
   mutate(pair = paste(assay, ID)) 
-
 
 df = resTabl %>%
   as_tibble %>%

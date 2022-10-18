@@ -633,6 +633,46 @@ knitr::knit_exit()
 ```
 
 
+# when data is non-missing from only 1 Institution, dreamlet returns empty result
+# is model singular?
+
+```{r dreamlet.fit.many.faster}
+form = ~ Sex + (1|SubID) + (1|batch) + scale(Age) # + Institution
+
+test.traits = colnames(colData(res.proc))[c(29:66, 74:111)]
+test.traits = c(test.traits, 'CERAD', "BRAAK_AD", "BRAAK_PD" ,  "CDRScore",  "Plq_Mn", "ApoE_gt")
+
+values = sort(apply(colData(res.proc)[,test.traits], 2, var, na.rm=TRUE))
+
+test.traits = names(values)[values > 0.1]
+
+fitList = lapply( test.traits, function(x){
+
+  message(x)
+
+  if( is.logical(colData(res.proc)[,x]) ){
+     res.proc@data[,x] = as.numeric(colData(res.proc)[,x] )
+   }
+
+  # test trait term at end
+  formula = update.formula(form, paste(' ~ . + ',x))
+
+  fit = dreamlet( res.proc, formula, BPPARAM = SnowParam(24), quiet=TRUE )
+  })
+names(fitList) = test.traits
+
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1/fitList.test.RDS"
+saveRDS(fitList, file=file)
+```
+
+
+
+
+
+
+
+
+
 
 ```{r dreamlet.fit}
 form = ~ Sex + (1|SubID) + (1|batch) + (1|round_num) + (1|HTO) + (1|Institution) + dx + scale(Age)

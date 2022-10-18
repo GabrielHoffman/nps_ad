@@ -2,7 +2,7 @@
 
 
 
-plot_within_btw = function( simMat, design, col=c("lightblue", "lightgreen"),main='',ylim=NULL,...){
+plot_within_btw = function( simMat, design, col=c("gray", "steelblue1"),main='',ylim=NULL,...){
   variation = list(type=c(), value=c(), donor1=c(), donor2=c())
   for(i in 1:ncol(design)){
     idx1 = which(design[,i] == 1)   
@@ -18,11 +18,16 @@ plot_within_btw = function( simMat, design, col=c("lightblue", "lightgreen"),mai
     variation$donor2 = append(variation$donor2, rep("", length(simMat[idx1,idx0])))
   }
   variation = as.data.frame(variation)
-  fig = ggplot( variation, aes(type, value)) + geom_violin(scale = "width", aes(fill=type)) + 
-    ylab("Variance explained (%)") + xlab("") + geom_boxplot(width = 0.07, 
-        fill = "grey", outlier.color = "black") + theme_bw(15) + 
-        scale_fill_manual(values = col) + theme(legend.position = "none") + 
-        ylab("Correlation between samples") + scale_fill_manual(values=c("grey", "steelblue1"))
+  fig = ggplot( variation, aes(type, value)) + 
+    geom_violin(scale = "width", aes(fill=type)) + 
+    ylab("Variance explained (%)") + 
+    xlab("") + 
+    geom_boxplot(width = 0.07, fill = "grey", outlier.color = "black") + 
+    theme_bw(15) + 
+    scale_fill_manual(values = col) + 
+    theme(legend.position = "none") + 
+    ylab("Correlation between samples") 
+
     if( main !='' ){
       fig = fig + ggtitle( main )
     }
