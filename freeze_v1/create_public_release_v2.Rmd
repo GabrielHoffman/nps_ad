@@ -104,7 +104,7 @@ sceCombine = sceCombine[keep,]
 Includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$batch))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
 ## Properties
-```{r proerties.combine, cache=FALSE}
+```{r properties.combine, cache=FALSE}
 # number of donors
 length(table(droplevels(sceCombine$SubID)))
 
@@ -140,7 +140,7 @@ sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:4]
 sce = sce[,!is.na(sce$Age) & (sce$Age >= 65) & (sce$Institution=="MSSM")]
 
 # Remove columns for public release
-keep = c('Sex', 'Age', 'AD', 'SubID', 'Channel', 'round_num', 'Institution', "batch", "anno", "class", "celltype", "subtype")
+keep = c('Sex', 'Age', 'AD', 'SubID', 'Channel', 'round_num', 'Institution', "batch", "class", "subtype", "leiden_labels")
 colData(sce) = droplevels(colData(sce)[,keep])
 ```
 
@@ -220,7 +220,7 @@ vec = seq(1, ncol(sce))
 chunk_length <- 100000     
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
-outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Oct_06_2022"
+outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Nov_03_2022"
 
 sce$static = c()
 
@@ -244,10 +244,10 @@ conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
 
 cd /sc/arion/projects/psychAD/NPS-AD/public_release_0/ 
-echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Oct_06_2022_chunk*.h5ad) | tr ' ' '\n' > list.txt
+echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Nov_03_2022_chunk*.h5ad) | tr ' ' '\n' > list.txt
 
 cd /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/pkgs/
-OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Oct_06_2022.h5ad 
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Nov_03_2022.h5ad 
 python $SRC -i /sc/arion/projects/psychAD/NPS-AD/public_release_0/list.txt -o $OUTFILE
 ```
 
