@@ -79,6 +79,8 @@ if( file.exists(datafile) ){
   rowData(sceCombine) = rowData(sce_in)
   rownames(sceCombine) = rownames(sce_in)
   reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
+  reducedDim(sceCombine, "X_pca") = reducedDim(sce_in, "X_pca")
+  reducedDim(sceCombine, "X_pca_regressed_harmony") = reducedDim(sce_in, "X_pca_regressed_harmony")
   counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
   assay(sceCombine, 'X') = NULL          # free X  
 
@@ -204,14 +206,6 @@ ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
 ```{r write}
 sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
-
-# write RDS
-# outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept20_22.RDS"
-# saveRDS(sce, outfile)
-
-# # write H5AD
-# outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept16_22.h5ad"
-# writeH5AD(sce, outfile, compression="lzf")
 ```
 
 ```{r write.chunks, eval=FALSE}
@@ -219,7 +213,7 @@ vec = seq(1, ncol(sce))
 chunk_length <- 100000     
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
-outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Sept24_2022"
+outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Dec_9_2022"
 
 sce$static = c()
 
