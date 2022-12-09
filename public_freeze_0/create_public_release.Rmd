@@ -17,7 +17,7 @@ ml python git pandoc
 git pull
 R --vanilla
 
-system("git pull"); rmarkdown::render("create_public_release.Rmd");
+system("git pull origin master"); rmarkdown::render("create_public_release.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
@@ -171,7 +171,7 @@ res.proc = processAssays( pb, ~ 1)
 # Extract merged expression and meta-data
 df = extractData(res.proc, "all")
 
-# Create a data.frame of UTY and XIST
+# Create a data.frame of UTY and LAS1L
 geneID = c("Sex", "LAS1L", "UTY")
 dfSub = df[,geneID] 
 dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
@@ -194,7 +194,7 @@ sex.prob = predict(fit, type="response")
 dfSub$score = as.integer(dfSub$Sex) -1 - sex.prob
 
 ggplot(dfSub[order(abs(dfSub$score)),], 
-  aes(XIST, UTY, color=abs(score))) +
+  aes(LAS1L, UTY, color=abs(score))) +
     geom_point() +
     theme_classic() +
     theme(aspect.ratio=1) +
@@ -203,7 +203,7 @@ ggplot(dfSub[order(abs(dfSub$score)),],
 drop = abs(dfSub$score) > 0.5
 table(drop)
 
-ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
+ggplot(dfSub[drop,], aes(LAS1L, UTY, color=abs(score))) +
     geom_point() +
     theme_classic() +
     theme(aspect.ratio=1) +
