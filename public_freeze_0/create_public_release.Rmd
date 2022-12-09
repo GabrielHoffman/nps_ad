@@ -138,10 +138,14 @@ Inclusion criteria:
 sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:6]
 
 # Subset to only donors >= 65 years old and in MSSM
-sce = sce[,(sce$Age >= 65)]
+sce = sce[,(sce$Age >= 65) &(sce$Brain_bank=="MSSM")]
+
+# 
+# and no Sex_chr_aneuploidy 
+sce = sce[,(!is.na(sce$Sex_chr_aneuploidy)) & !sce$Sex_chr_aneuploidy ]
 
 # Remove columns for public release
-keep = c('SubID', 'Channel', 'round_num', "poolID", 'Sex', 'Age', 'AD' , "class", "subclass", "subtype")
+keep = c('SubID', 'Channel', 'Brain_bank', 'round_num', "poolID", 'Sex', 'Age', 'AD', 'Ethnicity', 'pH', 'PMI' , "class", "subclass", "subtype")
 colData(sce) = droplevels(colData(sce)[,keep])
 ```
 
