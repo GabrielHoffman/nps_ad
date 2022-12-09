@@ -171,7 +171,7 @@ res.proc = processAssays( pb, ~ 1)
 df = extractData(res.proc, "all")
 
 # Create a data.frame of UTY and XIST
-geneID = c("Sex", "XIST", "UTY")
+geneID = c("Sex", "TSPAN6", "UTY")
 dfSub = df[,geneID] 
 dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
 
