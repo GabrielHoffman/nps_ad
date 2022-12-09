@@ -151,6 +151,7 @@ colData(sce) = droplevels(colData(sce)[,keep])
 ```
 
 
+rowData(sce)[rowData(sce)$gene_chrom=="X",]
 
 
 # Sex check and filtering
@@ -171,22 +172,23 @@ res.proc = processAssays( pb, ~ 1)
 df = extractData(res.proc, "all")
 
 # Create a data.frame of UTY and XIST
-geneID = c("Sex", "TSPAN6", "UTY")
+geneID = c("Sex", "LAS1L", "UTY")
 dfSub = df[,geneID] 
 dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
 
-ggplot(dfSub, aes(XIST, UTY, color=Sex)) +
+fig = ggplot(dfSub, aes(LAS1L, UTY, color=Sex)) +
     geom_point() +
     theme_classic() +
     theme(aspect.ratio=1) +
     scale_color_manual(values=c("blue", "red"))
+ggsave(fig, file="~/www/test.png")
 ```
 
 ## Mislabeliing score
 Show all and dropped donors
 ```{r sex.score}
 # predict sex based on gene expression
-fit = glm(Sex ~ XIST + UTY, dfSub, family="binomial")
+fit = glm(Sex ~ LAS1L + UTY, dfSub, family="binomial")
 sex.prob = predict(fit, type="response")
 
 # score sex mislabeling
