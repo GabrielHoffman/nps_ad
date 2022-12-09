@@ -176,12 +176,11 @@ geneID = c("Sex", "LAS1L", "UTY")
 dfSub = df[,geneID] 
 dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
 
-fig = ggplot(dfSub, aes(LAS1L, UTY, color=Sex)) +
+ggplot(dfSub, aes(LAS1L, UTY, color=Sex)) +
     geom_point() +
     theme_classic() +
     theme(aspect.ratio=1) +
     scale_color_manual(values=c("blue", "red"))
-ggsave(fig, file="~/www/test.png")
 ```
 
 ## Mislabeliing score
