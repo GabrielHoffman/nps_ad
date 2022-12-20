@@ -20,7 +20,7 @@ R --vanilla
 system("git pull origin master"); rmarkdown::render("create_rush_freeze.Rmd");
 
 
-# https://hoffmg01.hpc.mssm.edu/nps_ad/create_public_release.html
+# https://hoffmg01.hpc.mssm.edu/nps_ad/create_freezes/rush
 
 bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
 
@@ -200,8 +200,23 @@ sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
 ```
 
+
+```{r write.whole, eval=FALSE}
+outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022.h5ad"
+writeH5AD(sce, outfile, compression="lzf")
+```
+
 ```{r write.chunks, eval=FALSE}
-vec = seq(1, ncol(sce))
+
+# this some how avoids a python error during concatenation
+# pandas.errors.InvalidIndexError: 
+#    Reindexing only valid with uniquely valued Index objects
+sceCopy = SingleCellExperiment( list(counts=counts(sce)),
+          rowData = rowData(sce),
+          colData = colData(sce)[,1:ncol(colData(sce))],
+          reducedDims = reducedDims(sce))
+
+vec = seq(1, ncol(sceCopy))
 chunk_length <- 100000     
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
@@ -210,7 +225,7 @@ outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022
 res = lapply(names(chunks), function(id){
   message(id)
   outfile = paste0(outprefix, '_chunk', id, ".h5ad")
-  sceSub = sce[,chunks[[id]]]
+  sceSub = sceCopy[,chunks[[id]]]
   writeH5AD(sceSub, outfile, compression="none")
   })
 ```
@@ -227,10 +242,10 @@ conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
 
 cd /sc/arion/projects/psychAD/NPS-AD/public_release_0/ 
-echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Dec_19_2022_chunk*.h5ad) | tr ' ' '\n' > list.txt
+echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022_chunk*.h5ad) | tr ' ' '\n' > list.txt
 
 cd /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/pkgs/
-OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Dec_19_2022.h5ad 
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022.h5ad 
 python $SRC -i /sc/arion/projects/psychAD/NPS-AD/public_release_0/list.txt -o $OUTFILE
 ```
 
