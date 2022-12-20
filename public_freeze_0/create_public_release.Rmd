@@ -150,10 +150,6 @@ keep = c('SubID', 'Channel', 'Brain_bank', 'round_num', "poolID", 'Sex', 'Age', 
 colData(sce) = droplevels(colData(sce)[,keep])
 ```
 
-
-rowData(sce)[rowData(sce)$gene_chrom=="X",]
-
-
 # Sex check and filtering
 ```{r pb.sex, cache=TRUE}
 # Sum all reads for each individual
@@ -172,7 +168,7 @@ res.proc = processAssays( pb, ~ 1)
 df = extractData(res.proc, "all")
 
 # Create a data.frame of UTY and XIST
-geneID = c("Sex", "XIST", "UTY")
+geneID = c("Row.names", "Sex", "XIST", "UTY")
 dfSub = df[,geneID] 
 dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
 
@@ -203,11 +199,15 @@ ggplot(dfSub[order(abs(dfSub$score)),],
 drop = abs(dfSub$score) > 0.5
 table(drop)
 
-ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
-    geom_point() +
-    theme_classic() +
-    theme(aspect.ratio=1) +
-    scale_color_gradient(low="black", high="orange", limits=c(0, 1))
+dfSub %>%
+  filter(abs(score) > 0.5) %>%
+  kable
+
+# ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
+#     geom_point() +
+#     theme_classic() +
+#     theme(aspect.ratio=1) +
+#     scale_color_gradient(low="black", high="orange", limits=c(0, 1))
 ```
 
 
