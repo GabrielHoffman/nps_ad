@@ -142,8 +142,10 @@ sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:6]
 sce = sce[,(sce$Age >= 65) &(sce$Brain_bank=="MSSM")]
 
 # 
-# and no Sex_chr_aneuploidy 
-sce = sce[,(!is.na(sce$Sex_chr_aneuploidy)) & !sce$Sex_chr_aneuploidy ]
+# and no Sex_chr_aneuploidy, based on genotype
+# if no genotype available, reports NA
+exclude = replace_na(sce$Sex_chr_aneuploidy, FALSE)
+sce = sce[,!exclude ]
 
 # Remove columns for public release
 keep = c('SubID', 'Channel', 'Brain_bank', 'round_num', "poolID", 'Sex', 'Age', 'AD', 'Ethnicity', 'pH', 'PMI' , "class", "subclass", "subtype")
@@ -153,7 +155,7 @@ colData(sce) = droplevels(colData(sce)[,keep])
 # Sex check and filtering
 ```{r pb.sex, cache=TRUE}
 # Sum all reads for each individual
-sce$static = "all"
+sce$static = "all" 
 pb <- aggregateToPseudoBulk(sce,
       cluster_id = "static",
       sample_id  = "SubID")
@@ -163,7 +165,7 @@ pb <- aggregateToPseudoBulk(sce,
 ```{r plot.sex}
 # Process assays to compute log2 CPM
 res.proc = processAssays( pb, ~ 1) 
- 
+  
 # Extract merged expression and meta-data
 df = extractData(res.proc, "all")
 
@@ -185,7 +187,7 @@ Show all and dropped donors
 # predict sex based on gene expression
 fit = glm(Sex ~ XIST + UTY, dfSub, family="binomial")
 sex.prob = predict(fit, type="response")
-
+ 
 # score sex mislabeling
 dfSub$score = as.integer(dfSub$Sex) -1 - sex.prob
 
