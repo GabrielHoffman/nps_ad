@@ -126,17 +126,18 @@ Filter by Sex_chr_aneuploidy
 ```{r subset}
 # and no Sex_chr_aneuploidy, based on genotype
 # if no genotype available, reports NA
-exclude = replace_na(sce$Sex_chr_aneuploidy, FALSE)
-sce = sce[,!exclude ]
+exclude = replace_na(sceCombine$Sex_chr_aneuploidy, FALSE)
+sce = sceCombine[,!exclude ]
 ```
 
 # Sex check and filtering
 ```{r pb.sex, cache=TRUE}
 # Sum all reads for each individual
-sce$static = "all" 
-pb <- aggregateToPseudoBulk(sce,
+sceCombine$static = "all" 
+pb <- aggregateToPseudoBulk(sceCombine,
       cluster_id = "static",
-      sample_id  = "SubID")
+      sample_id  = "SubID",
+      BPPARAM=SnowParam(6))
 ```
 
 ## Show mislabels
