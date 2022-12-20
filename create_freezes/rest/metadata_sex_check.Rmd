@@ -1,0 +1,161 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'Create Public Freeze 0 from Internal Public Freeze 0'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+---
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/public_freeze_0
+ml python git pandoc
+git pull
+R --vanilla
+
+system("git pull origin master"); rmarkdown::render("metadata_sex_check.Rmd");
+
+
+# https://hoffmg01.hpc.mssm.edu/nps_ad/create_public_release.html
+
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
+
+
+
+--->
+
+# Load packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = FALSE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(HDF5Array)
+library(dreamlet)
+library(scater)
+library(tidyverse)
+library(kableExtra)
+library(org.Hs.eg.db)
+
+# update block size for reading h5ad file from disk
+setAutoBlockSize(1e9)
+```
+
+# Load full Internal Public Freeze 0
+```{r load.data, cache=FALSE}
+# H5AD
+h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/221116_NPS-AD_freeze2_raw_fixed.h5ad"
+
+# read raw/* from h5ad file
+sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
+
+# use `raw` as counts
+sceCombine = swapAltExp(sce_in, "raw")
+rowData(sceCombine) = rowData(sce_in)
+rownames(sceCombine) = rownames(sce_in)
+reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
+reducedDim(sceCombine, "X_pca") = reducedDim(sce_in, "X_pca")
+reducedDim(sceCombine, "X_pca_regressed_harmony") = reducedDim(sce_in, "X_pca_regressed_harmony")
+counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
+assay(sceCombine, 'X') = NULL          # free X  
+
+# merge with new metadata
+df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/syn26527784_latest.csv")
+
+# get order of matching
+i = match(sceCombine$SubID, df_meta$SubID)
+
+# Assign new metadata
+colData(sceCombine) = cbind(colData(sceCombine), df_meta[i,])
+
+# only save genes with unique names
+tab = table(rownames(sceCombine))
+keep = rownames(sceCombine) %in% names(tab[tab==1])
+sceCombine = sceCombine[keep,]
+```
+
+
+
+
+# Sex check and filtering
+```{r pb.sex, cache=TRUE}
+# Sum all reads for each individual
+sceCombine$static = "all" 
+pb <- aggregateToPseudoBulk(sceCombine,
+      cluster_id = "static",
+      sample_id  = "SubID",
+      BPPARAM=SnowParam(12))
+```
+
+## Show mislabels
+```{r plot.sex}
+# Process assays to compute log2 CPM
+res.proc = processAssays( pb, ~ 1) 
+  
+# Extract merged expression and meta-data
+df = extractData(res.proc, "all")
+
+# Create a data.frame of UTY and XIST
+geneID = c("Row.names", "Sex", "XIST", "UTY")
+dfSub = df[,geneID] 
+dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
+
+ggplot(dfSub, aes(XIST, UTY, color=Sex)) +
+    geom_point() +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    scale_color_manual(values=c("blue", "red"))
+```
+
+## Mislabeling score
+Show all and dropped donors
+```{r sex.score}
+# predict sex based on gene expression
+fit = glm(Sex ~ XIST + UTY, dfSub, family="binomial")
+sex.prob = predict(fit, type="response")
+ 
+# score sex mislabeling
+dfSub$score = as.integer(dfSub$Sex) -1 - sex.prob
+
+ggplot(dfSub[order(abs(dfSub$score)),], 
+  aes(XIST, UTY, color=abs(score))) +
+    geom_point() +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    scale_color_gradient(low="black", high="orange", limits=c(0, 1))
+
+# drop = abs(dfSub$score) > 0.5
+# table(drop)
+
+# ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
+#     geom_point() +
+#     theme_classic() +
+#     theme(aspect.ratio=1) +
+#     scale_color_gradient(low="black", high="orange", limits=c(0, 1))
+```
+
+```{r kbl}
+dfSub %>%
+  filter(abs(score) > 0.5) %>%
+  kbl %>%
+  kable_styling(full_width=FALSE)
+```  
+
+
+
