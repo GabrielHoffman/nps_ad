@@ -110,9 +110,6 @@ Includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombi
 # number of donors
 length(table(droplevels(sceCombine$SubID)))
 
-# number of donors
-table(droplevels(sceCombine$round_num))
-
 # cells based on Dx
 table(sceCombine$AD)
 
@@ -198,12 +195,8 @@ ggplot(dfSub[order(abs(dfSub$score)),],
     theme(aspect.ratio=1) +
     scale_color_gradient(low="black", high="orange", limits=c(0, 1))
 
-drop = abs(dfSub$score) > 0.5
-table(drop)
-
-dfSub %>%
-  filter(abs(score) > 0.5) %>%
-  kable
+# drop = abs(dfSub$score) > 0.5
+# table(drop)
 
 # ggplot(dfSub[drop,], aes(XIST, UTY, color=abs(score))) +
 #     geom_point() +
@@ -212,7 +205,12 @@ dfSub %>%
 #     scale_color_gradient(low="black", high="orange", limits=c(0, 1))
 ```
 
-
+```{r kbl}
+dfSub %>%
+  filter(abs(score) > 0.5) %>%
+  kbl %>%
+  kable_styling(full_width=FALSE)
+```  
 # Write H5AD for public release
 ```{r write}
 sce$static = c()
