@@ -64,7 +64,7 @@ h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/221116_NPS-AD_freeze
 
 sceCombine = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
 
-counts(sceCombine) = assay(sce_in, 'X')   # set counts assay to data in X
+counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
 assay(sceCombine, 'X') = NULL          # free X  
 
 # merge with new metadata
