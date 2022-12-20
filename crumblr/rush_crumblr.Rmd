@@ -10,6 +10,24 @@ output:
 ---
 
 
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/crumblr
+ml python git pandoc
+git pull
+R --vanilla
+
+system("git pull origin master"); rmarkdown::render("rush_crumblr.Rmd");
+
+
+# https://hoffmg01.hpc.mssm.edu/nps_ad/crumblr/rush_crumblr.html
+
+--->
+
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = FALSE,
