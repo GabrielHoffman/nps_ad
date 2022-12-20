@@ -20,7 +20,7 @@ R --vanilla
 system("git pull origin master"); rmarkdown::render("create_public_release.Rmd");
 
 
-# https://hoffmg01.u.hpc.mssm.edu/nps_ad/
+# https://hoffmg01.hpc.mssm.edu/nps_ad/create_public_release.html
 
 bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
 
@@ -166,13 +166,13 @@ pb <- aggregateToPseudoBulk(sce,
 ## Show mislabels
 ```{r plot.sex}
 # Process assays to compute log2 CPM
-res.proc = processAssays( pb, ~ 1) /
+res.proc = processAssays( pb, ~ 1) 
  
 # Extract merged expression and meta-data
 df = extractData(res.proc, "all")
 
 # Create a data.frame of UTY and LAS1L
-geneID = c("Sex", "LAS1L", "UTY")
+geneID = c("Sex", "XIST", "UTY")
 dfSub = df[,geneID] 
 dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
 
