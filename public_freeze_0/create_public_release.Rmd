@@ -69,7 +69,7 @@ if( file.exists(datafile) ){
 }else{
 
   # Public freeze 0
-  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221202_NPS-AD_public0_pass3_anno_clean.h5ad"
+  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_public0_pass3_anno.h5ad"
 
   # read raw/* from h5ad file
   sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
@@ -166,7 +166,7 @@ pb <- aggregateToPseudoBulk(sce,
 ## Show mislabels
 ```{r plot.sex}
 # Process assays to compute log2 CPM
-res.proc = processAssays( pb, ~ 1) 
+res.proc = processAssays( pb, ~ 1) /
  
 # Extract merged expression and meta-data
 df = extractData(res.proc, "all")
@@ -183,7 +183,7 @@ ggplot(dfSub, aes(LAS1L, UTY, color=Sex)) +
     scale_color_manual(values=c("blue", "red"))
 ```
 
-## Mislabeliing score
+## Mislabeling score
 Show all and dropped donors
 ```{r sex.score}
 # predict sex based on gene expression
@@ -213,6 +213,7 @@ ggplot(dfSub[drop,], aes(LAS1L, UTY, color=abs(score))) +
 
 # Write H5AD for public release
 ```{r write}
+sce$static = c()
 sce = sce[,sce$SubID %in% df$Row.names[!drop]]
 colData(sce) = droplevels(colData(sce))
 ```
@@ -223,8 +224,6 @@ chunk_length <- 100000
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
 outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Dec_9_2022"
-
-sce$static = c()
 
 res = lapply(names(chunks), function(id){
   message(id)
