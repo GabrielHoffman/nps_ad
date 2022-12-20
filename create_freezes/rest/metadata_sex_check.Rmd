@@ -12,7 +12,7 @@ output:
 
 <!--- 
 
-cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/public_freeze_0
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/rest/
 ml python git pandoc
 git pull
 R --vanilla
@@ -68,10 +68,10 @@ sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
 # use `raw` as counts
 sceCombine = swapAltExp(sce_in, "raw")
 rowData(sceCombine) = rowData(sce_in)
-rownames(sceCombine) = rownames(sce_in)
-reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
-reducedDim(sceCombine, "X_pca") = reducedDim(sce_in, "X_pca")
-reducedDim(sceCombine, "X_pca_regressed_harmony") = reducedDim(sce_in, "X_pca_regressed_harmony")
+# rownames(sceCombine) = rownames(sce_in)
+# reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
+# reducedDim(sceCombine, "X_pca") = reducedDim(sce_in, "X_pca")
+# reducedDim(sceCombine, "X_pca_regressed_harmony") = reducedDim(sce_in, "X_pca_regressed_harmony")
 counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
 assay(sceCombine, 'X') = NULL          # free X  
 
