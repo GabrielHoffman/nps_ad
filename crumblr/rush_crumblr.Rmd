@@ -186,7 +186,7 @@ df %>%
 ```{r crumblr}
 cobj = crumblr(cellCounts(pb.subclass))
 
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|AD) + pH + PMI
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|AD) + PMI
 
 vp.c = fitExtractVarPartModel(cobj, form, colData(pb.subclass))
 
@@ -197,7 +197,7 @@ plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
 fig.vp = plotPercentBars( sortCols(vp.c) )
 
 # analysis with dream()
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + AD + pH + PMI
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + AD + PMI
 fit = dream( cobj, form, colData(pb.subclass))
 fit = eBayes(fit)
 ```
@@ -265,7 +265,7 @@ ggplot(df, aes(V1, V2, color=subtype)) + geom_scattermore() + theme_classic() + 
 
 
 ```{r cca.subtype}
-form = ~ SubID + poolID + Sex + scale(Age) + AD + pH + PMI
+form = ~ SubID + poolID + Sex + scale(Age) + AD + PMI
 C = canCorPairs(form, colData(pb.subtype) )
 ggcorrplot(C, hc.order = TRUE)
 ```
@@ -325,7 +325,7 @@ df %>%
 ```{r crumblr.subtype}
 cobj = crumblr(cellCounts(pb.subtype))
 
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|AD) + pH + PMI
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|AD) + PMI
 
 vp.c = fitExtractVarPartModel(cobj, form, colData(pb.subtype))
 
@@ -336,7 +336,7 @@ plotVarPart(sortCols(vp.c), label.angle=60, ncol=4)  + theme(aspect.ratio=1)
 fig.vp = plotPercentBars( sortCols(vp.c) )
 
 # analysis with dream()
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + AD + pH + PMI
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + AD + PMI
 fit = dream( cobj, form, colData(pb.subtype))
 fit = eBayes(fit)
 ```
