@@ -115,10 +115,10 @@ table(droplevels(df[df$Channel=='R756793-1', "poolID"]))
 
 
 
-```{r ph, cache=FALSE}
-pb.subclass$pH[is.na(pb.subclass$pH)] = mean(pb.subclass$pH, na.rm=TRUE)
-pb.subtype$pH[is.na(pb.subtype$pH)] = mean(pb.subtype$pH, na.rm=TRUE)
-```
+# ```{r ph, cache=FALSE}
+# pb.subclass$pH[is.na(pb.subclass$pH)] = mean(pb.subclass$pH, na.rm=TRUE)
+# pb.subtype$pH[is.na(pb.subtype$pH)] = mean(pb.subtype$pH, na.rm=TRUE)
+# ```
 
 Public freeze 0 includes `r length(table(sce$Channel))` samples, `r length(table(sce$round_num))` rounds, `r length(table(sce$poolID))` 10X batches, `r length(table(sce$SubID))` donors, and `r format(ncol(sce), big.mark=',')` cells passing QC.
 
