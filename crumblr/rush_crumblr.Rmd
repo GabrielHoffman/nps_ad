@@ -16,7 +16,7 @@ output:
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/crumblr
 ml python git pandoc
-git pull
+git pull origin master
 R --vanilla
 
 system("git pull origin master"); rmarkdown::render("rush_crumblr.Rmd");
@@ -61,12 +61,15 @@ library(scattermore)
 
 
 ```{r load.data}
-folder = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/" 
-file = paste0(folder, "Rush_Dec_19_2022.h5ad")
+file = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022.h5ad"
 sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE)
 assayNames(sce)[1] = "counts"
 
 sce$AD = factor(sce$AD, c(0,1))
+
+# to avoid pseuobulk issue below
+drop.channel = c("R756793-2", 'R756793-1')
+sce = sce[,!sce$Channel %in% drop.channel]
 
 pb.subclass <- aggregateToPseudoBulk(sce,
     assay = "counts",     
@@ -80,6 +83,37 @@ pb.subtype <- aggregateToPseudoBulk(sce,
     sample_id = "Channel", 
     BPPARAM = SnowParam(6, progressbar=TRUE))
 ```
+
+```{r check, eval=FALSE}
+In Rush, there are to Channel values that are present in multiple pools.  For example, R756793-1 has 4352 counts in NPSAD-132-A1 and 2403 in NPSAD-20201221-C1 .  This matters because 1) it looks like the two samples from the same donor were sequenced twice.  2) When I compute pseudobulk, I only keep variables that are constant within Channel.  Since here poolID has two values for each of these samples, poolID gets dropped. 
+
+pb <- aggregateToPseudoBulk(sce[1:100,],
+    assay = "counts",     
+    cluster_id = "subclass",  
+    sample_id = "Channel")
+
+df = colData(sce)
+tab = xtabs( ~ poolID +Channel, df)
+
+res = apply(tab, 2, function(x){
+  i = which(x>0)
+  ifelse(length(i)==1, NA, i)
+  })
+res = res[!is.na(res)]
+
+
+a = tab[,names(res)]
+a[rowSums(a) > 0,]
+
+table(droplevels(df[df$Channel=='R756793-2', "poolID"]))
+table(droplevels(df[df$Channel=='R756793-1', "poolID"]))
+```
+
+
+
+
+
+
 
 ```{r ph, cache=FALSE}
 pb.subclass$pH[is.na(pb.subclass$pH)] = mean(pb.subclass$pH, na.rm=TRUE)
