@@ -244,7 +244,7 @@ vec = seq(1, ncol(sce))
 chunk_length <- 100000     
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
-outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Dec_19_2022"
+outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Dec_28_2022"
 
 res = lapply(names(chunks), function(id){
   message(id)
