@@ -14,7 +14,7 @@ output:
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/public_freeze_0
 ml python git pandoc
-git pull
+git pull origin master
 R --vanilla
 
 system("git pull origin master"); rmarkdown::render("create_public_release.Rmd");
@@ -69,7 +69,7 @@ if( file.exists(datafile) ){
 }else{
 
   # Public freeze 0
-  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_public0_pass3_anno.h5ad"
+  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_public0_pass3_anno_clean.h5ad"
 
   # read raw/* from h5ad file
   sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
@@ -84,8 +84,26 @@ if( file.exists(datafile) ){
   counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
   assay(sceCombine, 'X') = NULL          # free X  
 
-  # merge with new metadata
+  # merge with full metadata
+  #------------------------
+
+  # Load metdata
   df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/syn26527784_latest.csv")
+  rownames(df_meta) = df_meta$SubID
+
+  lst_clinical = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/clinical_metadata_sampleSets_latest.RDS")
+
+  df_meta$Dx_AD = NA
+  i = df_meta$SubID %in% lst_clinical$controls_neuropathological
+  df_meta$Dx_AD[i] = "Control" 
+  i = df_meta$SubID %in% lst_clinical$AD
+  df_meta$Dx_AD[i] = "AD"
+  df_meta$Dx_AD[with(df_meta, PD | DLBD)] = NA
+
+  i = with(df_meta, Age > 60 & Brain_bank == "MSSM")
+  xtabs(~ Dx_AD + Brain_bank, df_meta[i,])
+  xtabs(~ Dx_AD + PD, df_meta[i,])
+  xtabs(~ Dx_AD + DLBD, df_meta[i,])
 
   # get order of matching
   i = match(sceCombine$SubID, df_meta$SubID)
@@ -102,6 +120,7 @@ if( file.exists(datafile) ){
 }
 ```
 
+
 ## Public freeze 0, initial
 Includes `r length(table(sceCombine$Channel))` samples, `r length(table(sceCombine$round_num))` rounds, `r length(table(sceCombine$poolID))` 10X batches, `r length(table(sceCombine$SubID))` donors, and `r format(ncol(sceCombine), big.mark=',')` cells passing QC.
 
@@ -115,37 +134,39 @@ table(sceCombine$AD)
 
 # AD cases and controls
 tab = with(colData(sceCombine), unique(data.frame(SubID, AD, Sex, Age)))
-table(tab$AD)
+table(tab$Dx_AD)
 table(tab$Sex)
 hist(tab$Age)
 
-xtabs(~AD + Sex, tab)
+xtabs(~Dx_AD + Sex, tab)
 ```
 
 
 # Create subset based on AD and round_num
 Inclusion criteria: 
 
-  - Age >= 65
+  - Age >= 60
   - Institution is MSSM
   - round is 1,2,3,4,5,6
-  - `AD` variable is 0 or 1.  `NA` is removed
+  - `Dx_AD` variable is 'AD' or 'Control'.  `NA` is removed
 
 ```{r subset}
-# Subset based on AD status and round_num
-sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:6]
+# # Subset based on AD status and round_num
+# sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:6]
 
-# Subset to only donors >= 65 years old and in MSSM
-sce = sce[,(sce$Age >= 65) &(sce$Brain_bank=="MSSM")]
+# # Subset to only donors >= 65 years old and in MSSM
+# sce = sce[,(sce$Age >= 65) &(sce$Brain_bank=="MSSM")]
 
-# 
-# and no Sex_chr_aneuploidy, based on genotype
-# if no genotype available, reports NA
-exclude = replace_na(sce$Sex_chr_aneuploidy, FALSE)
-sce = sce[,!exclude ]
+# # 
+# # and no Sex_chr_aneuploidy, based on genotype
+# # if no genotype available, reports NA
+# exclude = replace_na(sce$Sex_chr_aneuploidy, FALSE)
+# sce = sce[,!exclude ]
 
-# Remove columns for public release
-keep = c('SubID', 'Channel', 'Brain_bank', 'round_num', "poolID", 'Sex', 'Age', 'AD', 'Ethnicity', 'pH', 'PMI' , "class", "subclass", "subtype")
+sce = sceCombine
+
+# Keep columns for public release
+keep = c('SubID', 'Channel', 'Brain_bank', 'round_num', "poolID", 'Sex', 'Age', 'Dx_AD', 'Ethnicity', 'pH', 'PMI' , "class", "subclass", "subtype")
 colData(sce) = droplevels(colData(sce)[,keep])
 ```
 
@@ -271,14 +292,14 @@ length(table(droplevels(sce$SubID)))
 table(droplevels(sce$round_num))
 
 # cells based on Dx
-table(sce$AD)
+table(sce$Dx_AD)
 
 # AD cases and controls
-tab = with(colData(sce), unique(data.frame(SubID, AD, Sex, Age)))
-table(tab$AD)
+tab = with(colData(sce), unique(data.frame(SubID, Dx_AD, Sex, Age)))
+table(tab$Dx_AD)
 table(tab$Sex)
 
-xtabs(~AD + Sex, tab)
+xtabs(~Dx_AD + Sex, tab)
 ```
 
 # Session Info
