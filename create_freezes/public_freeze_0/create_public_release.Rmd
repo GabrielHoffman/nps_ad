@@ -73,7 +73,7 @@ if( file.exists(datafile) ){
 
   # read raw/* from h5ad file
   sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
-
+ 
   # use `raw` as counts
   sceCombine = swapAltExp(sce_in, "raw")
   rowData(sceCombine) = rowData(sce_in)
