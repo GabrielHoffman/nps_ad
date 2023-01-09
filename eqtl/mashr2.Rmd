@@ -49,6 +49,7 @@ knitr::opts_chunk$set(
 
 ```{r load2}
 library(tidyverse)
+library(ggplot2)
 
 folder = "/sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_12292022/eQTL_detection/cis-eQTL_detection/analysis/prepare_for_mashR/data_for_Gabriel_mashR/"
 
@@ -157,6 +158,47 @@ names(listInput) = colnames(beta.post)
    
 upset(fromList(listInput), order.by = "freq", nsets=length(listInput))
 ```
+
+
+```{r forrest}
+get_significant_results(m2, conditions="Mg")
+
+rownames(beta)[grep("APOE", rownames(beta))]
+
+head( m2$result$lfsr)
+
+
+nonZero = apply(beta, 1, function(x){
+  sum(x==0)
+  })
+res = apply( m2$result$lfsr[nonZero==0,], 1, function(x){
+  sum(x < 0.05) == 2
+  })
+res[res]
+
+
+gene = "SYN3_rs2213533"
+
+df = data.frame( CellType = colnames(beta), 
+                # beta = beta[gene,], 
+                # se = se[gene,],
+                beta = m2$result$PosteriorMean[gene,],
+                se = m2$result$PosteriorSD[gene,])
+
+df = df[df$beta !=0,]
+
+ggplot(df, aes(CellType, beta)) +
+  geom_errorbar(aes(ymin = beta-1.96*se, ymax = beta+1.96*se), width=0) + 
+  geom_point(color="red") +
+  theme_classic() +
+  geom_hline(yintercept=0, linetype="dashed", color="grey") +
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  coord_flip() +
+  ggtitle(gene)
+```
+
+
+
 
 
 
