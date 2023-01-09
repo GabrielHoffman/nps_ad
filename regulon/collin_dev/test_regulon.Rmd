@@ -1,0 +1,109 @@
+---
+title: "Dreamlet analysis of non-count single-cell signals"
+subtitle: 'testing for Collin'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+---
+
+
+<!---
+
+rmarkdown::render("test_regulon.Rmd");
+
+
+
+# assay = 'X'
+# sample_id = 'Channel'
+# cluster_id = "subclass"
+
+# min.cells = 10
+# min.signal = 0.01
+# min.samples = 4
+# min.prop = 0.4
+
+
+
+
+
+
+
+
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=TRUE,
+  message=TRUE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+# Load libraries
+```{r load.packages, cache=FALSE}
+suppressPackageStartupMessages({
+library(zellkonverter)
+library(SingleCellExperiment)
+library(dreamlet)
+library(tidyverse)
+library(kableExtra)
+})
+```
+
+# Run with dreamlet v0.0.58
+
+# Load data
+```{r load}
+# scp sklar1:/sc/arion/projects/roussp01a/collin/fresh-mg/results/200k/fresh_mg_200k_regulon_ad.h5ad .
+# file = "/sc/arion/projects/roussp01a/collin/fresh-mg/results/200k/fresh_mg_200k_regulon_ad.h5ad"
+file = "~/Downloads/fresh_mg_200k_regulon_ad.h5ad"
+
+sce = readH5AD(file, use_hdf5=TRUE)
+
+sce$AD_Strict = factor(sce$AD_Strict, c("0", "1"))
+```
+
+# Aggregate data
+```{r agg, message=TRUE}
+pb = aggregateNonCountSignal(sce, 'X', 'Channel', "subclass", verbose=FALSE)
+```
+
+# dreamlet
+```{r dreamlet}
+# differential expression analysis
+res.dl = dreamlet( pb, ~ AD_Strict)
+
+# examine results
+topTable(res.dl, coef='AD_Strict1') %>%
+  kbl() %>%  
+  kable_paper(full_width = FALSE)
+```
+
+# Examine warning above
+Lets look at `details()`
+```{r test}
+details(res.dl)
+
+# for Ex, the variable ~AD_Strict was dropped from the formula
+# Examining this cell type, there are no AD cases retained after filtering
+data = extractData(pb, "Ex")
+data$AD_Strict
+```
+
+# Examine top hit
+```{r test2}
+data = extractData(pb, "MG_proliferative")
+
+boxplot(data[,'TFEC(+)'] ~ data$AD_Strict, main="TFEC(+)")
+```
+
