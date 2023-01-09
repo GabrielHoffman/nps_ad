@@ -24,11 +24,10 @@ git pull
 # rm -rf analysis_freeze1_cache/ analysis_freeze1_files
 R --vanilla
 
-system("git pull")
-rmarkdown::render("mashr.Rmd");
+system("git pull"); rmarkdown::render("mashr2.Rmd");
 
 
-# https://hoffmg01.u.hpc.mssm.edu/nps_ad/eqtl/mashr.html
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/eqtl/mashr2.html
 --->
 
 
@@ -75,9 +74,9 @@ library(mashr)
 data = mash_set_data(beta, se)
 
 U.pca = cov_pca(data,5)
-U.ed = cov_ed(data, U.pca)
+# U.ed = cov_ed(data, U.pca)
 
-m2 = mash(data, Ulist = c(U.ed,U.pca))
+m2 = mash(data, Ulist = U.pca)
 ```
 
 
