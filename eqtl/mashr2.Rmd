@@ -1,0 +1,182 @@
+---
+title: "snRNA-seq eQTL with mashr"
+subtitle: "Plots from Biao's analysis"
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+  toc: true
+  smart: false
+vignette: >
+  %\VignetteIndexEntry{Decorrelate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/eqtl/
+ml python git
+git pull
+# rm -rf analysis_freeze1_cache/ analysis_freeze1_files
+R --vanilla
+
+system("git pull")
+rmarkdown::render("mashr.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/nps_ad/eqtl/mashr.html
+--->
+
+
+Code is on [GitHub](https://github.com/GabrielHoffman/nps_ad/blob/master/eqtl/mashr.Rmd)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+
+```{r load2}
+library(tidyverse)
+
+folder = "/sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_12292022/eQTL_detection/cis-eQTL_detection/analysis/prepare_for_mashR/data_for_Gabriel_mashR/"
+
+file = paste0(folder, "adjust_beta_infor_for_mashR")
+beta = read.table(file, row.names=1)
+colnames(beta) = c('Mg', 'IN', 'OPC', 'Astro','Oligo', 'EN')
+beta = as.matrix(beta)
+
+file = paste0(folder, "adjust_se_infor_for_mashR")
+se = read.table(file, row.names=1)
+colnames(se) = c('Mg', 'IN', 'OPC', 'Astro','Oligo', 'EN')
+se = as.matrix(se)
+
+# if coef not estimated, set beta to zero and se = 1e6
+i = which(is.na(beta))
+beta[i] = 0
+se[i] = 1e6
+```
+
+```{r mash}
+library(mashr)
+
+data = mash_set_data(beta, se)
+
+U.pca = cov_pca(data,5)
+U.ed = cov_ed(data, U.pca)
+
+m2 = mash(data, Ulist = c(U.ed,U.pca))
+```
+
+
+
+Spearman correlation between original beta values
+```{r analysis, fig.height=7, fig.width=6}
+library(mashr)
+library(variancePartition)
+library(gplots)
+
+# posterior coefficients
+#   replacing missing with Na
+beta.post = get_pm(m2)
+beta.post[is.na(beta)] = NA
+
+C = cor(beta, use='pairwise.complete.obs', method="sp")
+
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="Original", key.xlab="Correlation", key.title='', keysize=1, cexRow=1, cexCol=1, margins=c(12,8))
+```
+
+Spearman correlation between posterior beta values
+```{r beta.post, fig.height=7, fig.width=6}
+C = cor(beta.post, use='pairwise.complete.obs', method="sp")
+
+par(mar=c(7,4,4,2)+0.1) 
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="mashr", key.xlab="Correlation", key.title='', keysize=1, cexRow=1, cexCol=1, margins=c(12,8))
+```
+ 
+
+
+
+Sharing based on sign
+```{r sign.share, fig.height=7, fig.width=6}
+# sharing based on sigh
+C = get_pairwise_sharing(m2, factor=0)
+
+heatmap.2(C, symm=TRUE, trace = "none", density.info = "none", col = bluered(100), symbreaks=TRUE, cellnote=round(C, 2), notecol="black", main="Sign sharing", key.xlab="Correlation", key.title='', keysize=1, cexRow=1, cexCol=1, margins=c(12,8))
+```
+
+Pi values from sharing components
+```{r pi1}
+# pi1 values
+df = get_estimated_pi(m2)
+df = data.frame(Component = names(df), pi = df)
+
+ggplot(df, aes(Component, pi)) + 
+  geom_bar(stat="identity", fill="darkred") + 
+  theme_classic() +
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  coord_flip() +
+  scale_y_continuous(limits=c(0, 1), expand=c(0,0)) +
+  ylab("Posterior probability") +
+  ggtitle("eQTL sharing from mashr")
+```
+
+```{r freq}
+# Frequency
+df = table(get_n_significant_conditions(m2))
+df = as.data.frame(df)
+
+ggplot(df, aes(Var1, Freq)) + 
+  geom_bar(stat="identity", fill="darkred") + 
+  theme_classic() +
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(limits=c(0, NA), expand=c(0,0)) +
+  ylab("Number of genes") +
+  xlab("Number of cell types")  +
+  ggtitle("Frequency of eQTL sharing")
+```
+
+```{r UpSetR, fig.height=7, fig.width=9}
+# UpsetR plot
+library(UpSetR)
+
+listInput = lapply( colnames(beta.post), function(cond)
+                get_significant_results(m2, conditions=cond))
+names(listInput) = colnames(beta.post)
+   
+upset(fromList(listInput), order.by = "freq", nsets=length(listInput))
+```
+
+
+
+
+```{r test, eval=FALSE}
+idx = which.max(get_estimated_pi(m2)) -1
+
+m2$fitted_g$Ulist[idx]
+
+v = apply(beta.post, 1, var)
+
+beta[which.max(v),,drop=FALSE]
+beta.post[which.max(v),,drop=FALSE]
+```
+
+
+
+
+
+
+
+
