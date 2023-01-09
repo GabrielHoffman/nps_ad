@@ -161,20 +161,19 @@ upset(fromList(listInput), order.by = "freq", nsets=length(listInput))
 
 
 ```{r forrest}
-get_significant_results(m2, conditions="Mg")
+# get_significant_results(m2, conditions="Mg")
 
-rownames(beta)[grep("APOE", rownames(beta))]
+# rownames(beta)[grep("APOE", rownames(beta))]
 
-head( m2$result$lfsr)
+# head( m2$result$lfsr)
 
-
-nonZero = apply(beta, 1, function(x){
-  sum(x==0)
-  })
-res = apply( m2$result$lfsr[nonZero==0,], 1, function(x){
-  sum(x < 0.05) == 2
-  })
-res[res]
+# nonZero = apply(beta, 1, function(x){
+#   sum(x==0)
+#   })
+# res = apply( m2$result$lfsr[nonZero==0,], 1, function(x){
+#   sum(x < 0.05) == 2
+#   })
+# res[res]
 
 
 gene = "SYN3_rs2213533"
