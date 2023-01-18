@@ -174,7 +174,6 @@ ggplot(df, aes(diagnosis, value, fill=variable)) +
 ```{r fraction.table}
 df %>%
   group_by(variable, diagnosis) %>%
-  mutate(diagnosis = recode(Dx, '0' = "Control", '1' = "Alzheimer's"))  %>% 
   summarize(mean = mean(value)) %>%
   pivot_wider(names_from=c('diagnosis'), values_from=c("mean")) %>%
   kbl %>%
@@ -313,7 +312,6 @@ ggplot(df, aes(diagnosis, value, fill=variable)) +
 ```{r fraction.table.subtype}
 df %>%
   group_by(variable, diagnosis) %>%
-  mutate(diagnosis = recode(diagnosis, '0' = "Control", '1' = "Alzheimer's"))  %>% 
   summarize(mean = mean(value)) %>%
   pivot_wider(names_from=c('diagnosis'), values_from=c("mean")) %>%
   kbl %>%
