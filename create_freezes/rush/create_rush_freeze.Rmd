@@ -84,8 +84,21 @@ if( file.exists(datafile) ){
   counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
   assay(sceCombine, 'X') = NULL          # free X  
 
-  # merge with new metadata
+  # merge with full metadata
+  #------------------------
+
+  # Load metdata
   df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/syn26527784_latest.csv")
+  rownames(df_meta) = df_meta$SubID
+
+  lst_clinical = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/clinical_metadata_sampleSets_latest.RDS")
+
+  df_meta$Dx_AD = NA
+  i = df_meta$SubID %in% lst_clinical$controls_neuropathological
+  df_meta$Dx_AD[i] = "Control" 
+  i = df_meta$SubID %in% lst_clinical$AD
+  df_meta$Dx_AD[i] = "AD"
+  df_meta$Dx_AD[with(df_meta, PD | DLBD)] = NA
 
   # get order of matching
   i = match(sceCombine$SubID, df_meta$SubID)
