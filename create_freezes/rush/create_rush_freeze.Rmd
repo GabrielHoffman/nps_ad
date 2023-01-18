@@ -69,7 +69,7 @@ if( file.exists(datafile) ){
 }else{
 
   # Public freeze 0
-  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_R_pass3_anno.h5ad"
+  h5ad_file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_R_pass3_anno_clean.h5ad"
 
   # read raw/* from h5ad file
   sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
