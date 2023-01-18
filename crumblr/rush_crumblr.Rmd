@@ -192,7 +192,9 @@ cobj = crumblr(cellCounts(pb.subclass))
 
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|Dx) + PMI
 
-vp.c = fitExtractVarPartModel(cobj, form, colData(pb.subclass))
+idx = !is.na(pb.subtype$Dx)
+
+vp.c = fitExtractVarPartModel(cobj[,idx], form, colData(pb.subclass)[idx,])
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
 ```
@@ -330,7 +332,9 @@ cobj = crumblr(cellCounts(pb.subtype))
 
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|Dx) + PMI
 
-vp.c = fitExtractVarPartModel(cobj, form, colData(pb.subtype))
+idx = !is.na(pb.subtype$Dx)
+
+vp.c = fitExtractVarPartModel(cobj[,idx], form, colData(pb.subtype)[idx,])
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4)  + theme(aspect.ratio=1)
 ```
