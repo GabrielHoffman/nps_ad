@@ -71,6 +71,8 @@ sce$Dx = factor(sce$Dx_AD, c("Control", "AD"))
 drop.channel = c("R756793-2", 'R756793-1')
 sce = sce[,!sce$Channel %in% drop.channel]
 
+sce = sce[,!is.na(sce$Dx)]
+
 pb.subclass <- aggregateToPseudoBulk(sce,
     assay = "counts",     
     cluster_id = "subclass",  
@@ -192,9 +194,7 @@ cobj = crumblr(cellCounts(pb.subclass))
 
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|Dx) + PMI
 
-idx = !is.na(pb.subtype$Dx)
-
-vp.c = fitExtractVarPartModel(cobj[,idx], form, colData(pb.subclass)[idx,])
+vp.c = fitExtractVarPartModel(cobj, form, colData(pb.subclass))
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
 ```
@@ -332,9 +332,7 @@ cobj = crumblr(cellCounts(pb.subtype))
 
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|Dx) + PMI
 
-idx = !is.na(pb.subtype$Dx)
-
-vp.c = fitExtractVarPartModel(cobj[,idx], form, colData(pb.subtype)[idx,])
+vp.c = fitExtractVarPartModel(cobj, form, colData(pb.subtype))
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4)  + theme(aspect.ratio=1)
 ```
