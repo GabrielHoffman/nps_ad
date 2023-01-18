@@ -19,7 +19,7 @@ ml python git pandoc
 git pull origin master
 R --vanilla
 
-system("git pull origin master"); rmarkdown::render("rush_crumblr.Rmd");
+system2("git pull origin master"); rmarkdown::render("rush_crumblr.Rmd");
 
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/crumblr/rush_crumblr.html
@@ -144,12 +144,12 @@ ggcorrplot(C, hc.order = TRUE)
 ```{r fractions, fig.width=9}
 fracs = cellCounts(pb.subclass) / rowSums(cellCounts(pb.subclass))
 
-i = pb.subclass$Dx == 'Control'
+i = which(pb.subclass$Dx == 'Control')
 fig1 = plotPercentBars(fracs[i,], col=ggColorHue(ncol(fracs))) + 
   ylab("Cell fractions") + 
   theme(legend.position = "none", axis.text.y=element_blank())
 
-i = pb.subclass$Dx == 'AD'
+i = which(pb.subclass$Dx == 'AD')
 fig2 = plotPercentBars(fracs[i,], col=ggColorHue(ncol(fracs))) + 
   ylab("Cell fractions") + 
   theme(legend.position = "none", axis.text.y=element_blank())
@@ -279,12 +279,12 @@ ggcorrplot(C, hc.order = TRUE)
 ```{r fractions.subtype, fig.width=9}
 fracs = cellCounts(pb.subtype) / rowSums(cellCounts(pb.subtype))
 
-i = pb.subtype$Dx == 'Control'
+i = which(pb.subtype$Dx == 'Control')
 fig1 = plotPercentBars(fracs[i,], col=ggColorHue(ncol(fracs))) + 
   ylab("Cell fractions") + 
   theme(legend.position = "none", axis.text.y=element_blank())
 
-i = pb.subtype$Dx == 'AD'
+i = which(pb.subtype$Dx == 'AD')
 fig2 = plotPercentBars(fracs[i,], col=ggColorHue(ncol(fracs))) + 
   ylab("Cell fractions") + 
   theme(legend.position = "none", axis.text.y=element_blank())
