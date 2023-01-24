@@ -1,0 +1,100 @@
+---
+title: "Joint variance partitioning analysis"
+subtitle: 'Public Release 0'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+---
+
+
+<!---
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/public_freeze_0
+ml python git
+git pull
+R --vanilla
+
+system("git pull"); rmarkdown::render("PsychAD_r0_analysis.Rmd");
+
+
+
+--->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+# Load libraries
+```{r load.packages, cache=FALSE}
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(zellkonverter)
+library(dreamlet)
+library(variancePartition)
+library(ggplot2)
+})
+```
+
+```{r readpb}
+pb = readRDS("/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Dec_28_2022_pseudobulk.RDS")
+
+# Normalize and apply voom
+form = ~ 1
+
+res.proc = processAssays( pb, form, assays=assayNames(pb)[1:2])
+
+data = lapply( assayNames(res.proc), function(key){
+  extractData(res.proc, key)
+  })
+
+# only shared names
+tab = table(unlist(lapply(data, colnames)))
+cols = names(tab)[tab>1]
+
+genes = cols[cols %in% rownames(pb)]
+ids = cols[!(cols %in% rownames(pb))]
+
+data2 = t(do.call(rbind, lapply(data, function(x) x[,genes,drop=FALSE])))
+
+info = do.call(rbind, lapply(data, function(x) x[,ids,drop=FALSE]))
+```
+
+
+```{r vp}
+form = ~ (1|SubID) + (1|poolID) + (1|Dx) + Age + (1|Sex) + (1|Ethnicity)
+
+df_vp = fitExtractVarPartModel(data2, form, info, BPPARAM=SnowParam(12))
+```
+
+```{r plot}
+plotVarPart(sortCols(df_vp))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
