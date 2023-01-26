@@ -234,7 +234,8 @@ dfSub %>%
 # Write H5AD for public release
 ```{r write}
 sce$static = c()
-sce = sce[,sce$SubID %in% df$Row.names[!drop.ids]]
+# sce = sce[,sce$SubID %in% df$Row.names[!drop.ids]]
+sce = sce[,sce$SubID %in% df$Row.names]
 colData(sce) = droplevels(colData(sce))
 ```
 
