@@ -12,7 +12,7 @@ output:
 
 <!--- 
 
-cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/public_freeze_0
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/create_freezes/public_freeze_0
 ml python git pandoc
 git pull origin master
 R --vanilla
@@ -234,8 +234,7 @@ dfSub %>%
 # Write H5AD for public release
 ```{r write2}
 sce$static = c()
-# sce = sce[,sce$SubID %in% df$Row.names[!drop.ids]]
-sce = sce[,sce$SubID %in% df$Row.names]
+sce = sce[,sce$SubID %in% df$Row.names[!drop.ids]]
 colData(sce) = droplevels(colData(sce))
 ```
 
