@@ -197,7 +197,7 @@ python $SRC -i ", h5ad_list, " -o ", outfile)
   write(cmd, jobfile)
 }
 
-write_merge_chunks_job( proj, outpref, timeTxt, jobfile )
+# write_merge_chunks_job( proj, outpref, timeTxt, jobfile )
 
 # system("rm -f stdcombind; bsub < /sc/arion/scratch/hoffmg01/tmp/job_RUSH_2023-02-07_11_20.lsf")
 
