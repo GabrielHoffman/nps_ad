@@ -59,7 +59,7 @@ setAutoBlockSize(1e9)
 
 
 # Merge H5AD with metadata
-```{r merge_with_metadata, cache=FALSE}
+```{r merge_with_metadata}
 merge_with_metadata = function(h5ad_file){
   # read raw/* from h5ad file
   sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
@@ -211,7 +211,7 @@ outprefix = "/sc/arion/scratch/hoffmg01/tmp/"
 
 figList = list()
 
-for( proj in names(h5ad_files)[1] ){
+for( proj in names(h5ad_files) ){
 
   # read H5AD and merge with meta-data
   #-----------------------------------
@@ -219,13 +219,14 @@ for( proj in names(h5ad_files)[1] ){
 
   # QC
   #---
-  # df = sex_check( sce )
+  df = sex_check( sce[,1:30000] )
 
-  # figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
-  #     geom_point() +
-  #     theme_classic() +
-  #     theme(aspect.ratio=1) +
-  #     scale_color_manual(values=c("blue", "red"))
+  figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
+      geom_point() +
+      theme_classic() +
+      theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+      scale_color_manual(values=c("blue", "red")) +
+        ggtitle(proj)
 
   # write sce in chunks
   #--------------------
@@ -242,6 +243,13 @@ for( proj in names(h5ad_files)[1] ){
   write_merge_chunks_job( proj, outpref, timeTxt, jobfile )
 }
 ```
+
+```{r plots}
+library(cowplot)
+
+plot_grid(plotlist = figList)
+```
+
 
 
 ```{r combine, eval=FALSE}
