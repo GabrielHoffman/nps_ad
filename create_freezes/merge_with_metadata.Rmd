@@ -1,6 +1,6 @@
 ---
 title: "Analysis of NPS/AD"
-subtitle: 'Create Public Freeze 0 from Internal Public Freeze 0'
+subtitle: 'Merge scRNA-seq freeze with meta-data freeze'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r Sys.time()`"
 output: 
@@ -12,12 +12,12 @@ output:
 
 <!--- 
 
-cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/create_freezes/public_freeze_0
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/create_freezes/
 ml python git pandoc
 git pull origin master
 R --vanilla
 
-system("git pull origin master"); rmarkdown::render("create_public_release.Rmd");
+system("git pull origin master"); rmarkdown::render("merge_with_metadata.Rmd");
 
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/create_public_release.html
@@ -100,26 +100,34 @@ merge_with_metadata = function(h5ad_file){
   tab = table(rownames(sceCombine))
   keep = rownames(sceCombine) %in% names(tab[tab==1])
   sceCombine = sceCombine[keep,]
+  colData(sceCombine) = droplevels(colData(sceCombine))
 
   sceCombine
 }
+
 write_in_chunks = function(sce, outprefix){
-  vec = seq(1, ncol(sce))
-  chunk_length <- 100000     
+
+  sceCopy = SingleCellExperiment( list(counts=counts(sce)),
+          rowData = rowData(sce),
+          colData = colData(sce)[,seq(ncol(colData(sce)))],
+          reducedDims = reducedDims(sce))
+
+  vec = seq(ncol(sceCopy))
+  chunk_length <- 10000
   chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
   res = lapply(names(chunks), function(id){
     message(id)
-    outfile = paste0(outprefix, '_chunk', id, ".h5ad")
-    sceSub = sce[,chunks[[id]]]
-    writeH5AD(sceSub, outfile, compression="none")
+    outfile = paste0(outprefix, '_chunk', sprintf("%02d", as.numeric(id)), ".h5ad")
+    sceSub = sceCopy[,chunks[[id]]]
+    writeH5AD(sceSub, outfile, compression="none", verbose=FALSE)
     })
 }
 
 sex_check = function(sce){
 
   sce$static = "all" 
-  pb <- aggregateToPseudoBulk(sce[,1:100000],
+  pb <- aggregateToPseudoBulk(sce,
         cluster_id = "static",
         sample_id  = "SubID",
         BPPARAM=SnowParam(1))
@@ -150,6 +158,43 @@ sex_check = function(sce){
 }
 
 
+# zellkonverter::writeH5AD() fails with 1.5M cells
+# So write in batches.
+# Later, concatenate the chunks in python
+# Do on high memory node
+# Need to use AnnData > 0.8.0
+write_merge_chunks_job = function(proj, outpref, timeTxt, jobfile){
+
+  # write text file of chunks files
+  infiles = dir(dirname(outpref), pattern = paste0(basename(outpref), "_chunk.*h5ad"), full.names=TRUE)
+  h5ad_list = paste0(outprefix, "list_", basename(outpref), ".txt")
+  write(infiles, file=h5ad_list)
+
+  # Final H5AD
+  outfile = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/", proj, "_", timeTxt, ".h5ad")
+
+  # write LSF job
+  cmd = paste0("#!/bin/bash
+#BSUB -P acc_CommonMind
+#BSUB -q premium
+#BSUB -R span[hosts=1]
+#BSUB -R rusage[mem=60000]
+#BSUB -W 12:00
+#BSUB -n 12
+
+conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
+
+SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
+
+cd /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/pkgs/
+
+python $SRC -i ", h5ad_list, " -o ", outfile)
+
+  write(cmd, jobfile)
+}
+
+
+
 # Frozen H5ADs
 h5ad_files = c(RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_R_pass3_anno_clean.h5ad", 
 HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_H_pass3_anno_clean.h5ad",
@@ -160,24 +205,35 @@ outprefix = "/sc/arion/scratch/hoffmg01/tmp/"
 
 figList = list()
 
-for( proj in names(h5ad_files) ){
+for( proj in names(h5ad_files)[1] ){
 
   # read H5AD and merge with meta-data
+  #-----------------------------------
   sce = merge_with_metadata( h5ad_files[proj] )
 
   # QC
+  #---
   df = sex_check( sce )
 
-  figList[[proj]] = ggplot(dfSub, aes(XIST, UTY, color=Sex)) +
+  figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
       geom_point() +
       theme_classic() +
       theme(aspect.ratio=1) +
       scale_color_manual(values=c("blue", "red"))
 
   # write sce in chunks
-  # outpref = paste0(outprefix, proj, "_tmp_", format(Sys.time(), "%Y-%m-%d_%H:%M"))
+  #--------------------
+  timeTxt = format(Sys.time(), "%Y-%m-%d_%H_%M")
 
-  # write_in_chunks( sce, outpref )
+  outpref = paste0(outprefix, proj, "_tmp_", timeTxt)
+
+  write_in_chunks( sce[,1:30000], outpref )
+
+  # write merge chunks code
+  #------------------------
+
+  jobfile = "/sc/arion/scratch/hoffmg01/tmp/job.lsf"
+  write_merge_chunks_job( proj, outpref, timeTxt, jobfile )
 }
 ```
 
@@ -185,6 +241,7 @@ for( proj in names(h5ad_files) ){
 
 
 
+```
 
 
 
