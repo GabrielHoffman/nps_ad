@@ -218,10 +218,12 @@ for( proj in names(h5ad_files) ){
 
   # read H5AD and merge with meta-data
   #-----------------------------------
+  message('  reading h5ad...')
   sce = merge_with_metadata( h5ad_files[proj] )
 
   # QC
-  #---
+  #---  
+  message('  sex check...')
   df = sex_check( sce )
 
   figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
@@ -233,6 +235,9 @@ for( proj in names(h5ad_files) ){
 
   # write sce in chunks
   #--------------------
+
+  message('  writing chunks...')
+
   timeTxt = format(Sys.time(), "%Y-%m-%d_%H_%M")
 
   outpref = paste0(outprefix, proj, "_tmp_", timeTxt)
