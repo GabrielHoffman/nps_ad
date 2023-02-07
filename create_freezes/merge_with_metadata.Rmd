@@ -1,0 +1,199 @@
+---
+title: "Analysis of NPS/AD"
+subtitle: 'Create Public Freeze 0 from Internal Public Freeze 0'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+---
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/create_freezes/public_freeze_0
+ml python git pandoc
+git pull origin master
+R --vanilla
+
+system("git pull origin master"); rmarkdown::render("create_public_release.Rmd");
+
+
+# https://hoffmg01.hpc.mssm.edu/nps_ad/create_public_release.html
+
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
+
+
+
+--->
+
+# Load packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = FALSE,
+  cache.lazy = FALSE)
+```
+
+```{r load.packages, cache=FALSE}
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(HDF5Array)
+library(dreamlet)
+library(scater)
+library(tidyverse)
+library(kableExtra)
+library(org.Hs.eg.db)
+
+# update block size for reading h5ad file from disk
+setAutoBlockSize(1e9)
+```
+
+
+# Merge H5AD with metadata
+```{r merge_with_metadata, cache=FALSE}
+merge_with_metadata = function(h5ad_file){
+  # read raw/* from h5ad file
+  sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
+  
+  # use `raw` as counts
+  sceCombine = swapAltExp(sce_in, "raw")
+  rowData(sceCombine) = rowData(sce_in)
+  rownames(sceCombine) = rownames(sce_in)
+  reducedDim(sceCombine, "X_umap") = reducedDim(sce_in, "X_umap")
+  reducedDim(sceCombine, "X_pca") = reducedDim(sce_in, "X_pca")
+  reducedDim(sceCombine, "X_pca_regressed_harmony") = reducedDim(sce_in, "X_pca_regressed_harmony")
+  counts(sceCombine) = assay(sceCombine, 'X')   # set counts assay to data in X
+  assay(sceCombine, 'X') = NULL          # free X  
+
+  # merge with full metadata
+  #------------------------
+
+  # Load metdata
+  df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/syn26527784_latest.csv")
+  rownames(df_meta) = df_meta$SubID
+
+  # lst_clinical = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/clinical_metadata_sampleSets_latest.RDS")
+
+  # df_meta$Dx_AD = NA
+  # i = df_meta$SubID %in% lst_clinical$controls_neuropathological
+  # df_meta$Dx_AD[i] = "Control" 
+  # i = df_meta$SubID %in% lst_clinical$AD
+  # df_meta$Dx_AD[i] = "AD"
+  # df_meta$Dx_AD[with(df_meta, PD | DLBD)] = NA
+
+  # get order of matching
+  i = match(sceCombine$SubID, df_meta$SubID)
+
+  # Assign new metadata
+  colData(sceCombine) = cbind(colData(sceCombine), df_meta[i,])
+
+  # only save genes with unique names
+  tab = table(rownames(sceCombine))
+  keep = rownames(sceCombine) %in% names(tab[tab==1])
+  sceCombine = sceCombine[keep,]
+
+  sceCombine
+}
+write_in_chunks = function(sce, outprefix){
+  vec = seq(1, ncol(sce))
+  chunk_length <- 100000     
+  chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
+
+  res = lapply(names(chunks), function(id){
+    message(id)
+    outfile = paste0(outprefix, '_chunk', id, ".h5ad")
+    sceSub = sce[,chunks[[id]]]
+    writeH5AD(sceSub, outfile, compression="none")
+    })
+}
+
+sex_check = function(sce){
+
+  sce$static = "all" 
+  pb <- aggregateToPseudoBulk(sce[,1:100000],
+        cluster_id = "static",
+        sample_id  = "SubID",
+        BPPARAM=SnowParam(1))
+
+  # Process assays to compute log2 CPM
+  res.proc = processAssays( pb, ~ 1, 
+                    min.cells = 0,
+                    min.count = 0,
+                    min.samples = 0, 
+                    min.prop = 0)
+    
+  # Extract merged expression and meta-data
+  df = extractData(res.proc, "all")
+
+  # Create a data.frame of UTY and XIST
+  geneID = c("Row.names", "Sex", "XIST", "UTY")
+  dfSub = df[,geneID] 
+  dfSub$Sex = factor(dfSub$Sex, c("Male", "Female"))
+
+  # predict sex based on gene expression
+  fit = glm(Sex ~ XIST + UTY, dfSub, family="binomial")
+  sex.prob = predict(fit, type="response")
+   
+  # score sex mislabeling
+  dfSub$score = as.integer(dfSub$Sex) -1 - sex.prob
+
+  dfSub
+}
+
+
+# Frozen H5ADs
+h5ad_files = c(RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_R_pass3_anno_clean.h5ad", 
+HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_H_pass3_anno_clean.h5ad",
+MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_M_pass3_anno_clean.h5ad",
+AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_FULL_pass3_anno_clean.h5ad")
+
+outprefix = "/sc/arion/scratch/hoffmg01/tmp/"
+
+figList = list()
+
+for( proj in names(h5ad_files) ){
+
+  # read H5AD and merge with meta-data
+  sce = merge_with_metadata( h5ad_files[proj] )
+
+  # QC
+  df = sex_check( sce )
+
+  figList[[proj]] = ggplot(dfSub, aes(XIST, UTY, color=Sex)) +
+      geom_point() +
+      theme_classic() +
+      theme(aspect.ratio=1) +
+      scale_color_manual(values=c("blue", "red"))
+
+  # write sce in chunks
+  # outpref = paste0(outprefix, proj, "_tmp_", format(Sys.time(), "%Y-%m-%d_%H:%M"))
+
+  # write_in_chunks( sce, outpref )
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
