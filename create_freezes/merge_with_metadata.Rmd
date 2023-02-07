@@ -175,25 +175,31 @@ write_merge_chunks_job = function(proj, outpref, timeTxt, jobfile){
 
   # write LSF job
   cmd = paste0("#!/bin/bash
+#BSUB -J ", proj, "_", timeTxt, "
 #BSUB -P acc_CommonMind
-#BSUB -q premium
+#BSUB -q express
+#BSUB -R rusage[mem=6000]
 #BSUB -R span[hosts=1]
-#BSUB -R rusage[mem=60000]
 #BSUB -W 12:00
-#BSUB -n 12
+#BSUB -n 3
+#BSUB -o %J.stdout         
+#BSUB -eo %J.stderr   
+#BSUB -L /bin/bash   
 
 conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 
-SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
+alias python=/hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/bin/python
 
-cd /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/pkgs/
+SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
 
 python $SRC -i ", h5ad_list, " -o ", outfile)
 
   write(cmd, jobfile)
 }
 
+write_merge_chunks_job( proj, outpref, timeTxt, jobfile )
 
+# system("rm -f stdcombind; bsub < /sc/arion/scratch/hoffmg01/tmp/job_RUSH_2023-02-07_11_20.lsf")
 
 # Frozen H5ADs
 h5ad_files = c(RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_R_pass3_anno_clean.h5ad", 
@@ -213,13 +219,13 @@ for( proj in names(h5ad_files)[1] ){
 
   # QC
   #---
-  df = sex_check( sce )
+  # df = sex_check( sce )
 
-  figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
-      geom_point() +
-      theme_classic() +
-      theme(aspect.ratio=1) +
-      scale_color_manual(values=c("blue", "red"))
+  # figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
+  #     geom_point() +
+  #     theme_classic() +
+  #     theme(aspect.ratio=1) +
+  #     scale_color_manual(values=c("blue", "red"))
 
   # write sce in chunks
   #--------------------
@@ -232,12 +238,33 @@ for( proj in names(h5ad_files)[1] ){
   # write merge chunks code
   #------------------------
 
-  jobfile = "/sc/arion/scratch/hoffmg01/tmp/job.lsf"
+  jobfile = paste0("/sc/arion/scratch/hoffmg01/tmp/job_", proj, "_", timeTxt, ".lsf")
   write_merge_chunks_job( proj, outpref, timeTxt, jobfile )
 }
 ```
 
 
+```{r combine, eval=FALSE}
+
+# get interactive job
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
+
+# run each merging
+cd /sc/arion/scratch/hoffmg01/tmp/
+
+for JOB in $(ls job*lsf);
+do
+  source $JOB
+done
+
+
+# # fails
+# ls job_RUSH_2023-02-07_11_20.lsf | parallel -P1 source
+
+# # works
+# source job_RUSH_2023-02-07_11_20.lsf
+# something about starting a new shell
+# using interactive lsf job works, but not automated job
 
 
 
