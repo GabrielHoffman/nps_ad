@@ -22,6 +22,7 @@ system("git pull origin master"); rmarkdown::render("merge_with_metadata.Rmd");
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/create_freezes/merge_with_metadata.html
 
+# start high-mem interactive job to run merging
 bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
 
 
@@ -113,7 +114,7 @@ write_in_chunks = function(sce, outprefix){
           reducedDims = reducedDims(sce))
 
   vec = seq(ncol(sceCopy))
-  chunk_length <- 10000
+  chunk_length <- 100000
   chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
   res = lapply(names(chunks), function(id){
