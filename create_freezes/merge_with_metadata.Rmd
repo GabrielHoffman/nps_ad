@@ -20,7 +20,7 @@ R --vanilla
 system("git pull origin master"); rmarkdown::render("merge_with_metadata.Rmd");
 
 
-# https://hoffmg01.hpc.mssm.edu/nps_ad/create_public_release.html
+# https://hoffmg01.hpc.mssm.edu/nps_ad/create_freezes/merge_with_metadata.html
 
 bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
 
@@ -214,7 +214,7 @@ figList = list()
 for( proj in names(h5ad_files) ){
 
   message(proj)
-  
+
   # read H5AD and merge with meta-data
   #-----------------------------------
   sce = merge_with_metadata( h5ad_files[proj] )
