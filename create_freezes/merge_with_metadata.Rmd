@@ -221,7 +221,7 @@ for( proj in names(h5ad_files) ){
 
   # QC
   #---
-  df = sex_check( sce[,1:30000] )
+  df = sex_check( sce )
 
   figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
       geom_point() +
@@ -236,7 +236,7 @@ for( proj in names(h5ad_files) ){
 
   outpref = paste0(outprefix, proj, "_tmp_", timeTxt)
 
-  write_in_chunks( sce[,1:30000], outpref )
+  write_in_chunks( sce, outpref )
 
   # write merge chunks code
   #------------------------
