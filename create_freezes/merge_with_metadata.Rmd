@@ -78,7 +78,7 @@ merge_with_metadata = function(h5ad_file){
   #------------------------
 
   # Load metdata
-  df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/syn26527784_latest.csv")
+  df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/syn26527784_latest.csv", show_col_types=FALSE)
   rownames(df_meta) = df_meta$SubID
 
   # lst_clinical = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/clinical_metadata_sampleSets_latest.RDS")
