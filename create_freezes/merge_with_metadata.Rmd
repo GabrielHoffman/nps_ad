@@ -62,7 +62,7 @@ setAutoBlockSize(1e9)
 ```{r merge_with_metadata}
 merge_with_metadata = function(h5ad_file){
   # read raw/* from h5ad file
-  sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=TRUE, uns=FALSE)
+  sce_in = readH5AD(h5ad_file, use_hdf5=TRUE, raw=TRUE, verbose=FALSE, uns=FALSE)
   
   # use `raw` as counts
   sceCombine = swapAltExp(sce_in, "raw")
@@ -213,6 +213,8 @@ figList = list()
 
 for( proj in names(h5ad_files) ){
 
+  message(proj)
+  
   # read H5AD and merge with meta-data
   #-----------------------------------
   sce = merge_with_metadata( h5ad_files[proj] )
