@@ -61,8 +61,6 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-```{r message}
-params$DATASET
-```
+Evaluating dataset: `r names(params$DATASET)`
 
 
