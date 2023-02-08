@@ -77,7 +77,8 @@ library(DelayedArray)
 library(GSEABase)
 library(scater)
 library(tidyverse)
-library(scattermore)
+library(ggplot2)
+library(cowplot) 
 })
 
 # update block size for reading h5ad file from disk
@@ -99,3 +100,135 @@ ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5
 ```{r umap}
 plotProjection(sce, "X_umap", "subclass", order=ctorder)  + ggtitle("subclass")
 ```
+
+
+## Summarize cell counts
+```{r summarize.cell.counts, fig.width=5}
+# cells per Channel
+colData(sce)$Channel %>% 
+  table %>% 
+  hist(main=paste0("Cell counts per Channel: mean=", format(mean(.), digits=2), ", median = ", format(median(.), digits=2)))
+
+colData(sce)$SubID %>% 
+  table %>% 
+  hist(main=paste0("Cell counts per SubID: mean=", format(mean(.), digits=2), ", median = ", format(median(.), digits=2)))
+
+# Number of cells observed per Channel
+colData(sce) %>%
+  xtabs( ~ Channel + subclass,.) %>%
+  as_tibble %>%
+  pivot_longer(cols=Channel) %>%
+  mutate(subclass = factor(subclass, ctorder)) %>%  
+  ggplot(aes(subclass, n, fill=subclass)) + 
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab("Number of cells observed per Channel") +
+    xlab('')
+
+# Number of cells observed per Subject
+fig.cells_subject = colData(sce) %>%
+  xtabs( ~ SubID + subclass,.) %>%
+  as_tibble %>%
+  pivot_longer(cols=SubID) %>%
+  mutate(subclass = factor(subclass, ctorder)) %>%  
+  ggplot(aes(subclass, n, fill=subclass)) + 
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab("Number of cells observed per Subject") +
+    xlab('')
+fig.cells_subject    
+```
+
+
+## Summarize read counts
+```{r summarize.read.counts}
+# extract read counts for each Channel
+df_counts = lapply( assayNames(pb), function(x){
+  data = assay(pb, x)
+
+  data.frame(celltype = x, ID = colnames(data), readCounts = colSums(data))
+})
+df_counts = do.call(rbind, df_counts)
+df_counts$celltype = factor(df_counts$celltype, ctorder)  
+
+ggplot(df_counts, aes(celltype, readCounts, fill=celltype)) +  
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab("Number of reads observed for each Channel") +
+    xlab('') +
+    ggtitle('Reads per cell cluster for each Channel')
+
+# extract cell counts
+df_rate = cellCounts(pb) %>%
+            as.data.frame %>%
+            mutate(ID = rownames(.))  %>% 
+            pivot_longer(cols=-ID, values_to="ncells", names_to="celltype") %>%
+            mutate(celltype = factor(celltype, ctorder))  
+
+# plot reads per cell
+inner_join(df_counts, df_rate, by=c("celltype", "ID")) %>%
+  ggplot(aes(celltype, readCounts/ncells, fill=celltype)) +  
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab('Reads per cell') +
+    xlab('') +
+    ggtitle('Reads per cell for each Channel')
+```
+
+
+## Cell type specificity
+```{r cellTypeSpecificity}
+df = cellTypeSpecificity( pb )
+ 
+plotViolin(df, assays=ctorder)  
+```
+
+
+### Show cell markers
+```{r cellMarkers}
+library(org.Hs.eg.db)
+genes = c('RBFOX3', 'MEG3', 'SLC17A7',
+'RBFOX3', 'MEG3', 'GAD1', 'GAD2', 'GRIK1',
+'SST',
+'PVALB',
+'VIP',
+'SLC1A3', 'GFAP', 'APOE', 'SLC1A2', 'SLC14A1',
+'PLP1', 'MAG', 'MBP',
+'PDGFRA', 'VCAN',
+'FLT1', 'CLDN5',
+'PDGFRB',
+'TGFBR1', 'DOCK8', 'CD74', 'CSF1R', 'MS4A6A', 'PLXDC2')
+ 
+df_genes = AnnotationDbi::select(org.Hs.eg.db, genes, "ENSEMBL", "SYMBOL")
+
+df_sub = df[rownames(df) %in% df_genes$ENSEMBL,]
+idx = match(rownames(df_sub), df_genes$ENSEMBL)
+rownames(df_sub) = df_genes$SYMBOL[idx]
+
+plotPercentBars(df, genes=unique(genes), assays=ctorder)  
+```
+
+```{r heatmap, fig.height=7, fig.width=7}
+dreamlet::plotHeatmap(df, genes=unique(genes), assays=ctorder)  
+```
+
