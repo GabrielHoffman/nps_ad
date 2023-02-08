@@ -26,7 +26,7 @@ system("git pull origin master"); rmarkdown::render("dreamlet_template.Rmd");
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo = FALSE,
+  echo = TRUE,
   warning=FALSE,
   message=FALSE,
   error = FALSE,
