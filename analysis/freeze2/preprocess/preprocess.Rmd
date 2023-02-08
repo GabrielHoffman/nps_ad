@@ -102,7 +102,7 @@ ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5
 for(cluster_id in c("class", "subclass", "subtype") ){
   for(sample_id in c("Channel", "SubID") ){
     # Compute pseudobulk
-    pb = aggregateToPseudoBulk(sce[1:100, 1:10000],
+    pb = aggregateToPseudoBulk(sce[, 1:10000],
       assay = "counts", 
       cluster_id = cluster_id,
       sample_id = sample_id,
