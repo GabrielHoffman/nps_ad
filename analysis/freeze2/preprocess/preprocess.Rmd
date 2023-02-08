@@ -32,6 +32,8 @@ HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-02-07_
 # FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
 AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-07_18_16.h5ad")
 
+system("git pull origin master");
+
 names(h5ad_files) %>% 
   walk(function(x) render("preprocess.Rmd",
           params = list(DATASET = h5ad_files[x]),
@@ -60,7 +62,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r message}
-message(params$DATASET)
+print(params$DATASET)
 ```
 
 
