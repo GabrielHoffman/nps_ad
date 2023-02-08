@@ -1,0 +1,167 @@
+---
+title: "Analysis template for RUSH"
+subtitle: 'Public Release 0'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+params:
+  DATASET: NULL
+---
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
+ml python git pandoc
+git pull origin master
+R --vanilla
+
+# system("git pull origin master"); rmarkdown::render("preprocess.Rmd");
+
+
+library(rmarkdown)
+library(tidyverse)
+
+h5ad_files = c(
+RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-02-07_14_21.h5ad", 
+HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-02-07_14_53.h5ad",
+# MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
+# FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
+AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-07_18_16.h5ad")
+
+h5ad_files %>% 
+  walk(function(x) render("preprocess.Rmd",
+                          params = list(DATASET = x),
+                          output_file = paste0("preprocess", x, ".html")))
+
+
+# https://hoffmg01.hpc.mssm.edu/nps_ad/nps_ad/analysis/freeze2/preprocess/
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r message}
+message(params$DATASET)
+```
+
+<!---
+# Load libraries
+```{r load.packages, cache=FALSE}
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(zellkonverter)
+library(dreamlet)
+library(zenith)
+library(DelayedArray)
+library(GSEABase)
+library(scater)
+library(tidyverse)
+library(scattermore)
+})
+
+# update block size for reading h5ad file from disk
+setAutoBlockSize(1e9)
+```
+
+# Load data
+```{r load.data}
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-02-07_14_21.h5ad" 
+sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE)
+assayNames(sce)[1] = "counts"
+
+# order of cell types used for plotting
+ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_IT', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo', "Immune")
+```
+
+# Summarizing data
+## UMAP
+```{r umap3}
+plotProjection(sce, "X_umap", "subclass", order=ctorder)  + ggtitle("subclass")
+```
+
+
+## Summarize cell counts
+```{r summarize.cell.counts, fig.width=5}
+# cells per Channel
+colData(sce)$Channel %>% 
+  table %>% 
+  hist(main=paste0("Cell counts per Channel: mean=", format(mean(.), digits=2), ", median = ", format(median(.), digits=2)))
+
+colData(sce)$SubID %>% 
+  table %>% 
+  hist(main=paste0("Cell counts per SubID: mean=", format(mean(.), digits=2), ", median = ", format(median(.), digits=2)))
+
+# Number of cells observed per Channel
+colData(sce) %>%
+  xtabs( ~ Channel + subclass,.) %>%
+  as_tibble %>%
+  pivot_longer(cols=Channel) %>%
+  mutate(subclass = factor(subclass, ctorder)) %>%  
+  ggplot(aes(subclass, n, fill=subclass)) + 
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab("Number of cells observed per Channel") +
+    xlab('')
+
+# Number of cells observed per Subject
+fig.cells_subject = colData(sce) %>%
+  xtabs( ~ SubID + subclass,.) %>%
+  as_tibble %>%
+  pivot_longer(cols=SubID) %>%
+  mutate(subclass = factor(subclass, ctorder)) %>%  
+  ggplot(aes(subclass, n, fill=subclass)) + 
+    geom_violin(color = NA) + 
+    geom_boxplot(width=.1, outlier.size=.1) +
+    theme_classic() + 
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5),
+      legend.position="none") + 
+    scale_y_log10() +
+    coord_flip() +
+    ylab("Number of cells observed per Subject") +
+    xlab('')
+fig.cells_subject    
+```
+
+# Compute pseudobulk at multiple levels
+```{r combineData, message=TRUE}
+# Create pseudo-bulk SingleCellExperiment
+for(cluster_id in c("class", "subclass", "subtype") ){
+  for(sample_id in c("Channel", "SubID") ){
+    # Compute pseudobulk
+    pb = aggregateToPseudoBulk(sce[1:100, 1:10000],
+      assay = "counts", 
+      cluster_id = cluster_id,
+      sample_id = sample_id,
+      BPPARAM = SnowParam(1))
+
+    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/RUSH_2023-02-07_14_21_", sample_id, "_", cluster_id)
+
+    # Save as RDS
+    file = paste0(filePrefix, ".RDS")
+    saveRDS(pb, file)
+
+  }
+}
+```
+--->
