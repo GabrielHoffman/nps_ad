@@ -44,7 +44,7 @@ names(h5ad_files)[1] %>%
 
 
 
-# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/
+# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_RUSH.html
 
 --->
 
@@ -80,6 +80,7 @@ library(tidyverse)
 library(ggplot2)
 library(cowplot) 
 library(org.Hs.eg.db)
+library(R.utils)
 })
 
 # update block size for reading h5ad file from disk
@@ -106,7 +107,7 @@ for(cluster_id in c("class", "subclass", "subtype") ){
       assay = "counts", 
       cluster_id = cluster_id,
       sample_id = sample_id,
-      BPPARAM = SnowParam(1))
+      BPPARAM = SnowParam(6))
 
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
 
@@ -131,7 +132,6 @@ for(cluster_id in c("class", "subclass", "subtype") ){
     }else{      
       form = ~ (1|poolID) + (1|Sex) + scale(Age)
     }
-    form = ~ 1
 
     # Read pseudobulk RDS 
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
@@ -144,19 +144,18 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 
     # Save processed object to RDS
     file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
-
     saveRDS(res.proc, file)
 
     # Residuals
     if( sample_id == "SubID" ){
-      form = ~ 1 # (1|poolID) + (1|Sex) + scale(Age)
+      form = ~ (1|poolID) + (1|Sex) + scale(Age)
       fit = dreamlet(res.proc, form, 
                       BPPARAM = SnowParam(12) )
 
       for( CT in assayNames(res.proc) ){
-        file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, ".tsv")
+        file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, "_", CT, ".tsv")
 
-        data = format(residuals(fit[[CT]], digits=5)
+        data = format(residuals(fit[[CT]]), digits=5)
         write.table( data, file=file, quote=FALSE, sep="\t")
         gzip(file, overwrite=TRUE)
       }
@@ -169,10 +168,17 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 
 # Summarizing data
 ## UMAP
-```{r umap}
-plotProjection(sce, "X_umap", "subclass", order=ctorder)  + ggtitle("subclass")
+```{r umap1}
+plotProjection(sce, "X_umap", "class", order=ctorder)  + ggtitle("class")
 ```
 
+```{r umap2}
+plotProjection(sce, "X_umap", "subclass", order=ctorder)  + ggtitle("subclass")
+```
+```{
+  r umap3}
+plotProjection(sce, "X_umap", "subtype", order=ctorder)  + ggtitle("subtype")
+```
 
 ## Summarize cell counts
 ```{r summarize.cell.counts, fig.width=5}
@@ -314,20 +320,18 @@ dreamlet::plotHeatmap(df, genes=unique(genes), assays=ctorder)
 ```{r voom}
 # Normalize and apply voom
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
-form = ~ 1
 
 res.proc = processAssays( pb, form, BPPARAM = SnowParam(12))
 ```
 
 ```{r voom.plot, fig.height=15, fig.width=10, cache=TRUE}
-plotVoom( res.proc, ncol=4, assays=ctorder)+ theme_classic()  
+plotVoom( res.proc, ncol=4, assays=ctorder) 
 ```
 
 
 # Variance Partitioning Analysis
 ```{r varPart}
-# form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
-form = ~ scale(Age) 
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(12))
 ```
