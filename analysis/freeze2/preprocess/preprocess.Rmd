@@ -174,7 +174,7 @@ fig.cells_subject
 ```
 
 ```{r read pseudobulk}
-filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_", "Channel", "_", "sublcass")
+filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_", "Channel", "_", "subclass")
 
 # Read from RDS
 pb = readRDS(paste0(filePrefix, ".RDS"))
@@ -261,3 +261,42 @@ plotPercentBars(df, genes=unique(genes), assays=ctorder)
 dreamlet::plotHeatmap(df, genes=unique(genes), assays=ctorder)  
 ```
 
+
+# Process data: log2 CPM + voom precision weights
+```{r voom}
+# Normalize and apply voom
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
+form = ~ 1
+
+res.proc = processAssays( pb, form, BPPARAM = SnowParam(12))
+```
+
+```{r voom.plot, fig.height=15, fig.width=10, cache=TRUE}
+plotVoom( res.proc, ncol=4, assays=ctorder ) + theme_classic()  
+```
+
+
+# Variance Partitioning Analysis
+```{r varPart}
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) 
+
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(12))
+```
+
+
+
+```{r vp.plot, fig.height=15, fig.width=10}
+plotVarPart( sortCols(res.vp), label.angle=45, ncol=4, assays=ctorder )  
+```
+
+
+
+# Correlation with and between donors
+```{r within_btw, fig.height=10, fig.width=10}
+source("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/common_analyses.R")
+ 
+fig = eval_within_across_donor( res.proc, "SubID" )
+
+fig + theme(panel.grid.minor = element_blank(),
+            panel.grid.minor.y = element_blank())
+```
