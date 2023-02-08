@@ -59,7 +59,8 @@ knitr::opts_chunk$set(
   dev = c("png", "pdf"),
   package.startup.message = FALSE,
   cache = TRUE,
-  cache.lazy = FALSE)
+  cache.lazy = FALSE,
+  cache.path = paste0('preprocess_', names(params$DATASET)))
 ```
 
  <font size="5">__Evaluating dataset: `r names(params$DATASET)`__</font>
