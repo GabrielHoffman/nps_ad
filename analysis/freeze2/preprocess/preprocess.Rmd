@@ -1,6 +1,6 @@
 ---
-title: `r names(params$DATASET)`
-subtitle: 'Public Release 0'
+title: "Preprocess H5AD files"
+subtitle: 'Save pseudobulk, etc'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r Sys.time()`"
 output: 
@@ -61,6 +61,7 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-Evaluating dataset: `r names(params$DATASET)`
+# Evaluating dataset: `r names(params$DATASET)`
+
 
 
