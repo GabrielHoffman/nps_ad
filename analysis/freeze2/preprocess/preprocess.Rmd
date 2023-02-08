@@ -108,7 +108,7 @@ for(cluster_id in c("class", "subclass", "subtype") ){
       sample_id = sample_id,
       BPPARAM = SnowParam(1))
 
-    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_", sample_id, "_", cluster_id)
+    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
 
     # Save as RDS
     saveRDS(pb, file = paste0(filePrefix, ".RDS"))
@@ -174,7 +174,7 @@ fig.cells_subject
 ```
 
 ```{r read.pseudobulk}
-filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_", "Channel", "_", "subclass")
+filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", "Channel", "_", "subclass")
 
 # Read from RDS
 pb = readRDS(paste0(filePrefix, ".RDS"))
