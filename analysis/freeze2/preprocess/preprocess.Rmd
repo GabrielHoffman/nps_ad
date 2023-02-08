@@ -173,7 +173,7 @@ fig.cells_subject = colData(sce) %>%
 fig.cells_subject    
 ```
 
-```{r read pseudobulk}
+```{r read.pseudobulk}
 filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_", "Channel", "_", "subclass")
 
 # Read from RDS
@@ -228,9 +228,9 @@ inner_join(df_counts, df_rate, by=c("celltype", "ID")) %>%
 
 ## Cell type specificity
 ```{r cellTypeSpecificity}
-df = cellTypeSpecificity( pb )
+df_cellScore = cellTypeSpecificity( pb )
  
-plotViolin(df, assays=ctorder)  
+plotViolin(df_cellScore, assays=ctorder)  
 ```
 
 
@@ -250,11 +250,11 @@ genes = c('RBFOX3', 'MEG3', 'SLC17A7',
  
 df_genes = AnnotationDbi::select(org.Hs.eg.db, genes, "ENSEMBL", "SYMBOL")
 
-df_sub = df[rownames(df) %in% df_genes$ENSEMBL,]
+df_sub = df_cellScore[rownames(df_cellScore) %in% df_genes$ENSEMBL,]
 idx = match(rownames(df_sub), df_genes$ENSEMBL)
 rownames(df_sub) = df_genes$SYMBOL[idx]
 
-plotPercentBars(df, genes=unique(genes), assays=ctorder)  
+plotPercentBars(df_cellScore, genes=unique(genes), assays=ctorder)  
 ```
 
 ```{r heatmap, fig.height=7, fig.width=7}
@@ -278,7 +278,8 @@ plotVoom( res.proc, ncol=4, assays=ctorder ) + theme_classic()
 
 # Variance Partitioning Analysis
 ```{r varPart}
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) 
+# form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
+form = ~ scale(Age) 
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(12))
 ```
