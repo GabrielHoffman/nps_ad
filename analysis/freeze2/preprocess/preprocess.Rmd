@@ -131,6 +131,7 @@ for(cluster_id in c("class", "subclass", "subtype") ){
     }else{      
       form = ~ (1|poolID) + (1|Sex) + scale(Age)
     }
+    form = ~ 1
 
     # Read pseudobulk RDS 
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
