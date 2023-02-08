@@ -119,6 +119,37 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 }
 ```
 
+# Compute `processAssays()` at multiple levels
+```{r processAssays}
+for(cluster_id in c("class", "subclass", "subtype") ){
+  
+  for(sample_id in c("Channel", "SubID") ){
+
+    # formula
+    if( sample_id == "Channel"){
+      form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
+    }else{      
+      form = ~ (1|poolID) + (1|Sex) + scale(Age)
+    }
+
+    # Read pseudobulk RDS 
+    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
+
+    pb = readRDS(paste0(filePrefix, ".RDS"))
+
+    res.proc = processAssays( pb, form, 
+                      BPPARAM = SnowParam(12))
+
+    #   # Save processed object to RDS
+    file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
+
+    saveRDS(res.proc, file)
+  }
+}
+```
+
+
+
 # Summarizing data
 ## UMAP
 ```{r umap}
@@ -272,7 +303,7 @@ res.proc = processAssays( pb, form, BPPARAM = SnowParam(12))
 ```
 
 ```{r voom.plot, fig.height=15, fig.width=10, cache=TRUE}
-plotVoom( res.proc, ncol=4, assays=ctorder ) + theme_classic()  
+plotVoom( res.proc, ncol=4, assays=ctorder)+ theme_classic()  
 ```
 
 
@@ -301,3 +332,5 @@ fig = eval_within_across_donor( res.proc, "SubID" )
 fig + theme(panel.grid.minor = element_blank(),
             panel.grid.minor.y = element_blank())
 ```
+
+
