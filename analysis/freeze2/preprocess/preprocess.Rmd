@@ -59,11 +59,43 @@ knitr::opts_chunk$set(
   dev = c("png", "pdf"),
   package.startup.message = FALSE,
   cache = TRUE,
-  cache.lazy = FALSE,
-  cache.path = names(params$DATASET))
+  cache.lazy = FALSE)
 ```
 
  <font size="5">__Evaluating dataset: `r names(params$DATASET)`__</font>
 
 
 
+# Load libraries
+```{r load.packages, cache=FALSE}
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(zellkonverter)
+library(dreamlet)
+library(zenith)
+library(DelayedArray)
+library(GSEABase)
+library(scater)
+library(tidyverse)
+library(scattermore)
+})
+
+# update block size for reading h5ad file from disk
+setAutoBlockSize(1e9)
+```
+
+# Load data
+```{r load.data}
+sce = readH5AD(params$DATASET, use_hdf5=TRUE, verbose=TRUE)
+assayNames(sce)[1] = "counts"
+
+# order of cell types used for plotting
+ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_IT', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo', "Immune")
+```
+
+
+# Summarizing data
+## UMAP
+```{r umap}
+plotProjection(sce, "X_umap", "subclass", order=ctorder)  + ggtitle("subclass")
+```
