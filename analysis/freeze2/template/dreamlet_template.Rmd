@@ -135,10 +135,10 @@ go.gs = go.gs[sapply(go.gs, function(x) length(geneIds(x))) < 1000]
 res.gsa = zenith_gsa(fit, go.gs, coefs="AD")
 ```
 
-```{r zenith.heatmap.1, fig.width=10, fig.height=25, cache=FALSE} 
+```{r zenith.heatmap.1, fig.width=10, fig.height=25} 
 # remove "GO0022625: " from gene set name
 res.gsa$Geneset = gsub("^GO\\S+ ", "", res.gsa$Geneset)
 res.gsa$assay = factor(res.gsa$assay, ctorder)  
 
-plotZenithResults(res.gsa, 10, 3) + theme(legend.position="bottom") 
+plotZenithResults(res.gsa, 5, 3) + theme(legend.position="bottom") 
 ```
