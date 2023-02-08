@@ -35,7 +35,7 @@ AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-0
 run = function(){
 system("git pull origin master");
 
-names(h5ad_files) %>% 
+names(h5ad_files)[1] %>% 
   walk(function(x) render("preprocess.Rmd",
           params = list(DATASET = h5ad_files[x]),
           output_file = paste0("./preprocess_", x, ".html")))

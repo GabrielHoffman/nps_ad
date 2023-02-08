@@ -76,7 +76,7 @@ plotProjection(sce, "X_umap", "subclass", order=ctorder)  + ggtitle("subclass")
 # Compute pseudobulk 
 ```{r combineData, message=TRUE}
 # Create pseudo-bulk SingleCellExperiment
-pb = aggregateToPseudoBulk(sce[1:100, 1:10000],
+pb = aggregateToPseudoBulk(sce,
   assay = "counts", 
   cluster_id = "subclass",
   sample_id = "Channel",
