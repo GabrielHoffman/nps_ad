@@ -20,9 +20,7 @@ R --vanilla
 
 system("git pull origin master"); rmarkdown::render("dreamlet_template.Rmd");
 
-
 # https://hoffmg01.hpc.mssm.edu/nps_ad/nps_ad/analysis/freeze2/template/dreamlet_template.html
-
 
 --->
 
@@ -112,7 +110,7 @@ res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(12))
 # Differential expression: dreamlet analysis
 ```{r dreamlet}
 # form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + AD
-form = ~ Dx
+form = ~ AD
 
 fit = dreamlet( res.proc, form, BPPARAM = SnowParam(12))
 ```
