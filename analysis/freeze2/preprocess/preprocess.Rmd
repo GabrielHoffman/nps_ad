@@ -1,5 +1,5 @@
 ---
-title: "Analysis template for RUSH"
+title: `r names(params$DATASET)`
 subtitle: 'Public Release 0'
 author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
 date: "Run on `r Sys.time()`"
