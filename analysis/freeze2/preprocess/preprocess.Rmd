@@ -102,7 +102,7 @@ ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5
 for(cluster_id in c("class", "subclass", "subtype") ){
   for(sample_id in c("Channel", "SubID") ){
     # Compute pseudobulk
-    pb = aggregateToPseudoBulk(sce[, 1:10000],
+    pb = aggregateToPseudoBulk(sce,
       assay = "counts", 
       cluster_id = cluster_id,
       sample_id = sample_id,
@@ -138,13 +138,29 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 
     pb = readRDS(paste0(filePrefix, ".RDS"))
 
+    # processAssays
     res.proc = processAssays( pb, form, 
                       BPPARAM = SnowParam(12))
 
-    #   # Save processed object to RDS
+    # Save processed object to RDS
     file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
 
     saveRDS(res.proc, file)
+
+    # Residuals
+    if( sample_id == "SubID" ){
+      form = ~ 1 # (1|poolID) + (1|Sex) + scale(Age)
+      fit = dreamlet(res.proc, form, 
+                      BPPARAM = SnowParam(12) )
+
+      for( CT in assayNames(res.proc) ){
+        file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, ".tsv")
+
+        data = format(residuals(fit[[CT]], digits=5)
+        write.table( data, file=file, quote=FALSE, sep="\t")
+        gzip(file, overwrite=TRUE)
+      }
+    }
   }
 }
 ```
@@ -334,4 +350,11 @@ fig + theme(panel.grid.minor = element_blank(),
             panel.grid.minor.y = element_blank())
 ```
 
+
+# Session Info
+<details>
+```{r sessioninfo, cache=FALSE}
+sessionInfo()
+```
+</details>
 
