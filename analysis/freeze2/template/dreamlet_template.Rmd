@@ -117,7 +117,7 @@ fit = dreamlet( res.proc, form, BPPARAM = SnowParam(12))
 
 ## Volcano
 ```{r volcano, fig.height=15, fig.width=10}
-plotVolcano(fit, "AD1", ncol=4, assays=ctorder) + theme_classic()
+plotVolcano(fit, "AD", ncol=4, assays=ctorder) + theme_classic()
 ```
 
 
@@ -131,7 +131,7 @@ go.gs = get_GeneOntology(to="SYMBOL")
 go.gs = go.gs[sapply(go.gs, function(x) length(geneIds(x))) < 1000]
 
 # zenith analysis 
-res.gsa = zenith_gsa(fit, go.gs, coefs="AD1")
+res.gsa = zenith_gsa(fit, go.gs, coefs="AD")
 ```
 
 ```{r zenith.heatmap.1, fig.width=10, fig.height=25, cache=FALSE} 
