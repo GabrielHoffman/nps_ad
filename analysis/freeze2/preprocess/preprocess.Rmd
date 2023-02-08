@@ -117,7 +117,6 @@ for(cluster_id in c("class", "subclass", "subtype") ){
     writeH5AD( pb, file = paste0(filePrefix, ".h5ad"), compression = "lzf" )
   }
 }
-knitr::knit_exit(1)
 ```
 
 # Summarizing data
@@ -174,6 +173,12 @@ fig.cells_subject = colData(sce) %>%
 fig.cells_subject    
 ```
 
+```{r read pseudobulk}
+filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_", "Channel", "_", "sublcass")
+
+# Read from RDS
+pb = readRDS(paste0(filePrefix, ".RDS"))
+```
 
 ## Summarize read counts
 ```{r summarize.read.counts}
