@@ -60,7 +60,7 @@ knitr::opts_chunk$set(
   package.startup.message = FALSE,
   cache = TRUE,
   cache.lazy = FALSE,
-  cache.path = paste0('preprocess_', names(params$DATASET)))
+  cache.path = names(params$DATASET))
 ```
 
  <font size="5">__Evaluating dataset: `r names(params$DATASET)`__</font>
