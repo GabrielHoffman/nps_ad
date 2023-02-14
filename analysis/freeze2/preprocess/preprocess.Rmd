@@ -43,8 +43,10 @@ names(h5ad_files)[1] %>%
 
 
 
-
 # https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_RUSH.html
+
+
+params = list(DATASET = h5ad_files["RUSH"])
 
 --->
 
@@ -130,7 +132,7 @@ for(cluster_id in c("class", "subclass", "subtype") ){
     if( sample_id == "Channel"){
       form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
     }else{      
-      form = ~ (1|poolID) + (1|Sex) + scale(Age)
+      form = ~ (1|Sex) + scale(Age)
     }
 
     message(cluster_id, ' ',sample_id)
