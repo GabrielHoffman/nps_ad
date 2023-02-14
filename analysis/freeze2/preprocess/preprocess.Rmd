@@ -28,7 +28,7 @@ library(tidyverse)
 h5ad_files = c(
 RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-02-07_14_21.h5ad", 
 HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-02-07_14_53.h5ad",
-# MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
+MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
 # FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
 AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-07_18_16.h5ad")
 
