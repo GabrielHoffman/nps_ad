@@ -152,7 +152,7 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 
     # Residuals
     if( sample_id == "SubID" ){
-      form = ~ (1|poolID) + (1|Sex) + scale(Age)
+      form = ~ (1|Sex) + scale(Age)
       fit = dreamlet(res.proc, form, 
                       BPPARAM = SnowParam(12) )
 
