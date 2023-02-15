@@ -130,7 +130,7 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 
     # formula
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
+      form = ~ (1|SubID) + (1|Sex) + scale(Age)
     }else{      
       form = ~ (1|Sex) + scale(Age)
     }
@@ -141,6 +141,10 @@ for(cluster_id in c("class", "subclass", "subtype") ){
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
 
     pb = readRDS(paste0(filePrefix, ".RDS"))
+
+    if( "poolID" %in% colnames(colData(pb)) ){
+      form = update(form, ~ . + (1|poolID))
+    }
 
     # processAssays
     res.proc = processAssays( pb, form, 
