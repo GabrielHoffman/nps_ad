@@ -35,7 +35,7 @@ AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-0
 run = function(){
 system("git pull origin master");
 
-names(h5ad_files)[1] %>% 
+names(h5ad_files)[2:4] %>% 
   walk(function(x) render("preprocess.Rmd",
           params = list(DATASET = h5ad_files[x]),
           output_file = paste0("./preprocess_", x, ".html")))
@@ -148,7 +148,7 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 
     # processAssays
     res.proc = processAssays( pb, form, 
-                      BPPARAM = SnowParam(12))
+                      BPPARAM = SnowParam(6))
 
     # Save processed object to RDS
     file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
@@ -157,7 +157,7 @@ for(cluster_id in c("class", "subclass", "subtype") ){
     # Residuals
     if( sample_id == "SubID" ){
       fit = dreamlet(res.proc, form, 
-                      BPPARAM = SnowParam(12) )
+                      BPPARAM = SnowParam(6) )
 
       for( CT in assayNames(res.proc) ){
         file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, "_", CT, ".tsv")
