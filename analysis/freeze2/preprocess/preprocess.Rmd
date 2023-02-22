@@ -35,7 +35,7 @@ AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-0
 run = function(){
 system("git pull origin master");
 
-names(h5ad_files)[2] %>% 
+names(h5ad_files)[1] %>% 
   walk(function(x) render("preprocess.Rmd",
           params = list(DATASET = h5ad_files[x]),
           output_file = paste0("./preprocess_", x, ".html")))
@@ -189,7 +189,7 @@ plotProjection(sce, "X_umap", "subclass", order=ctorder)  + ggtitle("subclass")
 ```
 
 ```{r umap3}
-plotProjection(sce, "X_umap", "subtype", order=ctorder)  + ggtitle("subtype")
+plotProjection(sce, "X_umap", "subtype")  + ggtitle("subtype")
 ```
 
 ## Summarize cell counts
