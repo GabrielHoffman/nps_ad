@@ -35,7 +35,7 @@ AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-0
 run = function(){
 system("git pull origin master");
 
-names(h5ad_files)[2:4] %>% 
+names(h5ad_files)[2] %>% 
   walk(function(x) render("preprocess.Rmd",
           params = list(DATASET = h5ad_files[x]),
           output_file = paste0("./preprocess_", x, ".html")))
@@ -102,8 +102,14 @@ ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5
 # Compute pseudobulk at multiple levels
 ```{r combineData, message=TRUE}
 # Create pseudo-bulk SingleCellExperiment
-for(cluster_id in c("class", "subclass", "subtype") ){
-  for(sample_id in c("Channel", "SubID") ){
+# cluster_id_options = c("class", "subclass", "subtype")
+# sample_id_options = c("Channel", "SubID")
+
+cluster_id_options = c("class")
+sample_id_options = c("Channel")
+
+for(cluster_id in cluster_id_options ){
+  for(sample_id in sample_id_options ){
     # Compute pseudobulk
     pb = aggregateToPseudoBulk(sce,
       assay = "counts", 
@@ -124,9 +130,8 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 
 # Compute `processAssays()` at multiple levels
 ```{r processAssays}
-for(cluster_id in c("class", "subclass", "subtype") ){
-  
-  for(sample_id in c("Channel", "SubID") ){
+for(cluster_id in cluster_id_options ){
+  for(sample_id in sample_id_options ){
 
     # formula
     if( sample_id == "Channel"){
@@ -176,14 +181,14 @@ for(cluster_id in c("class", "subclass", "subtype") ){
 # Summarizing data
 ## UMAP
 ```{r umap1}
-plotProjection(sce, "X_umap", "class", order=ctorder)  + ggtitle("class")
+plotProjection(sce, "X_umap", "class")  + ggtitle("class")
 ```
 
 ```{r umap2}
 plotProjection(sce, "X_umap", "subclass", order=ctorder)  + ggtitle("subclass")
 ```
-```{
-  r umap3}
+
+```{r umap3}
 plotProjection(sce, "X_umap", "subtype", order=ctorder)  + ggtitle("subtype")
 ```
 
@@ -319,7 +324,7 @@ plotPercentBars(df_cellScore, genes=unique(genes), assays=ctorder)
 ```
 
 ```{r heatmap, fig.height=7, fig.width=7}
-dreamlet::plotHeatmap(df, genes=unique(genes), assays=ctorder)  
+dreamlet::plotHeatmap(df_cellScore, genes=unique(genes), assays=ctorder)  
 ```
 
 
