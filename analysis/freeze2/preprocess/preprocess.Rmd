@@ -28,14 +28,14 @@ library(tidyverse)
 h5ad_files = c(
 RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-02-07_14_21.h5ad", 
 HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-02-07_14_53.h5ad",
-MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
+MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/MSSM_2023-02-07_16_08.h5ad",
 # FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
 AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-07_18_16.h5ad")
 
 run = function(){
 system("git pull origin master");
 
-names(h5ad_files)[1] %>% 
+names(h5ad_files)[2:4] %>% 
   walk(function(x) render("preprocess.Rmd",
           params = list(DATASET = h5ad_files[x]),
           output_file = paste0("./preprocess_", x, ".html")))
@@ -60,7 +60,7 @@ knitr::opts_chunk$set(
   tidy = FALSE,
   dev = c("png", "pdf"),
   package.startup.message = FALSE,
-  cache = TRUE,
+  cache = FALSE,
   cache.lazy = FALSE)
 ```
 
@@ -333,7 +333,7 @@ dreamlet::plotHeatmap(df_cellScore, genes=unique(genes), assays=ctorder)
 # Normalize and apply voom
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
 
-res.proc = processAssays( pb, form, BPPARAM = SnowParam(12))
+res.proc = processAssays( pb, form, BPPARAM = SnowParam(6))
 ```
 
 ```{r voom.plot, fig.height=15, fig.width=10, cache=TRUE}
@@ -345,7 +345,7 @@ plotVoom( res.proc, ncol=4, assays=ctorder)
 ```{r varPart}
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
 
-res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(12))
+res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6))
 ```
 
 
