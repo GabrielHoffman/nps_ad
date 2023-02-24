@@ -32,16 +32,16 @@ MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/MSSM_2023-02-07_
 # FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
 AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-07_18_16.h5ad")
 
-run = function(){
+run = function(x){
 system("git pull origin master");
 
-names(h5ad_files)[2:4] %>% 
+x %>% 
   walk(function(x) render("preprocess.Rmd",
           params = list(DATASET = h5ad_files[x]),
           output_file = paste0("./preprocess_", x, ".html")))
 }
 
-
+run("MSSM")
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_RUSH.html
 
@@ -96,6 +96,8 @@ assayNames(sce)[1] = "counts"
 
 # order of cell types used for plotting
 ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_IT', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo', "Immune")
+
+bpparam = SnowParam(6)
 ```
 
 
@@ -115,7 +117,7 @@ for(cluster_id in cluster_id_options ){
       assay = "counts", 
       cluster_id = cluster_id,
       sample_id = sample_id,
-      BPPARAM = SnowParam(6))
+      BPPARAM = bpparam)
 
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
 
@@ -153,7 +155,7 @@ for(cluster_id in cluster_id_options ){
 
     # processAssays
     res.proc = processAssays( pb, form, 
-                      BPPARAM = SnowParam(6))
+                      BPPARAM = bpparam)
 
     # Save processed object to RDS
     file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
@@ -162,7 +164,7 @@ for(cluster_id in cluster_id_options ){
     # Residuals
     if( sample_id == "SubID" ){
       fit = dreamlet(res.proc, form, 
-                      BPPARAM = SnowParam(6) )
+                      BPPARAM = bpparam )
 
       for( CT in assayNames(res.proc) ){
         file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, "_", CT, ".tsv")
@@ -333,7 +335,7 @@ dreamlet::plotHeatmap(df_cellScore, genes=unique(genes), assays=ctorder)
 # Normalize and apply voom
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
 
-res.proc = processAssays( pb, form, BPPARAM = SnowParam(6))
+res.proc = processAssays( pb, form, BPPARAM = bpparam)
 ```
 
 ```{r voom.plot, fig.height=15, fig.width=10, cache=TRUE}
@@ -345,7 +347,7 @@ plotVoom( res.proc, ncol=4, assays=ctorder)
 ```{r varPart}
 form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age)
 
-res.vp = fitVarPart(res.proc, form, BPPARAM = SnowParam(6))
+res.vp = fitVarPart(res.proc, form, BPPARAM = bpparam)
 ```
 
 
