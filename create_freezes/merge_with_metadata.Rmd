@@ -118,7 +118,7 @@ write_in_chunks = function(sce, outprefix){
   chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
   res = lapply(names(chunks), function(id){
-    message(id)
+    message(id, '/', max(names(chunks)))
     outfile = paste0(outprefix, '_chunk', sprintf("%02d", as.numeric(id)), ".h5ad")
     sceSub = sceCopy[,chunks[[id]]]
     writeH5AD(sceSub, outfile, compression="none", verbose=FALSE)
@@ -203,10 +203,12 @@ python $SRC -i ", h5ad_list, " -o ", outfile)
 # system("rm -f stdcombind; bsub < /sc/arion/scratch/hoffmg01/tmp/job_RUSH_2023-02-07_11_20.lsf")
 
 # Frozen H5ADs
+# https://docs.google.com/presentation/d/1oTolAu-aARpXg4D0shEJWD6YZ9u5aG6RQw7CLmMnXGU/edit#slide=id.g1bc8801a9f4_0_348
 h5ad_files = c(RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_R_pass3_anno_clean.h5ad", 
 HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_H_pass3_anno_clean.h5ad",
 MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_M_pass3_anno_clean.h5ad",
-AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_FULL_pass3_anno_clean.h5ad")
+# FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_FULL_pass3_anno_clean.h5ad",
+AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/221210_NPS-AD_freeze2_aging_pass3_anno_clean.h5ad")
 
 outprefix = "/sc/arion/scratch/hoffmg01/tmp/"
 
@@ -223,15 +225,15 @@ for( proj in names(h5ad_files) ){
 
   # QC
   #---  
-  message('  sex check...')
-  df = sex_check( sce )
+  # message('  sex check...')
+  # df = sex_check( sce )
 
-  figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
-      geom_point() +
-      theme_classic() +
-      theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
-      scale_color_manual(values=c("blue", "red")) +
-        ggtitle(proj)
+  # figList[[proj]] = ggplot(df, aes(XIST, UTY, color=Sex)) +
+  #     geom_point() +
+  #     theme_classic() +
+  #     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+  #     scale_color_manual(values=c("blue", "red")) +
+  #       ggtitle(proj)
 
   # write sce in chunks
   #--------------------
@@ -252,10 +254,11 @@ for( proj in names(h5ad_files) ){
 }
 ```
 
-```{r plots}
+```{r plots, eval=FALSE}
 library(cowplot)
 
-plot_grid(plotlist = figList)
+fig = plot_grid(plotlist = figList)
+ggsave(file = "~/www/test.pdf", fig)
 ```
 
 
@@ -263,7 +266,12 @@ plot_grid(plotlist = figList)
 ```{r combine, eval=FALSE}
 
 # get interactive job
-bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
+# -sla roussos_sla
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=110000] -W 12:00 -P acc_CommonMind -n 12 bash
+
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 24 bash
+
+#BSUB 
 
 # run each merging
 cd /sc/arion/scratch/hoffmg01/tmp/
@@ -273,6 +281,9 @@ do
   source $JOB
 done
 
+
+
+cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/
 
 # # fails
 # ls job_RUSH_2023-02-07_11_20.lsf | parallel -P1 source

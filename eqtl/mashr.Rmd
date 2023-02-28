@@ -54,6 +54,12 @@ synLogin()
 load(synGet('syn26969627')$path)
 ```
 
+```{r load2}
+folder = "/sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_12292022/eQTL_detection/cis-eQTL_detection/analysis/prepare_for_mashR/data_for_Gabriel_mashR"
+
+
+
+
 Spearman correlation between original beta values
 ```{r analysis, fig.height=7, fig.width=6}
 library(mashr)

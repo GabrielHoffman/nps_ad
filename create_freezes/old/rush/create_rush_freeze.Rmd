@@ -215,7 +215,7 @@ colData(sce) = droplevels(colData(sce))
 
 
 ```{r write.whole, eval=FALSE}
-outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022.h5ad"
+outfile = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Jan_18_2023.h5ad"
 writeH5AD(sce, outfile, compression="lzf")
 ```
 
@@ -233,7 +233,7 @@ vec = seq(1, ncol(sceCopy))
 chunk_length <- 100000     
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
-outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022"
+outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Jan_18_2023"
 
 res = lapply(names(chunks), function(id){
   message(id)
@@ -255,10 +255,10 @@ conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
 
 cd /sc/arion/projects/psychAD/NPS-AD/public_release_0/ 
-echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022_chunk*.h5ad) | tr ' ' '\n' > list.txt
+echo $(ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Jan_18_2023_chunk*.h5ad) | tr ' ' '\n' > list.txt
 
 cd /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/pkgs/
-OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Dec_19_2022.h5ad 
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/Rush_Jan_18_2023.h5ad 
 python $SRC -i /sc/arion/projects/psychAD/NPS-AD/public_release_0/list.txt -o $OUTFILE
 ```
 

@@ -41,7 +41,7 @@ x %>%
           output_file = paste0("./preprocess_", x, ".html")))
 }
 
-run("MSSM")
+run("RUSH")
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_RUSH.html
 

@@ -14,10 +14,10 @@ output:
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/freeze_v1
 ml python git pandoc
-git pull
+git pull origin master
 R --vanilla
 
-system("git pull"); rmarkdown::render("create_public_release_v2.Rmd");
+system("git pull origin master"); rmarkdown::render("create_public_release_v2.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/nps_ad/
@@ -51,6 +51,8 @@ library(dreamlet)
 library(scater)
 library(tidyverse)
 library(kableExtra)
+library(ggplot2)
+library(scattermore)
 library(org.Hs.eg.db)
 
 # update block size for reading h5ad file from disk
@@ -140,8 +142,73 @@ sce = sceCombine[,!is.na(sceCombine$AD) & sceCombine$round_num %in% 1:4]
 sce = sce[,!is.na(sce$Age) & (sce$Age >= 65) & (sce$Institution=="MSSM")]
 
 # Remove columns for public release
-keep = c('Sex', 'Age', 'AD', 'SubID', 'Channel', 'round_num', 'Institution', "batch", "class", "subtype", "leiden_labels")
+keep = c('Sex', 'Age', 'AD', 'SubID', 'Channel', 'round_num', 'Institution', "batch", "class", "subtype", "leiden_labels", "doublet_score")
 colData(sce) = droplevels(colData(sce)[,keep])
+
+# Remove Oligo_7, Micro_PVM_2
+sce = sce[,!(sce$subtype %in% c('Oligo_7', 'Micro_PVM_2'))]
+sce$subtype = droplevels(sce$subtype)
+sce$subtype = recode_factor(sce$subtype, Micro_PVM_1 = 'Micro_PVM')
+
+# AD status as factor
+sce$AD = factor(sce$AD, 0:1)
+
+# collapse cell type annotations into 9 categories
+sce$celltype = recode_factor(sce$subtype,
+                Astro_1 = "Astrocyte",
+                Astro_2 = "Astrocyte",
+                EN_L2_3_IT_1 = "Excitatory neuron",
+                EN_L2_3_IT_2 = "Excitatory neuron",
+                EN_L4_IT = "Excitatory neuron",
+                EN_L5_6_NP = "Excitatory neuron",
+                EN_L5_IT = "Excitatory neuron",
+                EN_L6_CT = "Excitatory neuron",
+                Endo = "Endothelial",
+                IN_Chandelier = "Inhibitory neuron",
+                IN_LAMP5 = "Inhibitory neuron",
+                IN_PVALB = "Inhibitory neuron",
+                IN_SST = "Inhibitory neuron",
+                IN_VIP = "Inhibitory neuron",
+                Immune_T = "T cell",
+                Micro_PVM = "Microglia",
+                OPC = "OPC",
+                Oligo_1 = "Oligodendrocyte",
+                Oligo_2 = "Oligodendrocyte",
+                Oligo_3 = "Oligodendrocyte",
+                Oligo_4 = "Oligodendrocyte",
+                Oligo_5 = "Oligodendrocyte",
+                Oligo_6 = "Oligodendrocyte",
+                VLMC_SMC_PC = "VLMC_SMC_PC")
+
+# predict annotation based on UMAP
+df = cbind(reducedDim(sce, "X_umap"), 
+    colData(sce)[,c("celltype", "doublet_score"),drop=FALSE]) %>% 
+    as.data.frame 
+ 
+library(nnet)
+fit = multinom( celltype ~ ns(V1) + ns(V2) + ns(V1*V2), data = df, maxit=200)
+value = predict(fit, type="probs")
+df$maxValue = apply(value, 1, max)
+
+
+```
+
+
+## UMAP
+```{r umap, dev="png"}
+# extract UMAP coordinates and annotations
+
+fig = ggplot(df, aes(V1, V2, color=doublet_score)) + geom_scattermore() + theme_classic() + theme(aspect.ratio=1) + xlab("UMAP1") + ylab("UMAP2") + scale_color_gradient(low="blue", high="red")
+ggsave(file='~/www/test.png', fig)
+
+
+
+fig = ggplot(df, aes(V1, V2, color=celltype)) + geom_scattermore() + theme_classic() + theme(aspect.ratio=1) + xlab("UMAP1") + ylab("UMAP2") 
+ggsave(file='~/www/test.png', fig)
+
+
+
+
 ```
 
 # Sex check and filtering
