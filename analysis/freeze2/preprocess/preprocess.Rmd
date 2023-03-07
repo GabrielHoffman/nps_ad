@@ -26,11 +26,11 @@ library(rmarkdown)
 library(tidyverse)
 
 h5ad_files = c(
-RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-02-07_14_21.h5ad", 
-HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-02-07_14_53.h5ad",
-MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/MSSM_2023-02-07_16_08.h5ad",
+RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-02-28_12_07.h5ad", 
+HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-02-28_12_36.h5ad",
+MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/MSSM_2023-02-28_13_54.h5ad",
 # FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
-AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-07_18_16.h5ad")
+AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-28_16_47.h5ad")
 
 run = function(x){
 system("git pull origin master");
@@ -41,7 +41,10 @@ x %>%
           output_file = paste0("./preprocess_", x, ".html")))
 }
 
-run("RUSH")
+run("HBCC")
+
+run("AGING")
+
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_RUSH.html
 
@@ -55,6 +58,7 @@ params = list(DATASET = h5ad_files["RUSH"])
 knitr::opts_chunk$set(
   echo = TRUE,
   warning=FALSE,
+  eval=FALSE,
   message=FALSE,
   error = FALSE,
   tidy = FALSE,
