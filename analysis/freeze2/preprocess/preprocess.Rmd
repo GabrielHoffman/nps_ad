@@ -109,7 +109,7 @@ bpparam = SnowParam(6)
 
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 # Create pseudo-bulk SingleCellExperiment
 cluster_id_options = c("class", "subclass", "subtype")
 sample_id_options = c("Channel", "SubID")
