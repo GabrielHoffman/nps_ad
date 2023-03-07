@@ -14,6 +14,10 @@ params:
 
 <!--- 
 
+
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=10000] -W 12:00 -P acc_CommonMind -n 12 bash
+
+
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 ml python git pandoc
 git pull origin master
@@ -46,7 +50,7 @@ run("HBCC")
 run("AGING")
 
 
-# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_RUSH.html
+# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_AGING.html
 
 
 params = list(DATASET = h5ad_files["RUSH"])
@@ -58,7 +62,6 @@ params = list(DATASET = h5ad_files["RUSH"])
 knitr::opts_chunk$set(
   echo = TRUE,
   warning=FALSE,
-  eval=FALSE,
   message=FALSE,
   error = FALSE,
   tidy = FALSE,
@@ -101,7 +104,7 @@ assayNames(sce)[1] = "counts"
 # order of cell types used for plotting
 ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_IT', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo', "Immune")
 
-bpparam = SnowParam(3)
+bpparam = SnowParam(6)
 ```
 
 
