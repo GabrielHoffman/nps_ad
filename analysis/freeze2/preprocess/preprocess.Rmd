@@ -15,7 +15,7 @@ params:
 <!--- 
 
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=10000] -W 12:00 -P acc_CommonMind -n 12 bash
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=30000] -W 48:00 -P acc_CommonMind -n 12 bash
 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
@@ -45,7 +45,6 @@ x %>%
           output_file = paste0("./preprocess_", x, ".html")))
 }
 
-run("HBCC")
 
 run("AGING")
 
@@ -109,7 +108,7 @@ bpparam = SnowParam(6)
 
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=FALSE}
+```{r combineData, message=TRUE, eval=TRUE}
 # Create pseudo-bulk SingleCellExperiment
 cluster_id_options = c("class", "subclass", "subtype")
 sample_id_options = c("Channel", "SubID")
