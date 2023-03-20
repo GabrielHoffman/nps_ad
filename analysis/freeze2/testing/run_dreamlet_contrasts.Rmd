@@ -62,8 +62,8 @@ load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreaml
 # variable_type = "CAT"
 # ctst_key = "HBCC_SCZ_BD_CTRL"
 # dataset = "HBCC"
-outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", ctst_key)
-ctr = CONTRASTS[[param$variable_type]][[param$ctst_key]]
+outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", params$ctst_key)
+ctr = CONTRASTS[[params$variable_type]][[params$ctst_key]]
 
 if( ! dir.exists(outpath) ) dir.create(outpath)
 
