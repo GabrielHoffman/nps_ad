@@ -133,7 +133,13 @@ fit = dreamlet( res.proc, form,
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
    
-res.zenith = lapply(ctr$contrasts, function(coef){
+if( is.na(ctr$contrasts) ){   
+  coef.test = ctr$contrasts
+}else{
+  coef.test = ctr$variable
+}
+
+res.zenith = lapply(coef.test, function(coef){
   zenith_gsa(fit, coef = coef, go.gs)
   })   
 res.zenith = do.call(rbind, res.zenith)
