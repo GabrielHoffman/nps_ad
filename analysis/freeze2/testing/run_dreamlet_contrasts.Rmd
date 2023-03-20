@@ -1,0 +1,229 @@
+---
+title: "Run dreamlet contrasts"
+subtitle: 'Automated analysis'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+params:
+  cntrst: NULL
+---
+
+
+
+<!--- 
+
+# https://hoffmg01.hpc.mssm.edu/PsychAD_analysis/
+
+rmarkdown::render("run_dreamlet_contrasts.Rmd")
+
+
+Rscript -e "rmarkdown::render('example.Rmd',params=list(args = myarg))"
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = FALSE,
+  cache.lazy = FALSE)
+```
+
+
+```{r get.contrast}
+variable_type = "CAT"
+ctst_key = "HBCC_SCZ_BD_CTRL"
+outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", ctst_key)
+ctr = CONTRASTS[[variable_type]][[ctst_key]]
+
+if( ! dir.exists(outpath) ) dir.create(outpath)
+
+print(paste0("> Variable: ", ctr$variable))
+print(paste0("> Vector of contrasts: ", paste0(ctr$contrasts, collapse=",")))
+
+
+
+```
+
+<!---
+ <font size="5">__Evaluating dataset: `r names(params$DATASET)`__</font>
+}
+--->
+
+
+# Load
+```{r load}
+library(dreamlet)
+library(SingleCellExperiment)
+library(tidyverse)
+library(zenith)
+library(qvalue)
+library(cowplot)
+library(tidyverse)
+
+# Load CONTRASTS and metadata
+load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
+
+# read processed data
+res.proc = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/HBCC_2023-02-28_12_36_processAssays_Channel_subclass.RDS")
+
+covariates_base = c("Age", "Sex", "PMI")#, "(1|SubID)", "(1|poolID)")
+```
+
+# dreamlet analysis
+```{r analysis}
+# combine base covariance with testing variables
+covariates = setdiff(union(covariates_base, ctr$covariates_incl), ctr$covariates_excl)
+
+# user-specified formula
+form = paste0("~ 0 + ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+form = as.formula(form)
+
+# merge subject-level metadata with colData(res.proc)
+metadata_sub = metadata[metadata$SubID %in% colData(res.proc)$SubID,]
+idx = match( colData(res.proc)$SubID, metadata_sub$SubID)
+
+# test ordering
+# df = cbind(as.character(colData(res.proc)$SubID), 
+#   metadata_sub$SubID[idx])
+# all.equal(df[,1], df[,2])
+
+cols = colnames(metadata_sub) %in% colnames(colData(res.proc))
+# colData(res.proc) = cbind(colData(res.proc), metadata_sub[idx,!cols])
+res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
+
+# run dreamlet
+fit = dreamlet( res.proc, form, 
+            contrasts = ctr$contrasts, 
+            BPPARAM=SnowParam(1, progressbar=TRUE), 
+            assay = "Astro")
+
+# Run zenith gene set analysis on result of dreamlet
+go.gs = get_GeneOntology(to="SYMBOL")
+   
+res.zenith = lapply(ctr$contrasts, function(coef){
+  zenith_gsa(fit, coef = coef, go.gs)
+  })   
+res.zenith = do.call(rbind, res.zenith)
+
+# mashr
+res.mashr = lapply( unique(res.zenith$coef), function(coef_key){
+  run_mash(fit, coef=coef_key)
+})
+```
+
+# Plot results
+```{r plots}
+# cell type order
+ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo', "Immune")
+
+ctorder = ctorder[ctorder %in% assayNames(fit)]
+
+# plotZenithResults
+tmp = sapply( unique(res.zenith$coef), function(coef_key){
+
+  df = res.zenith[res.zenith$coef == coef_key,,drop=FALSE]
+  fig = plotZenithResults(df, 5, 1)
+  file = paste0(outpath, "/zenith_", gsub(" ", "_", coef_key), ".pdf")
+  ggsave(file=file, fig, height=20)
+  })
+
+# plotVolcano
+tmp = sapply( unique(res.zenith$coef), function(coef_key){
+
+  fig = plotVolcano( fit, coef = coef_key, assays=ctorder )
+  file = paste0(outpath, "/plotVolcano_", gsub(" ", "_", coef_key), ".pdf")
+  ggsave(file=file, fig, height=20)
+  })
+
+# DE counts
+df_DE = lapply( unique(res.zenith$coef), function(coef_key){
+
+  topTable(fit, coef = coef_key, number=Inf ) %>%
+    as_tibble %>%
+    mutate(coef = coef_key) %>%
+    group_by(coef, assay) %>%
+    summarise( 
+      nGenes = length(adj.P.Val), 
+      nDE = sum(adj.P.Val < 0.05),
+      pi1 = 1 - qvalue(P.Value)$pi0) %>%
+    mutate(assay = factor(assay, ctorder)) 
+})
+df_DE = do.call(rbind, df_DE)
+
+# plots
+tmp = sapply( unique(res.zenith$coef), function(coef_key){
+
+  df_de = df_DE[df_DE$coef == coef_key, , drop=FALSE]
+
+  ymax = 1.05*max(df_de$nGenes)
+  fig1 = ggplot(df_de, aes(nGenes, assay, fill=assay)) + 
+      geom_bar(stat="identity") + 
+      theme_classic() +
+      theme(aspect.ratio=1, legend.position="none") +
+      scale_x_continuous(limits=c(0,ymax), expand=c(0,0)) +
+      xlab("# genes expressed") +
+      ylab("Cell type") 
+
+  ymax = max(1.05*max(df_de$nDE), 100)
+  fig2 = ggplot(df_de, aes(nDE, assay, fill=assay)) + 
+      geom_bar(stat="identity") + 
+      theme_classic() +
+      theme(aspect.ratio=1, legend.position="none", axis.text.y=element_blank()) +
+      scale_x_continuous(limits=c(0,ymax), expand=c(0,0)) +
+      xlab("# genes with FDR < 5%") +
+      ylab('')
+
+  fig3 = ggplot(df_de, aes(pi1, assay, fill=assay)) + 
+      geom_bar(stat="identity") + 
+      theme_classic() +
+      theme(aspect.ratio=1, legend.position="none", axis.text.y=element_blank()) +
+      scale_x_continuous(limits=c(0,1), expand=c(0,0)) +
+      xlab(bquote(pi[1]))+
+      ylab('')
+
+  fig = plot_grid(fig1, fig2, fig3, labels=LETTERS[1:3], nrow=1, axis="tblr", align="hv")
+
+  file = paste0(outpath, "/nDE_", gsub(" ", "_", coef_key), ".pdf")
+  ggsave(file, fig, width=12)
+})
+
+```
+
+# Save results
+```{r save.results}
+file = paste0(outpath, "/fit.RDS")
+saveRDS(fit, file=file)
+
+file = paste0(outpath, "/res_zenith.RDS")
+saveRDS(res.zenith, file=file)
+
+file = paste0(outpath, "/res_mashr.RDS")
+saveRDS(res.mashr, file=file)
+
+file = paste0(outpath, "/df_DE.tsv")
+write.table(df_DE, file, sep="\t", quote=FALSE, row.names=FALSE)
+```
+
+
+
+
+
+
+Session Info
+<details>
+```{r session, echo=FALSE}
+sessionInfo()
+```
+</details>
+
+
