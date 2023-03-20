@@ -23,6 +23,11 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/tes
 ml python git pandoc
 git pull origin master
 
+# Create jobs
+Rscript write_contrast_jobs.R
+
+# Goto folder
+cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis
 
 
 # rmarkdown::render("run_dreamlet_contrasts.Rmd")
