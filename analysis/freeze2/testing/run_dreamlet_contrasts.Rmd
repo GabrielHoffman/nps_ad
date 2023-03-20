@@ -27,15 +27,14 @@ git pull origin master
 
 rmarkdown::render("run_dreamlet_contrasts.Rmd")
 
-
-Rscript -e "rmarkdown::render('example.Rmd',params=list(args = myarg))"
-
 DIR=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
 
 variable_type="CAT"
 ctst_key="HBCC_SCZ_BD_CTRL"
 dataset="HBCC"
-Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\", params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", ctst_key = \"$ctst_key\"))"
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/${ctst_key}/${ctst_key}
+Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\", output_file = \"$OUTFILE\", 
+params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", ctst_key = \"$ctst_key\"))"
 
 
 --->
@@ -75,7 +74,9 @@ if( ! dir.exists(outpath) ) dir.create(outpath)
 ```
 
 
-<font size="5">__Evaluating dataset: `r names(params$dataset)`__</font>
+<font size="5">__Evaluating dataset: `r params$dataset`__</font>
+<font size="5">__Variable type: `r params$variable_type`__</font>
+<font size="5">__Contrast: `r params$ctst_key`__</font>
 
 
 ```{r exit, cache=FALSE}
