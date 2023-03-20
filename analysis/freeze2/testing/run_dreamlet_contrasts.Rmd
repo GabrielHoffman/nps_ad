@@ -135,9 +135,9 @@ res.zenith = lapply(ctr$contrasts, function(coef){
 res.zenith = do.call(rbind, res.zenith)
 
 # mashr
-res.mashr = lapply( unique(res.zenith$coef), function(coef_key){
-  run_mash(fit, coef=coef_key)
-})
+# res.mashr = lapply( unique(res.zenith$coef), function(coef_key){
+#   run_mash(fit, coef=coef_key)
+# })
 ```
 
 # Plot results
@@ -226,8 +226,8 @@ saveRDS(fit, file=file)
 file = paste0(outpath, "/res_zenith.RDS")
 saveRDS(res.zenith, file=file)
 
-file = paste0(outpath, "/res_mashr.RDS")
-saveRDS(res.mashr, file=file)
+# file = paste0(outpath, "/res_mashr.RDS")
+# saveRDS(res.mashr, file=file)
 
 file = paste0(outpath, "/df_DE.tsv")
 write.table(df_DE, file, sep="\t", quote=FALSE, row.names=FALSE)
