@@ -25,7 +25,7 @@ git pull origin master
 
 
 
-rmarkdown::render("run_dreamlet_contrasts.Rmd")
+# rmarkdown::render("run_dreamlet_contrasts.Rmd")
 
 
 DIR=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
@@ -120,7 +120,7 @@ res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts, 
             BPPARAM=SnowParam(1, progressbar=TRUE), 
-            assay = "Astro")
+            assay = c("Astro", "Oligo"))
 
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
