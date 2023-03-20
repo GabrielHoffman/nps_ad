@@ -56,7 +56,7 @@ for( variable_type in names(CONTRASTS)){
 
 		dataset = gsub("([a-zA-Z]+).*", "\\1", ctst_key)
 
-		if( dataset %in% c("MSSM", "RUSH", "HBCC") ){
+		if( dataset %in% c("MSSM", "RUSH", "HBCC", "Aging") ){
 			write_job( variable_type, ctst_key, dataset)
 		}else{
 			for(dataset in c("MSSM", "RUSH", "HBCC")){
