@@ -125,6 +125,8 @@ cols = colnames(metadata_sub) %in% colnames(colData(res.proc))
 # colData(res.proc) = cbind(colData(res.proc), metadata_sub[idx,!cols])
 res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 
+if( is.na(ctr$contrasts) ) ctr$contrasts = NULL
+
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts, 
