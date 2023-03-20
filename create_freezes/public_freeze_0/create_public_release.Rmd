@@ -179,7 +179,7 @@ pb <- aggregateToPseudoBulk(sce,
 ```
 
 ## Show mislabels
-```{r plot.sex}
+```{r plot.sex, eval=FALSE}
 # Process assays to compute log2 CPM
 res.proc = processAssays( pb, ~ 1) 
   
