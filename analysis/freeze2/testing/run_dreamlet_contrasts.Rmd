@@ -74,9 +74,11 @@ if( ! dir.exists(outpath) ) dir.create(outpath)
 ```
 
 
-<font size="5">__Evaluating dataset: `r params$dataset`__</font>
-<font size="5">__Variable type: `r params$variable_type`__</font>
-<font size="5">__Contrast: `r params$ctst_key`__</font>
+<font size="5">__Evaluating dataset:__ `r params$dataset` </font>
+
+<font size="5">__Variable type:__ `r params$variable_type`</font>
+
+<font size="5">__Contrast:__ `r params$ctst_key`</font>
 
 
 ```{r exit, cache=FALSE}
