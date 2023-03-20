@@ -78,11 +78,12 @@ if( ! dir.exists(outpath) ) dir.create(outpath)
 <font size="5">__Evaluating dataset: `r names(params$dataset)`__</font>
 
 
-
+```{r exit, cache=FALSE}
+knitr::knit_exit()
+```
 
 # Load
 ```{r load}
-knitr::knit_exit()
 library(dreamlet)
 library(SingleCellExperiment)
 library(tidyverse)
