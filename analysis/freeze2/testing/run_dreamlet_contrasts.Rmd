@@ -250,6 +250,9 @@ saveRDS(res.zenith, file=file)
 
 file = paste0(outpath, "/df_DE.tsv")
 write.table(df_DE, file, sep="\t", quote=FALSE, row.names=FALSE)
+
+file = paste0(outpath, "/formula.txt")
+write(as.character(form), file)
 ```
 
 
