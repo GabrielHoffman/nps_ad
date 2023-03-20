@@ -109,7 +109,11 @@ covariates_base = c("Age", "Sex", "PMI")#, "(1|SubID)", "(1|poolID)")
 covariates = setdiff(union(covariates_base, ctr$covariates_incl), ctr$covariates_excl)
 
 # user-specified formula
-form = paste0("~ 0 + ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
+  form = paste0("~ ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+}else{
+  form = paste0("~ 0 + ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+}
 form = as.formula(form)
 
 # merge subject-level metadata with colData(res.proc)
@@ -125,10 +129,15 @@ cols = colnames(metadata_sub) %in% colnames(colData(res.proc))
 # colData(res.proc) = cbind(colData(res.proc), metadata_sub[idx,!cols])
 res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 
+if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
+  ctr$contrasts = NULL
+}
+
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts, 
-            BPPARAM=SnowParam(6, progressbar=TRUE))
+            BPPARAM=SnowParam(1, progressbar=TRUE), 
+            assays = c("Astro", "EN_L2_3_IT"))
 
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
