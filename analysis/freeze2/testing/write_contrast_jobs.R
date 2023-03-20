@@ -17,10 +17,10 @@ write_job = function( variable_type, ctst_key, dataset ){
 	SRC = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/run_dreamlet_contrasts.Rmd"
 
 	cmd = paste0("rmarkdown::render('", SRC, "', 
-					output_file = '", outfile, "', 
-					params = list(dataset = '", dataset, "',
-					variable_type = '", variable_type, "', 
-					ctst_key = '", ctst_key, "'))")
+output_file = '", outfile, "', 
+params = list(dataset = '", dataset, "',
+variable_type = '", variable_type, "', 
+ctst_key = '", ctst_key, "'))")
 
 	logs = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/logs/", suffix, "_")
 
