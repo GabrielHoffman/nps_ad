@@ -6,9 +6,11 @@ load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreaml
 
 write_job = function( variable_type, ctst_key, dataset ){
 
-	outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", dataset, "_", ctst_key)
+	suffix = gsub(paste0(dataset, "_", dataset, "_"), paste0(dataset, "_"), paste0(dataset, "_", ctst_key))
 
-	outfile = paste0(outpath, "/", dataset, "_", ctst_key)
+	outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", suffix)
+
+	outfile = paste0(outpath, "/", suffix)
 
 	if( ! dir.exists(outpath) ) dir.create(outpath)
 
@@ -20,10 +22,10 @@ write_job = function( variable_type, ctst_key, dataset ){
 					variable_type = '", variable_type, "', 
 					ctst_key = '", ctst_key, "'))")
 
-	logs = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/logs/", dataset, "_", ctst_key, "_")
+	logs = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/logs/", suffix, "_")
 
 	txt = paste0("#!/bin/bash
-	#BSUB -J ", dataset, "_", ctst_key, "
+	#BSUB -J ", suffix, "
 	#BSUB -P acc_CommonMind
 	#BSUB -q premium
 	#BSUB -n 6
@@ -43,7 +45,7 @@ write_job = function( variable_type, ctst_key, dataset ){
 
 	")
 
-	jobFile = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/jobs/", dataset, "_", ctst_key, ".lsf") 
+	jobFile = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/jobs/", suffix, ".lsf") 
 
 	write(txt, jobFile)
 }
