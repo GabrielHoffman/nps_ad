@@ -29,7 +29,7 @@ Rscript write_contrast_jobs.R
 # Goto folder
 cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis
 
-ls jobs/* | head -n 3 | parallel -P1 "bsub < {}"
+ls jobs/* | parallel -P1 "bsub < {}"
 
 # rmarkdown::render("run_dreamlet_contrasts.Rmd")
 
@@ -100,7 +100,7 @@ file = dir(path, pattern=pattern, full.names=TRUE)
 
 res.proc = readRDS( file )
 
-covariates_base = c("Age", "Sex", "PMI")#, "(1|SubID)", "(1|poolID)")
+covariates_base = c("Age", "Sex", "PMI", "(1|SubID)", "(1|poolID)")
 ```
 
 # dreamlet analysis
