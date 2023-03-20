@@ -4,17 +4,15 @@
 # Load CONTRASTS and metadata
 load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
 
-write_job = function( variable_type, ctst_key ){
+write_job = function( variable_type, ctst_key, dataset ){
 
-	outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", ctst_key)
+	outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", dataset, "_", ctst_key)
 
-	outfile = paste0(outpath, "/", ctst_key)
+	outfile = paste0(outpath, "/", dataset, "_", ctst_key)
 
 	if( ! dir.exists(outpath) ) dir.create(outpath)
 
 	SRC = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/run_dreamlet_contrasts.Rmd"
-
-	dataset = gsub("([a-zA-Z]+).*", "\\1", ctst_key)
 
 	cmd = paste0("rmarkdown::render('", SRC, "', 
 					output_file = '", outfile, "', 
@@ -22,10 +20,10 @@ write_job = function( variable_type, ctst_key ){
 					variable_type = '", variable_type, "', 
 					ctst_key = '", ctst_key, "'))")
 
-	logs = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/logs/", ctst_key, "_")
+	logs = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/logs/", dataset, "_", ctst_key, "_")
 
 	txt = paste0("#!/bin/bash
-	#BSUB -J ", ctst_key, "
+	#BSUB -J ", dataset, "_", ctst_key, "
 	#BSUB -P acc_CommonMind
 	#BSUB -q premium
 	#BSUB -n 6
@@ -45,7 +43,7 @@ write_job = function( variable_type, ctst_key ){
 
 	")
 
-	jobFile = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/jobs/", ctst_key, ".lsf") 
+	jobFile = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/jobs/", dataset, "_", ctst_key, ".lsf") 
 
 	write(txt, jobFile)
 }
@@ -54,6 +52,14 @@ write_job = function( variable_type, ctst_key ){
 for( variable_type in names(CONTRASTS)){
 	for( ctst_key in names(CONTRASTS[[variable_type]]) ){
 
-		write_job( variable_type, ctst_key)
+		dataset = gsub("([a-zA-Z]+).*", "\\1", ctst_key)
+
+		if( dataset %in% c("MSSM", "RUSH", "HBCC") ){
+			write_job( variable_type, ctst_key, dataset)
+		}else{
+			for(dataset in c("MSSM", "RUSH", "HBCC")){
+				write_job( variable_type, ctst_key, dataset)
+			}
+		}
 	}
 }
