@@ -125,8 +125,6 @@ cols = colnames(metadata_sub) %in% colnames(colData(res.proc))
 # colData(res.proc) = cbind(colData(res.proc), metadata_sub[idx,!cols])
 res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 
-if( is.na(ctr$contrasts) ) ctr$contrasts = NULL
-
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts, 
@@ -135,10 +133,10 @@ fit = dreamlet( res.proc, form,
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
    
-if( is.na(ctr$contrasts) ){   
-  coef.test = ctr$contrasts
-}else{
+if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){   
   coef.test = ctr$variable
+}else{
+  coef.test = ctr$contrasts 
 }
 
 res.zenith = lapply(coef.test, function(coef){
