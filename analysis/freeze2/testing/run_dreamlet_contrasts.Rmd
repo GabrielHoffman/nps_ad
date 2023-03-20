@@ -30,7 +30,10 @@ Rscript -e "rmarkdown::render('example.Rmd',params=list(args = myarg))"
 
 DIR=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
 
-Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\")"
+variable_type="CAT"
+ctst_key="HBCC_SCZ_BD_CTRL"
+dataset="HBCC"
+Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\", params=list(dataset = \"\", variable_type = \"\", ctst_key = \"\"))"
 
 
 --->
@@ -54,28 +57,30 @@ knitr::opts_chunk$set(
 # Load CONTRASTS and metadata
 load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
 
-variable_type = "CAT"
-ctst_key = "HBCC_SCZ_BD_CTRL"
+# variable_type = "CAT"
+# ctst_key = "HBCC_SCZ_BD_CTRL"
+# dataset = "HBCC"
 outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", ctst_key)
-ctr = CONTRASTS[[variable_type]][[ctst_key]]
+ctr = CONTRASTS[[param$variable_type]][[param$ctst_key]]
 
 if( ! dir.exists(outpath) ) dir.create(outpath)
 
-print(paste0("> Variable: ", ctr$variable))
-print(paste0("> Vector of contrasts: ", paste0(ctr$contrasts, collapse=",")))
+# print(paste0("> Variable: ", ctr$variable))
+# print(paste0("> Vector of contrasts: ", paste0(ctr$contrasts, collapse=",")))
 
 
 
 ```
 
-<!---
- <font size="5">__Evaluating dataset: `r names(params$DATASET)`__</font>
-}
---->
+
+<font size="5">__Evaluating dataset: `r names(params$dataset)`__</font>
+
+
 
 
 # Load
 ```{r load}
+knitr::knit_exit()
 library(dreamlet)
 library(SingleCellExperiment)
 library(tidyverse)
@@ -85,7 +90,8 @@ library(cowplot)
 library(tidyverse)
 
 # read processed data
-res.proc = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/HBCC_2023-02-28_12_36_processAssays_Channel_subclass.RDS")
+file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", params$dataset, "_2023-02-28_12_36_processAssays_Channel_subclass.RDS")
+res.proc = readRDS( file )
 
 covariates_base = c("Age", "Sex", "PMI")#, "(1|SubID)", "(1|poolID)")
 ```
