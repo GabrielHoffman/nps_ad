@@ -29,6 +29,7 @@ Rscript write_contrast_jobs.R
 # Goto folder
 cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis
 
+ls jobs/* | head -n 3 | parallel -P1 "bsub < {}"
 
 # rmarkdown::render("run_dreamlet_contrasts.Rmd")
 
@@ -93,7 +94,10 @@ library(cowplot)
 library(tidyverse)
 
 # read processed data
-file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", params$dataset, "_2023-02-28_12_36_processAssays_Channel_subclass.RDS")
+path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/")
+pattern = paste0(toupper(params$dataset), "_2023-02-28_.*_processAssays_Channel_subclass.RDS")
+file = dir(path, pattern=pattern, full.names=TRUE)
+
 res.proc = readRDS( file )
 
 covariates_base = c("Age", "Sex", "PMI")#, "(1|SubID)", "(1|poolID)")
