@@ -119,8 +119,7 @@ res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts, 
-            BPPARAM=SnowParam(6, progressbar=TRUE), 
-            assay = c("Astro", "Oligo"))
+            BPPARAM=SnowParam(6, progressbar=TRUE))
 
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
