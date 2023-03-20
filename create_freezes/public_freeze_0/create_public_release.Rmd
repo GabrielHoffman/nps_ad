@@ -171,7 +171,7 @@ colData(sce) = droplevels(colData(sce)[,keep])
 # Sex check and filtering
 ```{r pb.sex, cache=TRUE}
 # Sum all reads for each individual
-sce$static = "all" 
+sce$static = "all"  
 pb <- aggregateToPseudoBulk(sce,
       cluster_id = "static",
       sample_id  = "SubID",
@@ -179,7 +179,7 @@ pb <- aggregateToPseudoBulk(sce,
 ```
 
 ## Show mislabels
-```{r plot.sex, eval=FALSE}
+```{r plot.sex}
 # Process assays to compute log2 CPM
 res.proc = processAssays( pb, ~ 1) 
   
