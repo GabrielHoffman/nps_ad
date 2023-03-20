@@ -17,10 +17,21 @@ params:
 
 # https://hoffmg01.hpc.mssm.edu/PsychAD_analysis/
 
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
+ml python git pandoc
+git pull origin master
+
+
+
 rmarkdown::render("run_dreamlet_contrasts.Rmd")
 
 
 Rscript -e "rmarkdown::render('example.Rmd',params=list(args = myarg))"
+
+DIR=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
+
+Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\")"
+
 
 --->
 
@@ -40,6 +51,9 @@ knitr::opts_chunk$set(
 
 
 ```{r get.contrast}
+# Load CONTRASTS and metadata
+load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
+
 variable_type = "CAT"
 ctst_key = "HBCC_SCZ_BD_CTRL"
 outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", ctst_key)
@@ -69,9 +83,6 @@ library(zenith)
 library(qvalue)
 library(cowplot)
 library(tidyverse)
-
-# Load CONTRASTS and metadata
-load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
 
 # read processed data
 res.proc = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/HBCC_2023-02-28_12_36_processAssays_Channel_subclass.RDS")
