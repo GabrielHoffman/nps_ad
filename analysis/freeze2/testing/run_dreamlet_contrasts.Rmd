@@ -8,7 +8,9 @@ output:
     toc: true
     smart: true
 params:
-  cntrst: NULL
+  dataset: NULL
+  variable_type: NULL
+  ctst_key: NULL
 ---
 
 
@@ -33,7 +35,7 @@ DIR=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/te
 variable_type="CAT"
 ctst_key="HBCC_SCZ_BD_CTRL"
 dataset="HBCC"
-Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\", params=list(dataset = \"\", variable_type = \"\", ctst_key = \"\"))"
+Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\", params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", ctst_key = \"$ctst_key\"))"
 
 
 --->
