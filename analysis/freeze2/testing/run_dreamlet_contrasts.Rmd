@@ -136,8 +136,7 @@ if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts, 
-            BPPARAM=SnowParam(1, progressbar=TRUE), 
-            assays = c("Astro", "EN_L2_3_IT"))
+            BPPARAM=SnowParam(3, progressbar=TRUE))
 
 if( is.null(coefNames(fit)) ){
   print("No coefficients were esimated,\nlikely because variable of interest was NA")
