@@ -85,13 +85,14 @@ if( ! dir.exists(outpath) ) dir.create(outpath)
 
 # Load data
 ```{r load}
+suppressPackageStartupMessages({
 library(dreamlet)
 library(SingleCellExperiment)
 library(tidyverse)
 library(zenith)
 library(qvalue)
 library(cowplot)
-library(tidyverse)
+library(tidyverse)})
 
 # read processed data
 path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/")
@@ -135,8 +136,7 @@ if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
 
 # run dreamlet
 fit = dreamlet( res.proc, form, 
-            contrasts = ctr$contrasts, 
-            BPPARAM=SnowParam(3, progressbar=TRUE))
+            contrasts = ctr$contrasts)
 
 if( is.null(coefNames(fit)) ){
   print("No coefficients were esimated,\nlikely because variable of interest was NA")
