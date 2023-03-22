@@ -12,7 +12,7 @@ write_job = function( variable_type, ctst_key, dataset ){
 
 	outfile = paste0(outpath, "/", suffix)
 
-	if( ! dir.exists(outpath) ) dir.create(outpath)
+	# if( ! dir.exists(outpath) ) dir.create(outpath)
 
 	SRC = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/run_dreamlet_contrasts.Rmd"
 

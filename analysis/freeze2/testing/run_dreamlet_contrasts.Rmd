@@ -141,6 +141,7 @@ fit = dreamlet( res.proc, form,
 if( is.null(coefNames(fit)) ){
   print("No coefficients were esimated,\nlikely because variable of interest was NA")
   knitr::knit_exit()
+  stop()
 }
 
 # Run zenith gene set analysis on result of dreamlet
@@ -165,6 +166,8 @@ res.zenith = do.call(rbind, res.zenith)
 
 # Plot results
 ```{r plots}
+if( ! dir.exists(outpath) ) dir.create(outpath)
+
 # cell type order
 ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', "EN_L6_IT_1", "EN_L6_IT_2", 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo', "Immune")
 
