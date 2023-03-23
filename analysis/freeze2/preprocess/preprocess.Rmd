@@ -15,7 +15,7 @@ params:
 <!--- 
 
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=30000] -W 48:00 -P acc_CommonMind -n 12 bash
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=30000] -W 96:00 -P acc_CommonMind -n 12 bash
 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
@@ -46,13 +46,16 @@ x %>%
 }
 
 
-run("AGING")
+run("MSSM")
 
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_AGING.html
 
 
 params = list(DATASET = h5ad_files["RUSH"])
+
+complete pseudobulk?
+studentized residuals
 
 --->
 
@@ -173,9 +176,17 @@ for(cluster_id in cluster_id_options ){
                       BPPARAM = bpparam )
 
       for( CT in assayNames(res.proc) ){
+        # residuals
         file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, "_", CT, ".tsv")
 
         data = format(residuals(fit[[CT]]), digits=5)
+        write.table( data, file=file, quote=FALSE, sep="\t")
+        gzip(file, overwrite=TRUE)
+
+        # pearson residuals
+        file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residualsPearson_", sample_id, "_", cluster_id, "_", CT, ".tsv")
+
+        data = format(residuals(fit[[CT]], type="pearson"), digits=5)
         write.table( data, file=file, quote=FALSE, sep="\t")
         gzip(file, overwrite=TRUE)
       }
