@@ -153,14 +153,14 @@ fit = dream( cobj, form, colData(pb), L = L)
 fit = eBayes(fit)
 ```
 
-```{r topTable}
+```{r topTable, results="asis"}
 res = lapply(ctr$contrasts, function(ctst){
   tab = topTable(fit, coef=ctst, number=Inf)
 
   tab %>%
     kable(caption = ctst)
 })
-cat(do.call(paste, res))
+do.call(paste, res)
 knitr::knit_exit()
 ```
 
