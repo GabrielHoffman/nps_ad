@@ -158,7 +158,7 @@ res = lapply(ctr$contrasts, function(ctst){
   topTable(fit, coef=ctst, number=Inf) %>%
     kable(caption = ctst) 
 })
-names(res) = ctr$contrasts
+# names(res) = ctr$contrasts
 res
 ```
 
