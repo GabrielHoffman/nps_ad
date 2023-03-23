@@ -161,6 +161,7 @@ res = lapply(ctr$contrasts, function(ctst){
     kable(caption = ctst)
 })
 cat(do.call(paste, res))
+knitr::knit_exit()
 ```
 
 
