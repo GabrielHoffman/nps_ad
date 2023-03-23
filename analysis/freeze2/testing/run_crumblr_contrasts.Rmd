@@ -1,0 +1,181 @@
+---
+title: "Run crumblr contrasts"
+subtitle: 'Automated analysis'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+params:
+  dataset: NULL
+  variable_type: NULL
+  ctst_key: NULL
+---
+
+
+
+<!--- 
+
+# https://hoffmg01.hpc.mssm.edu/PsychAD_analysis/
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
+ml python git pandoc
+git pull origin master
+
+# Create jobs
+Rscript write_contrast_jobs.R
+
+# Goto folder
+cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis
+
+ls jobs/* | parallel -P1 "bsub < {}"
+
+# rmarkdown::render("run_dreamlet_contrasts.Rmd")
+
+
+DIR=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
+
+variable_type="CAT"
+ctst_key="HBCC_SCZ_BD_CTRL"
+dataset="HBCC"
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/${ctst_key}/${ctst_key}
+Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\", output_file = \"$OUTFILE\", 
+params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", ctst_key = \"$ctst_key\"))"
+
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = FALSE,
+  cache.lazy = FALSE)
+```
+
+
+```{r get.contrast}
+# Load CONTRASTS and metadata
+load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
+
+# variable_type = "CAT"
+# ctst_key = "HBCC_SCZ_BD_CTRL"
+# dataset = "HBCC"
+outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", params$ctst_key)
+ctr = CONTRASTS[[params$variable_type]][[params$ctst_key]]
+
+# if( ! dir.exists(outpath) ) dir.create(outpath)
+```
+
+
+<font size="5">__Evaluating dataset:__ `r params$dataset` </font>
+
+<font size="5">__Variable type:__ `r params$variable_type`</font>
+
+<font size="5">__Contrast:__ `r params$ctst_key`</font>
+
+
+
+# Load data
+```{r load}
+suppressPackageStartupMessages({
+library(dreamlet)
+library(SingleCellExperiment)
+library(tidyverse)
+library(zenith)
+library(qvalue)
+library(cowplot)
+library(tidyverse)})
+
+# read processed data
+path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk//")
+pattern = paste0(toupper(params$dataset), "_2023-02-28_.*_PB_Channel_subclass.RDS")
+file = dir(path, pattern=pattern, full.names=TRUE)
+
+res.proc = readRDS( file )
+
+covariates_base = c("Age", "Sex", "PMI", "(1|SubID)", "(1|poolID)")
+```
+
+# dreamlet analysis
+```{r analysis}
+# combine base covariance with testing variables
+covariates = setdiff(union(covariates_base, ctr$covariates_incl), ctr$covariates_excl)
+
+# user-specified formula
+if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
+  form = paste0("~ ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+}else{
+  form = paste0("~ 0 + ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+}
+form = as.formula(form)
+
+# merge subject-level metadata with colData(res.proc)
+metadata_sub = metadata[metadata$SubID %in% colData(res.proc)$SubID,]
+idx = match( colData(res.proc)$SubID, metadata_sub$SubID)
+
+# test ordering
+# df = cbind(as.character(colData(res.proc)$SubID), 
+#   metadata_sub$SubID[idx])
+# all.equal(df[,1], df[,2])
+
+cols = colnames(metadata_sub) %in% colnames(colData(res.proc))
+# colData(res.proc) = cbind(colData(res.proc), metadata_sub[idx,!cols])
+res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
+
+if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
+  ctr$contrasts = NULL
+}
+
+# run dreamlet
+fit = dreamlet( res.proc, form, 
+            contrasts = ctr$contrasts)
+
+if( is.null(coefNames(fit)) ){
+  print("No coefficients were esimated,\nlikely because variable of interest was NA")
+  knitr::knit_exit()
+  stop()
+}
+
+
+
+
+
+# Save results
+```{r save.results}
+file = paste0(outpath, "/fit.RDS")
+saveRDS(fit, file=file)
+
+file = paste0(outpath, "/res_zenith.RDS")
+saveRDS(res.zenith, file=file)
+
+# file = paste0(outpath, "/res_mashr.RDS")
+# saveRDS(res.mashr, file=file)
+
+file = paste0(outpath, "/df_DE.tsv")
+write.table(df_DE, file, sep="\t", quote=FALSE, row.names=FALSE)
+
+file = paste0(outpath, "/formula.txt")
+write(as.character(form), file)
+```
+
+
+
+
+
+
+Session Info
+<details>
+```{r session, echo=FALSE}
+sessionInfo()
+```
+</details>
+
+
