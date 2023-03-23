@@ -155,10 +155,8 @@ fit = eBayes(fit)
 
 ```{r topTable, results="asis"}
 # lapply(ctr$contrasts, function(ctst){
-for(ctst in tr$contrasts){
-  tab = topTable(fit, coef=ctst, number=Inf)
-
-  tab %>%
+for(ctst in ctr$contrasts){
+  topTable(fit, coef=ctst, number=Inf) %>%
     kable(caption = ctst) %>%
     print
 }
