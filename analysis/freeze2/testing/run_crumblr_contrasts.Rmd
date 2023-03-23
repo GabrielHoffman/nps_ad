@@ -158,12 +158,13 @@ res = lapply(ctr$contrasts, function(ctst){
   topTable(fit, coef=ctst, number=Inf) %>%
     kable(caption = ctst) 
 })
+names(res) = ctr$contrasts
 kables(res)
 ```
 
 
 ### Multivariate test along hierarchy
-```{r sd, fig.width=10, fig.height=5}
+```{r sd, fig.width=10, fig.height=5, eval=FALSE}
 hc = buildClusterTreeFromPB(pb)
 
 lapply(ctr$contrasts, function(ctst){
