@@ -158,7 +158,8 @@ lapply(ctr$contrasts, function(ctst){
   tab = topTable(fit, coef=ctst, number=Inf)
 
   tab %>%
-    kable(caption = ctst)
+    kable(caption = ctst) %>%
+    kable_styling
 })
 knitr::knit_exit()
 ```
