@@ -104,7 +104,7 @@ file = dir(path, pattern=pattern, full.names=TRUE)
 
 pb = readRDS( file )
 
-covariates_base = c("Age", "Sex", "PMI", "(1|SubID)", "(1|poolID)")
+covariates_base = c("Age", "(1|Sex)", "PMI", "(1|SubID)", "(1|poolID)")
 ```
 
 # crumblr analysis
@@ -113,12 +113,14 @@ covariates_base = c("Age", "Sex", "PMI", "(1|SubID)", "(1|poolID)")
 covariates = setdiff(union(covariates_base, ctr$covariates_incl), ctr$covariates_excl)
 
 # user-specified formula
-if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
+if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
   form = paste0("~ ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
 }else{
   form = paste0("~ 0 + ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+  form.vp = paste0("~ (1|", ctr$variable, ") + ", paste0(covariates, collapse=" + "))
 }
 form = as.formula(form)
+form.vp = as.formula(form.vp)
 
 # merge subject-level metadata with colData(res.proc)
 metadata_sub = metadata[metadata$SubID %in% colData(pb)$SubID,]
@@ -140,9 +142,12 @@ if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
 cobj = crumblr(cellCounts(pb))
 
 # variance partitioning
-# vp.c = fitExtractVarPartModel(cobj, form, colData(pb))
+idx = !is.na(colData(pb)[,ctr$variable])
+vp.c = fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
 
-# plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
+fig.vp = plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
+
+fig.vp
 
 L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
 
@@ -155,7 +160,6 @@ fit = eBayes(fit)
 
 ### Multivariate test along hierarchy
 ```{r sd, fig.width=10, fig.height=5}
-
 hc = buildClusterTreeFromPB(pb)
 
 for(ctst in ctr$contrasts){
@@ -184,7 +188,7 @@ for(ctst in ctr$contrasts){
           axis.ticks.y=element_blank())
 
   # combine plots
-  fig2 %>% insert_left(fig1) #%>% insert_right(fig.vp)
+  fig2 %>% insert_left(fig1) %>% insert_right(fig.vp)
 }
 ```
 
