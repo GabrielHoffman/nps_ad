@@ -157,11 +157,8 @@ fit = eBayes(fit)
 lapply(ctr$contrasts, function(ctst){
   tab = topTable(fit, coef=ctst, number=Inf)
 
-  tab$se = with(tab, logFC/t)
-
   tab %>%
-    kbl %>%
-    kable_styling(full_width = FALSE)
+    kable(caption = ctst)
 })
 ```
 
