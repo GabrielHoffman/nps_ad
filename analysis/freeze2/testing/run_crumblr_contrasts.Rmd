@@ -92,7 +92,6 @@ library(tidyverse)
 library(crumblr)
 library(qvalue)
 library(cowplot)
-library(kableExtra)
 library(aplot)
 library(ggtree)
 library(tidyverse)})
@@ -157,7 +156,7 @@ fit = eBayes(fit)
 # lapply(ctr$contrasts, function(ctst){
 for(ctst in ctr$contrasts){
   topTable(fit, coef=ctst, number=Inf) %>%
-    kable(caption = ctst) %>%
+    knitr::kable(caption = ctst) %>%
     print
 }
 knitr::knit_exit()
