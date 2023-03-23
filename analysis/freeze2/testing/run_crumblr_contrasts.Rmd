@@ -156,9 +156,10 @@ fit = eBayes(fit)
 ```{r topTable, results="asis"}
 res = lapply(ctr$contrasts, function(ctst){
   topTable(fit, coef=ctst, number=Inf) %>%
+    select(logFC, AveExpr,  t, P.Value, adj.P.Val)  %>%
     kable(caption = ctst) 
 })
-# names(res) = ctr$contrasts
+names(res) = ctr$contrasts
 res
 ```
 
