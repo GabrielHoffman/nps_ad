@@ -154,13 +154,12 @@ fit = eBayes(fit)
 ```
 
 ```{r topTable, results="asis"}
-res = lapply(ctr$contrasts, function(ctst){
+lapply(ctr$contrasts, function(ctst){
   tab = topTable(fit, coef=ctst, number=Inf)
 
   tab %>%
     kable(caption = ctst)
 })
-do.call(paste, res)
 knitr::knit_exit()
 ```
 
