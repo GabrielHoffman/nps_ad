@@ -102,7 +102,7 @@ path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk//")
 pattern = paste0(toupper(params$dataset), "_2023-02-28_.*_PB_Channel_subclass.RDS")
 file = dir(path, pattern=pattern, full.names=TRUE)
 
-# pb = readRDS( file )
+pb = readRDS( file )
 
 covariates_base = c("Age", "(1|Sex)", "PMI", "(1|SubID)", "(1|poolID)")
 ```
@@ -165,7 +165,7 @@ res
 
 
 ### Multivariate test along hierarchy
-```{r sd, fig.width=10, fig.height=5, eval=FALSE}
+```{r sd, fig.width=10, fig.height=5}
 hc = buildClusterTreeFromPB(pb)
 
 lapply(ctr$contrasts, function(ctst){
