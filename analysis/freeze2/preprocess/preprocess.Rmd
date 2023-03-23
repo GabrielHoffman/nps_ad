@@ -121,7 +121,7 @@ sample_id_options = c("Channel", "SubID")
 
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
-    # Compute pseudobulk
+    # Compute pseudobulk for each cell type
     pb = aggregateToPseudoBulk(sce,
       assay = "counts", 
       cluster_id = cluster_id,
@@ -129,6 +129,11 @@ for(cluster_id in cluster_id_options ){
       BPPARAM = bpparam)
 
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
+
+    # Pseudobulk combining all cells
+    counts.list = lapply(assayNames(pb), function(id) assay(pb, id))
+    sumCounts = Reduce("+", counts.list)
+    assay(pb, "bulk") = sumCounts
 
     # Save as RDS
     saveRDS(pb, file = paste0(filePrefix, ".RDS"))
