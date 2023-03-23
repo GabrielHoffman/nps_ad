@@ -134,7 +134,7 @@ idx = match( colData(pb)$SubID, metadata_sub$SubID)
 cols = colnames(metadata_sub) %in% colnames(colData(pb))
 colData(pb) = cbind(colData(pb), metadata_sub[idx,!cols])
 
-if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
+if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
   ctr$contrasts = NULL
 }
 
@@ -155,18 +155,8 @@ fit = dream( cobj, form, colData(pb), L = L)
 fit = eBayes(fit)
 ```
 
-
-
-
-### Multivariate test along hierarchy
-```{r sd, fig.width=10, fig.height=5}
-hc = buildClusterTreeFromPB(pb)
-
-for(ctst in ctr$contrasts){
-  res = treeTest( fit, cobj, hc, coef=ctst)
-
-  fig1 = plotTreeTest(res) + xlim(0, 15) + theme(legend.position="none") + ggtitle(ctst)
-
+```{r topTable}
+lapply(ctr$contrasts, function(ctst){
   tab = topTable(fit, coef=ctst, number=Inf)
 
   tab$celltype = factor(rownames(tab), rev(get_taxa_name(fig1)))
@@ -175,6 +165,23 @@ for(ctst in ctr$contrasts){
   tab %>%
     kbl %>%
     kable_styling(full_width = FALSE)
+})
+```
+
+
+### Multivariate test along hierarchy
+```{r sd, fig.width=10, fig.height=5}
+hc = buildClusterTreeFromPB(pb)
+
+lapply(ctr$contrasts, function(ctst){
+  res = treeTest( fit, cobj, hc, coef=ctst)
+
+  fig1 = plotTreeTest(res) + xlim(0, 15) + theme(legend.position="none") + ggtitle(ctst)
+
+  tab = topTable(fit, coef=ctst, number=Inf)
+
+  tab$celltype = factor(rownames(tab), rev(get_taxa_name(fig1)))
+  tab$se = with(tab, logFC/t)
 
   fig2 = ggplot(tab, aes(celltype, logFC)) + 
     geom_hline(yintercept=0, linetype="dashed", color="grey", size=1) +
@@ -189,7 +196,7 @@ for(ctst in ctr$contrasts){
 
   # combine plots
   fig2 %>% insert_left(fig1) %>% insert_right(fig.vp)
-}
+})
 ```
 
 
