@@ -10,7 +10,7 @@ write_job = function( variable_type, ctst_key, dataset, method){
 
 	outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", suffix)
 
-	outfile = paste0(outpath, "/", suffix)
+	outfile = paste0(outpath, "/", suffix, "_", method)
 
 	if( ! dir.exists(outpath) ) dir.create(outpath)
 
