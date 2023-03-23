@@ -160,7 +160,7 @@ res = lapply(ctr$contrasts, function(ctst){
   tab %>%
     kable(caption = ctst)
 })
-do.call(paste, res)
+cat(do.call(paste, res))
 ```
 
 
