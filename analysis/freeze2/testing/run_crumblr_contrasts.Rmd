@@ -157,7 +157,7 @@ res = lapply(ctr$contrasts, function(ctst){
   topTable(fit, coef=ctst, number=Inf) %>%
     knitr::kable(caption = ctst) 
 })
-kables(res)
+knitr::kables(res)
 knitr::knit_exit()
 ```
 
