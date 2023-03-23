@@ -159,7 +159,7 @@ res = lapply(ctr$contrasts, function(ctst){
     kable(caption = ctst) 
 })
 names(res) = ctr$contrasts
-kables(res)
+res
 ```
 
 
