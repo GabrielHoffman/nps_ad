@@ -78,24 +78,25 @@ merge_with_metadata = function(h5ad_file){
   # merge with full metadata
   #------------------------
 
-  # Load metdata
+  # Load metadata
   df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/syn26527784_latest.csv", show_col_types=FALSE)
   rownames(df_meta) = df_meta$SubID
-
-  # lst_clinical = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze1_rc/metadata/clinical_metadata_sampleSets_latest.RDS")
-
-  # df_meta$Dx_AD = NA
-  # i = df_meta$SubID %in% lst_clinical$controls_neuropathological
-  # df_meta$Dx_AD[i] = "Control" 
-  # i = df_meta$SubID %in% lst_clinical$AD
-  # df_meta$Dx_AD[i] = "AD"
-  # df_meta$Dx_AD[with(df_meta, PD | DLBD)] = NA
 
   # get order of matching
   i = match(sceCombine$SubID, df_meta$SubID)
 
   # Assign new metadata
   colData(sceCombine) = cbind(colData(sceCombine), df_meta[i,])
+
+  # Load data for batching and sequencing
+  df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv")
+
+  # get order of matching
+  i = match(sceCombine$poolID, df_batching$poolID)
+
+  # Assign new metadata
+  cols = c('projID', 'date', 'pool', 'flowcell', 'lane')
+  colData(sceCombine) = cbind(colData(sceCombine), df_batching[i,cols])
 
   # only save genes with unique names
   tab = table(rownames(sceCombine))
