@@ -89,7 +89,7 @@ merge_with_metadata = function(h5ad_file){
   colData(sceCombine) = cbind(colData(sceCombine), df_meta[i,])
 
   # Load data for batching and sequencing
-  df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv")
+  df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv", show_col_types=FALSE)
   df_batching$date = as.character(df_batching$date)
 
   # rename some batches
