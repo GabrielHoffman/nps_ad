@@ -95,7 +95,9 @@ merge_with_metadata = function(h5ad_file){
   # rename some batches
   sceCombine$poolID = recode(sceCombine$poolID, 
       'NPSAD-145-S1' = "NPSAD-145-A1", 
-      'NPSAD-145-S2' = "NPSAD-145-A2")
+      'NPSAD-145-S2' = "NPSAD-145-A2",
+      'NPSAD-146-S1' = 'NPSAD-146-A1', 
+      'NPSAD-146-S2' = 'NPSAD-146-A2')
 
   # get order of matching
   i = match(sceCombine$poolID, df_batching$poolID)
