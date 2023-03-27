@@ -90,9 +90,11 @@ merge_with_metadata = function(h5ad_file){
 
   # Load data for batching and sequencing
   df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv")
+  df_batching$date = as.character(df_batching$date)
 
   # get order of matching
   i = match(sceCombine$poolID, df_batching$poolID)
+  if( any(is.na(i))) stop("poolID missing")
 
   # Assign new metadata
   cols = c('projID', 'date', 'pool', 'flowcell', 'lane')

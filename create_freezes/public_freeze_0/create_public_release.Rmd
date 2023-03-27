@@ -257,7 +257,7 @@ vec = seq(1, ncol(sce))
 chunk_length <- 100000     
 chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
-outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Jan_25_2023"
+outprefix = "/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_March_20_2023"
 
 res = lapply(names(chunks), function(id){
   message(id)
@@ -279,10 +279,10 @@ conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 SRC=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/concat_h5ad.py
 
 cd /sc/arion/projects/psychAD/NPS-AD/public_release_0/ 
-echo $(seq 1 15 | parallel -P1 ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Jan_25_2023_chunk{}.h5ad) | tr ' ' '\n' > list.txt
+echo $(seq 1 15 | parallel -P1 ls /sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_March_20_2023_chunk{}.h5ad) | tr ' ' '\n' > list.txt
 
 cd /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/pkgs/
-OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_Jan_25_2023.h5ad 
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/public_release_0/PsychAD_r0_March_20_2023.h5ad 
 python $SRC -i /sc/arion/projects/psychAD/NPS-AD/public_release_0/list.txt -o $OUTFILE
 ```
 
