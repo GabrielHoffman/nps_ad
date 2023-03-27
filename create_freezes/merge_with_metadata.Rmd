@@ -23,7 +23,7 @@ system("git pull origin master"); rmarkdown::render("merge_with_metadata.Rmd");
 # https://hoffmg01.hpc.mssm.edu/nps_ad/create_freezes/merge_with_metadata.html
 
 # start high-mem interactive job to run merging
-bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60000] -W 12:00 -P acc_CommonMind -n 12 bash
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 12 bash
 
 
 
@@ -92,9 +92,18 @@ merge_with_metadata = function(h5ad_file){
   df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv")
   df_batching$date = as.character(df_batching$date)
 
+  # rename some batches
+  sceCombine$poolID = recode(sceCombine$poolID, 
+      'NPSAD-145-S1' = "NPSAD-145-A1", 
+      'NPSAD-145-S2' = "NPSAD-145-A2")
+
   # get order of matching
   i = match(sceCombine$poolID, df_batching$poolID)
-  if( any(is.na(i))) stop("poolID missing")
+  if( any(is.na(i)) ){
+    msg = paste0(unique(sceCombine$poolID[which(is.na(i))]), collapse=" ")
+    message(msg)
+    stop("poolID missing")
+  }
 
   # Assign new metadata
   cols = c('projID', 'date', 'pool', 'flowcell', 'lane')
