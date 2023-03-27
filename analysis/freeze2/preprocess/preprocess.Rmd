@@ -178,8 +178,7 @@ for(cluster_id in cluster_id_options ){
     }
 
     # processAssays
-    res.proc = processAssays( pb, form, 
-                      BPPARAM = bpparam)
+    res.proc = processAssays( pb[1:200,], form, BPPARAM = bpparam)
 
     # Save processed object to RDS
     file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
@@ -187,10 +186,12 @@ for(cluster_id in cluster_id_options ){
 
     # Residuals
     if( sample_id == "SubID" ){
+      message("residuals...")
       fit = dreamlet(res.proc, form, 
                       BPPARAM = bpparam )
 
       for( CT in assayNames(res.proc) ){
+        message(paste0("   ", CT))
         # residuals
         file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, "_", CT, ".tsv")
 
@@ -201,7 +202,8 @@ for(cluster_id in cluster_id_options ){
         # pearson residuals
         file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residualsPearson_", sample_id, "_", cluster_id, "_", CT, ".tsv")
 
-        data = format(residuals(fit[[CT]], type="pearson"), digits=5)
+        data = residuals(fit[[CT]], res.proc[[CT]], type="pearson")        
+        data = format(data, digits=5)
         write.table( data, file=file, quote=FALSE, sep="\t")
         gzip(file, overwrite=TRUE)
       }
