@@ -40,7 +40,7 @@ library(tidyverse)
 h5ad_files = c(
 RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-03-26_22_43.h5ad", 
 HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-03-26_23_09.h5ad",
-MSSM = "coming soon",
+# MSSM = "coming soon",
 # FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
 AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-03-27_02_16.h5ad")
 
@@ -54,7 +54,7 @@ x %>%
 }
 
 
-run("MSSM")
+run("RUSH")
 
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_AGING.html
@@ -117,18 +117,20 @@ ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5
 bpparam = SnowParam(6)
 ```
 
-
 # Compute pseudobulk at multiple levels
 ```{r combineData, message=TRUE, eval=TRUE}
 # Create pseudo-bulk SingleCellExperiment
-cluster_id_options = c("class", "subclass", "subtype")
+cluster_id_options = c("bulk", "class", "subclass", "subtype")
 sample_id_options = c("Channel", "SubID")
 
 # cluster_id_options = c("class")
 # sample_id_options = c("Channel")
 
+sce$bulk = "bulk"
+
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
+
     # Compute pseudobulk for each cell type
     pb = aggregateToPseudoBulk(sce,
       assay = "counts", 
