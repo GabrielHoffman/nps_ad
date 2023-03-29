@@ -192,6 +192,11 @@ tmp = sapply( unique(res.zenith$coef), function(coef_key){
   ggsave(file=file, fig, height=20)
   })
 
+estimatepi1 = function(p){
+  tryCatch( 1 - qvalue(p)$pi0, 
+    error=function(e) 0 )
+}
+
 # DE counts
 df_DE = lapply( unique(res.zenith$coef), function(coef_key){
 
@@ -202,7 +207,7 @@ df_DE = lapply( unique(res.zenith$coef), function(coef_key){
     summarise( 
       nGenes = length(adj.P.Val), 
       nDE = sum(adj.P.Val < 0.05),
-      pi1 = 1 - qvalue(P.Value)$pi0) %>%
+      pi1 = estimatepi1(P.Value)) %>%
     mutate(assay = factor(assay, ctorder)) 
 })
 df_DE = do.call(rbind, df_DE)

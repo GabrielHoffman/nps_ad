@@ -40,7 +40,7 @@ library(tidyverse)
 h5ad_files = c(
 RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-03-26_22_43.h5ad", 
 HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-03-26_23_09.h5ad",
-# MSSM = "coming soon",
+MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/MSSM_2023-03-27_00_08.h5ad",
 # FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
 AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-03-27_02_16.h5ad")
 
@@ -55,6 +55,15 @@ x %>%
 
 
 run("RUSH")
+
+
+run("HBCC")
+
+
+run("AGING")
+
+
+run("MSSM")
 
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_AGING.html
@@ -173,7 +182,7 @@ for(cluster_id in cluster_id_options ){
     }
 
     # processAssays
-    res.proc = processAssays( pb[1:200,], form, BPPARAM = bpparam)
+    res.proc = processAssays( pb, form, BPPARAM = bpparam)
 
     # Save processed object to RDS
     file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
