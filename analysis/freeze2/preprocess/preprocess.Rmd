@@ -177,8 +177,8 @@ for(cluster_id in cluster_id_options ){
 
     pb = readRDS(paste0(filePrefix, ".RDS"))
 
-    if( "pool" %in% colnames(colData(pb)) ){
-      form = update(form, ~ . + (1|pool))
+    if( "poolID" %in% colnames(colData(pb)) ){
+      form = update(form, ~ . + (1|poolID))
     }
 
     # processAssays
@@ -371,7 +371,7 @@ dreamlet::plotHeatmap(df_cellScore, genes=unique(genes), assays=ctorder)
 # Process data: log2 CPM + voom precision weights
 ```{r voom}
 # Normalize and apply voom
-form = ~ (1|SubID) + (1|pool) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell)
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell)
 
 res.proc = processAssays( pb, form, BPPARAM = bpparam)
 ```
@@ -383,7 +383,7 @@ plotVoom( res.proc, ncol=4, assays=ctorder)
 
 # Variance Partitioning Analysis
 ```{r varPart}
-form = ~ (1|SubID) + (1|pool) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell)
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = bpparam)
 ```
