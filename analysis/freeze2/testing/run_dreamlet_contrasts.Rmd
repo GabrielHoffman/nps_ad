@@ -103,7 +103,7 @@ file = dir(path, pattern=pattern, full.names=TRUE)
 
 res.proc = readRDS( file )
 
-covariates_base = c("Age", "Sex", "PMI")#, "(1|SubID)", "(1|poolID)")
+covariates_base = c("Age", "Sex", "PMI", "(1|SubID)", "(1|pool)")
 ```
 
 # dreamlet analysis
