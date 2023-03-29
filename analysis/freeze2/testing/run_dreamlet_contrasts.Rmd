@@ -31,6 +31,8 @@ cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis
 
 ls jobs/* | parallel -P1 "bsub < {}"
 
+ls jobs/*crumblr* | parallel -P1 "bsub < {}"
+
 # rmarkdown::render("run_dreamlet_contrasts.Rmd")
 
 
@@ -96,7 +98,7 @@ library(tidyverse)})
 
 # read processed data
 path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/")
-pattern = paste0(toupper(params$dataset), "_2023-02-28_.*_processAssays_Channel_subclass.RDS")
+pattern = paste0(toupper(params$dataset), "_2023-03-2.*_processAssays_Channel_subclass.RDS")
 file = dir(path, pattern=pattern, full.names=TRUE)
 
 res.proc = readRDS( file )
