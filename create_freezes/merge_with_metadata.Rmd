@@ -226,7 +226,7 @@ RUSH = "230329_NPS-AD_freeze2.5_R_clean.h5ad",
 HBCC = "230329_NPS-AD_freeze2.5_H_clean.h5ad",
 MSSM = "230329_NPS-AD_freeze2.5_M_clean.h5ad",
 FULL = "230329_NPS-AD_freeze2.5_FULL_clean.h5ad",
-AGING = "test")
+AGING = "230329_NPS-AD_freeze2.5_Aging_clean.h5ad")
 
 path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/"
 h5ad_files = paste0(path, h5ad_files)
