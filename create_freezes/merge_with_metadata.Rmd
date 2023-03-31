@@ -135,7 +135,7 @@ write_in_chunks = function(sce, outprefix){
   chunks = split(vec, ceiling(seq_along(vec) / chunk_length))
 
   res = lapply(names(chunks), function(id){
-    message(id, '/', max(names(chunks)))
+    message(id, '/', names(chunks)[length(chunks)])
     outfile = paste0(outprefix, '_chunk', sprintf("%02d", as.numeric(id)), ".h5ad")
     sceSub = sceCopy[,chunks[[id]]]
     writeH5AD(sceSub, outfile, compression="none", verbose=FALSE)
