@@ -25,6 +25,9 @@ system("git pull origin master"); rmarkdown::render("merge_with_metadata.Rmd");
 # start high-mem interactive job to run merging
 bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 12 bash
 
+# regular job to run this script
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=10000] -W 12:00 -P acc_CommonMind -n 12 bash
+
 
 
 --->
@@ -192,11 +195,11 @@ write_merge_chunks_job = function(proj, outpref, timeTxt, jobfile){
   cmd = paste0("#!/bin/bash
 #BSUB -J ", proj, "_", timeTxt, "
 #BSUB -P acc_CommonMind
-#BSUB -q express
-#BSUB -R rusage[mem=6000]
+#BSUB -q premium
+#BSUB -R rusage[mem=60790]
 #BSUB -R span[hosts=1]
 #BSUB -W 12:00
-#BSUB -n 3
+#BSUB -n 24
 #BSUB -o %J.stdout         
 #BSUB -eo %J.stderr   
 #BSUB -L /bin/bash   
