@@ -229,7 +229,7 @@ FULL = "230329_NPS-AD_freeze2.5_FULL_clean.h5ad",
 AGING = "230329_NPS-AD_freeze2.5_Aging_clean.h5ad")
 
 path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/"
-h5ad_files = paste0(path, h5ad_files)
+h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
 outprefix = "/sc/arion/scratch/hoffmg01/tmp/"
 
