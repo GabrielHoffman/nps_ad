@@ -89,27 +89,27 @@ merge_with_metadata = function(h5ad_file){
   colData(sceCombine) = cbind(colData(sceCombine), df_meta[i,])
 
   # Load data for batching and sequencing
-  df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv", show_col_types=FALSE)
-  df_batching$date = as.character(df_batching$date)
+  # df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv", show_col_types=FALSE)
+  # df_batching$date = as.character(df_batching$date)
 
-  # rename some batches
-  sceCombine$poolID = recode(sceCombine$poolID, 
-      'NPSAD-145-S1' = "NPSAD-145-A1", 
-      'NPSAD-145-S2' = "NPSAD-145-A2",
-      'NPSAD-146-S1' = 'NPSAD-146-A1', 
-      'NPSAD-146-S2' = 'NPSAD-146-A2')
+  # # rename some batches
+  # sceCombine$poolID = recode(sceCombine$poolID, 
+  #     'NPSAD-145-S1' = "NPSAD-145-A1", 
+  #     'NPSAD-145-S2' = "NPSAD-145-A2",
+  #     'NPSAD-146-S1' = 'NPSAD-146-A1', 
+  #     'NPSAD-146-S2' = 'NPSAD-146-A2')
 
-  # get order of matching
-  i = match(sceCombine$poolID, df_batching$poolID)
-  if( any(is.na(i)) ){
-    msg = paste0(unique(sceCombine$poolID[which(is.na(i))]), collapse=" ")
-    message(msg)
-    stop("poolID missing")
-  }
+  # # get order of matching
+  # i = match(sceCombine$poolID, df_batching$poolID)
+  # if( any(is.na(i)) ){
+  #   msg = paste0(unique(sceCombine$poolID[which(is.na(i))]), collapse=" ")
+  #   message(msg)
+  #   stop("poolID missing")
+  # }
 
   # Assign new metadata
-  cols = c('projID', 'date', 'pool', 'flowcell', 'lane')
-  colData(sceCombine) = cbind(colData(sceCombine), df_batching[i,cols])
+  # cols = c('projID', 'date', 'pool', 'flowcell', 'lane')
+  # colData(sceCombine) = cbind(colData(sceCombine), df_batching[i,cols])
 
   # only save genes with unique names
   tab = table(rownames(sceCombine))
@@ -218,11 +218,15 @@ python $SRC -i ", h5ad_list, " -o ", outfile)
 
 # Frozen H5ADs
 # https://docs.google.com/presentation/d/1oTolAu-aARpXg4D0shEJWD6YZ9u5aG6RQw7CLmMnXGU/edit#slide=id.g1bc8801a9f4_0_348
-h5ad_files = c(RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_R_pass3_anno_clean.h5ad", 
-HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_H_pass3_anno_clean.h5ad",
-MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_M_pass3_anno_clean.h5ad",
-# FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/221210_NPS-AD_freeze2_FULL_pass3_anno_clean.h5ad",
-AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/221210_NPS-AD_freeze2_aging_pass3_anno_clean.h5ad")
+h5ad_files = c(
+RUSH = "230329_NPS-AD_freeze2.5_R_clean.h5ad", 
+HBCC = "230329_NPS-AD_freeze2.5_H_clean.h5ad",
+MSSM = "230329_NPS-AD_freeze2.5_M_clean.h5ad",
+FULL = "230329_NPS-AD_freeze2.5_FULL_clean.h5ad",
+AGING = "test")
+
+path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/"
+h5ad_files = paste0(path, h5ad_files)
 
 outprefix = "/sc/arion/scratch/hoffmg01/tmp/"
 
