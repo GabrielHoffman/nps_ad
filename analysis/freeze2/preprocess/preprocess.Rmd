@@ -18,6 +18,9 @@ params:
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=30000] -W 96:00 -P acc_CommonMind -n 12 bash
 
 
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=45000] -W 96:00 -P acc_CommonMind -n 12 bash
+
+
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 ml python git pandoc
 git pull origin master
@@ -29,20 +32,17 @@ R --vanilla
 library(rmarkdown)
 library(tidyverse)
 
-# h5ad_files = c(
-# RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-02-28_12_07.h5ad", 
-# HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-02-28_12_36.h5ad",
-# MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/MSSM_2023-02-28_13_54.h5ad",
-# # FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
-# AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-02-28_16_47.h5ad")
+path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 
 # March 26
 h5ad_files = c(
-RUSH = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/RUSH_2023-03-26_22_43.h5ad", 
-HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/HBCC_2023-03-26_23_09.h5ad",
-MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/MSSM_2023-03-27_00_08.h5ad",
-# FULL = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/",
-AGING = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/AGING_2023-03-27_02_16.h5ad")
+RUSH = "RUSH_2023-04-01_12_07.h5ad", 
+HBCC = "HBCC_2023-04-01_12_22.h5ad",
+MSSM = "MSSM_2023-04-01_12_56.h5ad",
+# FULL = "",
+AGING = "AGING_2023-04-01_16_14.h5ad")
+
+h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
 run = function(x){
 system("git pull origin master");
@@ -123,7 +123,7 @@ assayNames(sce)[1] = "counts"
 # order of cell types used for plotting
 ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_IT', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', "EN_L6_IT_1", "EN_L6_IT_2", 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo', "Immune")
 
-bpparam = SnowParam(6)
+bpparam = SnowParam(3)
 ```
 
 # Compute pseudobulk at multiple levels
