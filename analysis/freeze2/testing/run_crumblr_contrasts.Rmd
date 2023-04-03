@@ -129,7 +129,7 @@ if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
   form.vp = paste0("~ (1|", ctr$variable, ") + ", paste0(covariates, collapse=" + "))
 }
 form = as.formula(form)
-form.vp = as.formula(form.vp)
+form.vp = as.formula(form)
 
 # merge subject-level metadata with colData(res.proc)
 metadata_sub = metadata[metadata$SubID %in% colData(pb)$SubID,]
