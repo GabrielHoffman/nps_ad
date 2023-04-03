@@ -97,6 +97,7 @@ library(tidyverse)
 library(crumblr)
 library(qvalue)
 library(cowplot)
+library(ggcorrplot)
 library(knitr)
 library(aplot)
 library(ggtree)
@@ -161,6 +162,10 @@ fit = dream( cobj, form, colData(pb), L = L)
 fit = eBayes(fit)
 ```
 
+### Formulas
+form: `r form`
+form.vp: `r form.vp`
+
 ```{r topTable, results="asis"}
 res = lapply(ctr$contrasts, function(ctst){
   topTable(fit, coef=ctst, number=Inf) %>%
@@ -176,7 +181,7 @@ res
 ```{r sd, fig.width=10, fig.height=5}
 hc = buildClusterTreeFromPB(pb)
 
-lapply(ctr$contrasts, function(ctst){
+figList = lapply(ctr$contrasts, function(ctst){
   res = treeTest( fit, cobj, hc, coef=ctst)
 
   fig1 = plotTreeTest(res) + xlim(0, 15) + theme(legend.position="none") + ggtitle(ctst)
@@ -198,11 +203,30 @@ lapply(ctr$contrasts, function(ctst){
           axis.ticks.y=element_blank())
 
   # combine plots
-  fig2 %>% insert_left(fig1) %>% insert_right(fig.vp)
+  fig.combine = fig2 %>% insert_left(fig1) %>% insert_right(fig.vp)
+
+  # correlation 
+  # get covariance matrix
+  V = vcov(fit, cobj, coef=ctst)
+
+  # convert to correlation matrix
+  V = cov2cor(V)
+
+  # shorten names
+  rownames(V) = gsub(paste0(":", ctst), '', rownames(V))
+  colnames(V) = gsub(paste0(":", ctst), '', colnames(V))
+
+  # sort to match tree
+  i = match(rev(get_taxa_name(fig1)), rownames(V))
+
+  fig.cor = ggcorrplot(V[i,i], outline.color=NA, colors=c("blue3", "white", "red3"))  + ggtitle(ctst) 
+
+  list(fig.combine = fig.combine, fig.cor = fig.cor)
 })
+
+lapply(figList, function(x) x$fig.combine)
+lapply(figList, function(x) x$fig.cor)
 ```
-
-
 
 
 
