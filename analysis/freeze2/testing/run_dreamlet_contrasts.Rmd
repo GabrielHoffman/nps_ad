@@ -88,6 +88,9 @@ ctr = CONTRASTS[[params$variable_type]][[params$ctst_key]]
 
 <font size="5">__Contrast:__ `r params$ctst_key`</font>
 
+<font size="5">__AnnoLevel:__ `r params$AnnoLevel`</font>
+
+<font size="5">__SampleLevel:__ `r params$SampleLevel`</font>
 
 
 # Load data
@@ -108,7 +111,11 @@ file = dir(path, pattern=pattern, full.names=TRUE)
 
 res.proc = readRDS( file )
 
-covariates_base = c("Age", "Sex", "PMI", "(1|SubID)", "(1|pool)")
+covariates_base = c("Age", "Sex", "PMI") 
+
+if( params$SampleLevel == "Channel" ){
+  covariates_base = c(covariates_base, "(1|SubID)", "(1|pool)")
+}
 ```
 
 # dreamlet analysis
