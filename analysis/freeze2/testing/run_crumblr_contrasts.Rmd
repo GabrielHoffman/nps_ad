@@ -164,7 +164,7 @@ fit = eBayes(fit)
 
 ### Formulas
 
-`r ctr$variable`
+`r as.character(form)`
 
 
 
