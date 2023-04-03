@@ -11,6 +11,8 @@ params:
   dataset: NULL
   variable_type: NULL
   ctst_key: NULL
+  AnnoLevel: NULL
+  SampleLevel: NULL
 ---
 
 
