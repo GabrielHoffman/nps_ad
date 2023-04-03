@@ -22,6 +22,8 @@ write_job = function( variable_type, ctst_key, dataset, method, SampleLevel, Ann
 output_file = '", outfile, "', 
 params = list(dataset = '", dataset, "',
 variable_type = '", variable_type, "', 
+SampleLevel = '", SampleLevel, "', 
+AnnoLevel = '", AnnoLevel, "', 
 ctst_key = '", ctst_key, "'))")
 
 	logs = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/logs/", suffix, "_", method, "_")
