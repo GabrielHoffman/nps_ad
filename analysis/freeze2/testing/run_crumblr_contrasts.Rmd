@@ -163,7 +163,12 @@ fig.vp = plotPercentBars( sortCols(vp.c) )
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
 
-L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
+if( ! is.null(ctr$contrasts) ){
+  L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
+}else{
+  L = NULL
+}
+
 fit = dream( cobj, form, colData(pb), L = L)
 fit = eBayes(fit)
 ```
