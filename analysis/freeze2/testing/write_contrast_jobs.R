@@ -4,11 +4,13 @@
 # Load CONTRASTS and metadata
 load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
 
-write_job = function( variable_type, ctst_key, dataset, method){
+write_job = function( variable_type, ctst_key, dataset, method, SampleLevel, AnnoLevel){
 
 	suffix = gsub(paste0(dataset, "_", dataset, "_"), paste0(dataset, "_"), paste0(toupper(dataset), "_", ctst_key, "_", SampleLevel, "_", AnnoLevel))
 
-	outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", suffix)
+	suffix2 = gsub(paste0(dataset, "/", dataset, "/"), paste0(dataset, "/"), paste0(toupper(dataset), "/", ctst_key, "/", SampleLevel, "/", AnnoLevel))
+
+	outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", suffix2)
 
 	outfile = paste0(outpath, "/", suffix, "_", method)
 
@@ -50,21 +52,38 @@ Rscript -e \"", cmd, "\"
 	write(txt, jobFile)
 }
 
+# create jobs
+AnnoLevel = c("bulk", "class", "subclass", "subtype")
+SampleLevel = c("Channel", "SubID")
+method = c("dreamlet", "crumblr")
+# dataset = c("MSSM", "RUSH", "HBCC", "AGING", "FULL")
 
-for( method in c("dreamlet", "crumblr") ){
-	for( variable_type in names(CONTRASTS)){
-		for( ctst_key in names(CONTRASTS[[variable_type]]) ){
+df = expand.grid( 	SampleLevel = SampleLevel, 
+					AnnoLevel = AnnoLevel, 
+					variable_type = names(CONTRASTS),
+					method = method)
 
-			dataset = gsub("([a-zA-Z]+).*", "\\1", ctst_key)
+for(i in seq(nrow(df))){
 
-			if( dataset %in% c("MSSM", "RUSH", "HBCC", "Aging") ){
-				write_job( variable_type, ctst_key, dataset, method)
-			}else{
-				for(dataset in c("MSSM", "RUSH", "HBCC")){
-					write_job( variable_type, ctst_key, dataset, method)
-				}
-			}
+	for(ctst_key in names(CONTRASTS[[df$variable_type[i]]]) ){
+
+		dataset = gsub("([a-zA-Z]+).*", "\\1", ctst_key)
+
+		if( dataset %in% c("MSSM", "RUSH", "HBCC", "Aging") ){
+			dsArray = dataset
+		}else{
+			dsArray = c("MSSM", "RUSH", "HBCC")
+		}
+
+		for( ds in dsArray){
+			write_job( 	df$variable_type[i], 
+						ctst_key, 
+						ds, 
+						df$method[i], 
+						df$SampleLevel[i], 
+						df$AnnoLevel[i])	
 		}
 	}
 }
+
 
