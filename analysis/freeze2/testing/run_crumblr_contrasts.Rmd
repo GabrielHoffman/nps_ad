@@ -73,7 +73,8 @@ outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/
 
 ctr = CONTRASTS[[params$variable_type]][[params$ctst_key]]
 
-# if( ! dir.exists(outpath) ) dir.create(outpath)
+# make this a random effect
+ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
 ```
 
 
