@@ -165,9 +165,12 @@ fit = eBayes(fit)
 ### Formulas
 
 formula: `r paste0(as.character(form), collapse=' ')`
+
 formula vp: `r paste0(as.character(form.vp), collapse=' ')`
+
 n samples: `r ncol(cobj)`
-n retained: `r fit$design`
+
+n retained: `r nrow(fit$design)`
 
 
 ```{r topTable, results="asis"}
