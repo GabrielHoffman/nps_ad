@@ -67,10 +67,10 @@ knitr::opts_chunk$set(
 # Load CONTRASTS and metadata
 load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
 
-# variable_type = "CAT"
-# ctst_key = "HBCC_SCZ_BD_CTRL"
-# dataset = "HBCC"
-outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", params$ctst_key)
+suffix2 = with(params, gsub(paste0(dataset, "/", dataset, "/"), paste0(dataset, "/"), paste0(toupper(dataset), "/", ctst_key, "/", SampleLevel, "/", AnnoLevel)))
+
+outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", suffix2)
+
 ctr = CONTRASTS[[params$variable_type]][[params$ctst_key]]
 
 # if( ! dir.exists(outpath) ) dir.create(outpath)
