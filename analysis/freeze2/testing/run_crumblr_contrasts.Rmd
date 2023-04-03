@@ -150,10 +150,6 @@ if( params$SampleLevel == "Channel"){
 cols = colnames(metadata_sub) %in% colnames(colData(pb))
 colData(pb) = cbind(colData(pb), metadata_sub[idx,!cols])
 
-if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
-  ctr$contrasts = NULL
-}
-
 # crumblr + dream
 cobj = crumblr(cellCounts(pb))
 
@@ -164,10 +160,16 @@ fig.vp = plotPercentBars( sortCols(vp.c) )
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
 
+
+# if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
+#   ctr$contrasts = NULL
+# }
+
 if( ! is.null(ctr$contrasts) ){
   L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
 }else{
   L = NULL
+  ctr$contrasts = ctr$variable
 }
 
 fit = dream( cobj, form, colData(pb), L = L)
