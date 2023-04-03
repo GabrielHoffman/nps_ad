@@ -6,7 +6,7 @@ load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreaml
 
 write_job = function( variable_type, ctst_key, dataset, method){
 
-	suffix = gsub(paste0(dataset, "_", dataset, "_"), paste0(dataset, "_"), paste0(dataset, "_", ctst_key))
+	suffix = gsub(paste0(dataset, "_", dataset, "_"), paste0(dataset, "_"), paste0(toupper(dataset), "_", ctst_key, "_", SampleLevel, "_", AnnoLevel))
 
 	outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", suffix)
 
