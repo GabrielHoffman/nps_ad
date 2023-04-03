@@ -105,7 +105,7 @@ library(tidyverse)})
 
 # read processed data
 path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/")
-pattern = paste0(toupper(params$dataset), "_2023-03.*_PB_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
+pattern = paste0(toupper(params$dataset), "_2023-04-01.*_PB_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
 file = dir(path, pattern=pattern, full.names=TRUE)
 
 pb = readRDS( file )
@@ -240,7 +240,7 @@ lapply(figList, function(x) x$fig.cor)
 # Save results
 ```{r save.results}
 file = paste0(outpath, "/fit_crumblr.RDS")
-saveRDS(fit, file=file)
+# saveRDS(fit, file=file)
 ```
 
 
