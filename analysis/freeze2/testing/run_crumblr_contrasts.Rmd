@@ -165,7 +165,7 @@ plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
 #   ctr$contrasts = NULL
 # }
 
-if( ! is.null(ctr$contrasts) ){
+if( ! is.null(ctr$contrasts) & !is.na(ctr$contrasts)){
   L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
 }else{
   L = NULL
