@@ -163,8 +163,8 @@ fit = eBayes(fit)
 ```
 
 ### Formulas
-`r form`
-`r form.vp`
+`r 1`
+`r 2`
 
 ```{r topTable, results="asis"}
 res = lapply(ctr$contrasts, function(ctst){
