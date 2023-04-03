@@ -14,7 +14,7 @@ write_job = function( variable_type, ctst_key, dataset, method, SampleLevel, Ann
 
 	outfile = paste0(outpath, "/", suffix, "_", method)
 
-	if( ! dir.exists(outpath) ) dir.create(outpath)
+	if( ! dir.exists(outpath) ) dir.create(outpath, recursive=TRUE)
 
 	SRC = paste0("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/run_", method, "_contrasts.Rmd")
 
