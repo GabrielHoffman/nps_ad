@@ -160,11 +160,6 @@ fig.vp = plotPercentBars( sortCols(vp.c) )
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4) + theme(aspect.ratio=1)
 
-
-# if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
-#   ctr$contrasts = NULL
-# }
-
 if( ! is.null(ctr$contrasts) & !is.na(ctr$contrasts)){
   L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
 }else{
@@ -199,7 +194,7 @@ res
 
 
 ### Multivariate test along hierarchy
-```{r sd, fig.width=10, fig.height=5}
+```{r sd, fig.width=15, fig.height=8}
 hc = buildClusterTreeFromPB(pb)
 
 figList = lapply(ctr$contrasts, function(ctst){

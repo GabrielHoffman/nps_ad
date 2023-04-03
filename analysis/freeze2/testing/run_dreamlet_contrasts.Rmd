@@ -148,12 +148,16 @@ cols = colnames(metadata_sub) %in% colnames(colData(res.proc))
 # colData(res.proc) = cbind(colData(res.proc), metadata_sub[idx,!cols])
 res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 
-if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
-  ctr$contrasts = NULL
+if( ! is.null(ctr$contrasts) & !is.na(ctr$contrasts)){
+  L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
+}else{
+  L = NULL
+  ctr$contrasts = ctr$variable
 }
 
 # run dreamlet
 fit = dreamlet( res.proc, form, 
+            assays = "Astro",
             contrasts = ctr$contrasts)
 
 if( is.null(coefNames(fit)) ){
