@@ -163,7 +163,6 @@ fit = eBayes(fit)
 ```
 
 ### Formulas
-`r form`
 
 `r params$dataset`
 
