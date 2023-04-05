@@ -19,8 +19,7 @@ write_job = function( variable_type, ctst_key, dataset, method, SampleLevel, Ann
 	SRC = paste0("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/run_", method, "_contrasts.Rmd")
 
 	cmd = paste0("rmarkdown::render('", SRC, "', 
-output_file = '", outfile, "', 
-intermediates_dir = '", outfile, "', 
+output_file = '", outfile, "',  
 params = list(dataset = '", dataset, "',
 variable_type = '", variable_type, "', 
 SampleLevel = '", SampleLevel, "', 
