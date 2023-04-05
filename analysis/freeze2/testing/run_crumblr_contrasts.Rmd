@@ -108,6 +108,7 @@ library(ggcorrplot)
 library(knitr)
 library(aplot)
 library(ggtree)
+library(RColorBrewer)
 library(tidyverse)})
 
 # read processed data
