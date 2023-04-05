@@ -198,9 +198,10 @@ res
 hc = buildClusterTreeFromPB(pb)
 
 figList = lapply(ctr$contrasts, function(ctst){
+  
   res = treeTest( fit, cobj, hc, coef=ctst)
 
-  fig1 = plotTreeTest(res) + xlim(0, 15) + theme(legend.position="none") + ggtitle(ctst)
+  fig1 = plotTreeTest(res) + xlim(0, xmax*2) + theme(legend.position="none") + ggtitle(ctst)
 
   tab = topTable(fit, coef=ctst, number=Inf)
 
@@ -244,6 +245,10 @@ lapply(figList, function(x) x$fig.combine)
 lapply(figList, function(x) x$fig.cor)
 ```
 
+ggsave(file="~/www/test.pdf", figList[[1]]$fig.combine, width=15, height=8)
+
+
+ggsave(file="~/www/test.pdf", fig1, width=15, height=8)
 
 
 # Save results

@@ -20,6 +20,7 @@ write_job = function( variable_type, ctst_key, dataset, method, SampleLevel, Ann
 
 	cmd = paste0("rmarkdown::render('", SRC, "', 
 output_file = '", outfile, "', 
+output_file = '", intermediates_dir, "', 
 params = list(dataset = '", dataset, "',
 variable_type = '", variable_type, "', 
 SampleLevel = '", SampleLevel, "', 
