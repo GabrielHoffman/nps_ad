@@ -76,7 +76,13 @@ outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/
 
 ctr = CONTRASTS[[params$variable_type]][[params$ctst_key]]
 
-# if( ! dir.exists(outpath) ) dir.create(outpath)
+# Remove contrasts that fail
+if( ctr$variable == "c07x"){
+  ctr$contrasts = ctr$contrasts[!grepl("c07xBD", ctr$contrasts)]
+}
+
+# make this a random effect
+ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
 ```
 
 
@@ -149,7 +155,7 @@ cols = colnames(metadata_sub) %in% colnames(colData(res.proc))
 # colData(res.proc) = cbind(colData(res.proc), metadata_sub[idx,!cols])
 res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 
-if( ! is.null(ctr$contrasts) & !is.na(ctr$contrasts)){
+if( ! is.null(ctr$contrasts) & !any(is.na(ctr$contrasts)) ){
   L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
 }else{
   L = NULL
@@ -166,7 +172,20 @@ if( is.null(coefNames(fit)) ){
   knitr::knit_exit()
   stop()
 }
+```
 
+### Formulas
+
+formula: `r paste0(as.character(form), collapse=' ')`
+
+formula vp: `r paste0(as.character(form.vp), collapse=' ')`
+
+n samples: `r ncol(cobj)`
+
+n retained: `r nrow(fit$design)`
+
+# Gene set analysis
+```
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
    

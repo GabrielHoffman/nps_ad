@@ -59,7 +59,7 @@ knitr::opts_chunk$set(
   tidy = FALSE,
   dev = c("png", "pdf"),
   package.startup.message = FALSE,
-  cache = FALSE,
+  cache = TRUE,
   cache.lazy = FALSE)
 ```
 
@@ -96,7 +96,7 @@ ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
 
 
 # Load data
-```{r load}
+```{r load, cache=FALSE}
 suppressPackageStartupMessages({
 library(dreamlet)
 library(SingleCellExperiment)
@@ -253,11 +253,6 @@ figList = lapply(ctr$contrasts, function(ctst){
 lapply(figList, function(x) x$fig.combine)
 lapply(figList, function(x) x$fig.cor)
 ```
-
-ggsave(file="~/www/test.pdf", figList[[1]]$fig.combine, width=15, height=8)
-
-
-ggsave(file="~/www/test.pdf", fig1, width=15, height=8)
 
 
 # Save results
