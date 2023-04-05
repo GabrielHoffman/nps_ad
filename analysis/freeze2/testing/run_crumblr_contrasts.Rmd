@@ -59,7 +59,7 @@ knitr::opts_chunk$set(
   tidy = FALSE,
   dev = c("png", "pdf"),
   package.startup.message = FALSE,
-  cache = TRUE,
+  cache = FALSE,
   cache.lazy = FALSE)
 ```
 
@@ -96,7 +96,7 @@ ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
 
 
 # Load data
-```{r load, cache=FALSE}
+```{r load}
 suppressPackageStartupMessages({
 library(dreamlet)
 library(SingleCellExperiment)
