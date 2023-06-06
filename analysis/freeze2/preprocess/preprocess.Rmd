@@ -18,8 +18,6 @@ params:
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=30000] -W 96:00 -P acc_CommonMind -n 12 bash
 
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=45000] -W 96:00 -P acc_CommonMind -n 12 bash
-
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 ml python git pandoc
@@ -36,11 +34,11 @@ path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 
 # March 26
 h5ad_files = c(
-RUSH = "RUSH_2023-04-01_12_07.h5ad", 
-HBCC = "HBCC_2023-04-01_12_22.h5ad",
-MSSM = "MSSM_2023-04-01_12_56.h5ad",
+RUSH = "RUSH_2023-06-04_12_07.h5ad", 
+HBCC = "HBCC_2023-06-04_12_22.h5ad",
+MSSM = "MSSM_2023-06-04_12_56.h5ad",
 # FULL = "",
-AGING = "AGING_2023-04-01_16_14.h5ad")
+AGING = "AGING_2023-06-04_16_14.h5ad")
 
 h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
@@ -71,8 +69,10 @@ run("MSSM")
 
 params = list(DATASET = h5ad_files["RUSH"])
 
-complete pseudobulk?
-studentized residuals
+# Try to merge MSSM
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 30 bash
+
+
 
 --->
 
