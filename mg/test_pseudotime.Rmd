@@ -129,7 +129,7 @@ names(res) = names(dfList)
 res
 ```
 
-
+# Analysis per cell type
 ```{r lmer.subtype}
 res = lapply(names(dfList), function(id){
 
@@ -156,6 +156,19 @@ res = lapply(names(dfList), function(id){
 })
 res = do.call(rbind, res)
 ```
+
+```{r plot.subtype, fig.height=12, fig.width=12}
+res$pvalue = pmax(res[['Pr...t..']], 1e-10)
+
+ggplot(res, aes(subtype, Estimate, fill=-log10(pvalue))) +
+	geom_bar(stat="identity") +
+	theme_classic() +
+	theme(aspect.ratio=1) +
+	facet_wrap(~ Dataset, nrow=2) +
+	coord_flip() +
+	scale_fill_gradient(name=bquote(-log[10]~p), low="black", high="red", limits=c(0, 10))
+```
+
 
 
 
