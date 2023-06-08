@@ -13,7 +13,9 @@ output:
 
 <!--- 
 
-cd /Users/gabrielhoffman/workspace/repos/nps_ad/mg
+# cd /Users/gabrielhoffman/workspace/repos/nps_ad/mg
+cd 
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/mg
 R --vanilla
 
 rmarkdown::render("test_pseudotime.Rmd");
@@ -51,22 +53,29 @@ library(SingleCellExperiment)
 file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
 sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE)
 
-files = dir("/Users/gabrielhoffman/Downloads/data-2/", recursive=TRUE, full.names=TRUE)
+files = dir("/sc/arion/scratch/hoffmg01/data/", recursive=TRUE, full.names=TRUE)
 names(files) = gsub(".csv", "", paste(basename(dirname(files)), basename(files), sep="/"))
 
 dfList = lapply( names(files)[1:2], function(id){
 
 	df = read_csv(files[id])
-	df$Donor =  gsub("-[GCTA]+", "", df$barcodekey)
+	df$SubID =  gsub("-[GCTA]+", "", df$barcodekey)
 
 	df
 	})
 names(dfList) = names(files)[1:2]
 
+dfList2 = lapply( names(files)[3:4], function(id){
 
+	df = read_csv(files[id])
 
+	df = cbind(df, colData(sce)[df[["...1"]]+1,])
 
+	df
+	})
+names(dfList2) = names(files)[3:4]
 
+dfList = c(dfList, dfList2)
 ```
 
 ```{r plots}
@@ -86,9 +95,13 @@ fitList
 ```{r lmer}
 res = lapply(names(dfList), function(id){
 
-	form = dpt_pseudotime ~ braak + (1|subtype) + (1|Donor)
+	if( grepl("fresh_mg", id) ){
+		form = dpt_pseudotime ~ braak + (1|subtype) + (1|SubID)
+	}else{
+		form = dpt_pseudotime ~ braak + (1|subtype) + (1|SubID)
+	}
 
-	fit = lmer(form, dfList[[id]], REML=FALSE)
+	fit = lmer(form, dfList[[id]], REML=FALSE, control=lme4::lmerControl(optimizer="Nelder_Mead"))
 
 	list(vp = calcVarPart(fit), summary = coef(summary(fit)))
 })
