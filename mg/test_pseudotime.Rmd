@@ -101,7 +101,7 @@ fitList = lapply(names(dfList), function(id){
 	theme(aspect.ratio=1) +
 	xlab("Braak") + 
 	ggtitle(id) +
-	facet_grid(~ subtype, nrow=2)
+	facet_grid(~ subtype, rows=2)
 })
 fitList
 ```
