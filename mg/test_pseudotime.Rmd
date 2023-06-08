@@ -103,7 +103,7 @@ res = lapply(names(dfList), function(id){
 	if( grepl("fresh_mg", id) ){
 		form = dpt_pseudotime ~ braak + (1|subtype) + (1|SubID)
 	}else{
-		form = dpt_pseudotime ~ braak + (1|subtype) + (1|SubID)
+		form = dpt_pseudotime ~ braak + (1|subtype) + (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) + (1|predicted_phase)
 	}
 
 	fit = lmer(form, dfList[[id]], REML=FALSE, control=lme4::lmerControl(optimizer="Nelder_Mead"))
