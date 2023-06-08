@@ -220,7 +220,7 @@ df %>%
 	filter( !is.na(dpt_pseudotime)) %>%
 	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
 	geom_point() +
-	geom_smooth(method="rlm") + 
+	geom_smooth(method="lm", color="red") + 
 	theme_classic() +
 	theme(aspect.ratio=1) +
 	ylab("PTPRG") +
@@ -234,7 +234,7 @@ df %>%
 	filter(!is.na(dpt_pseudotime)) %>%
 	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
 	geom_point() +
-	geom_smooth(method="rlm") + 
+	geom_smooth(method="lm", color="red") + 
 	theme_classic() +
 	theme(aspect.ratio=1) +
 	ylab("PTPRG") +
