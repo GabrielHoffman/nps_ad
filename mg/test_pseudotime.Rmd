@@ -60,7 +60,7 @@ sce_colData = readRDS("/sc/arion/scratch/hoffmg01/data/colData.RDS")
 
 # Fresh MG
 file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/4_qc/230424_FreshMG_freeze3_MicroPVM_anno_meta_HGNC_log1p.h5ad"
-sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE, obsp=FALSE)
+# sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE, obsp=FALSE)
 # saveRDS(colData(sce), file="/sc/arion/scratch/hoffmg01/data/colData_fresh.RDS")
 sce_colData_fresh = readRDS("/sc/arion/scratch/hoffmg01/data/colData_fresh.RDS")
 
@@ -117,7 +117,9 @@ res = lapply(names(dfList), function(id){
 		form = dpt_pseudotime ~ braak + (1|subtype) + (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) + (1|predicted_phase)
 	}
 
-	fit = lmer(form, dfList[[id]], REML=FALSE, control=lme4::lmerControl(optimizer="Nelder_Mead"))
+	data = dfList[[id]][,all.vars(form)]
+
+	fit = lmer(form, data, REML=FALSE, control=lme4::lmerControl(optimizer="Nelder_Mead"))
 
 	list(vp = calcVarPart(fit), summary = coef(summary(fit)))
 })
