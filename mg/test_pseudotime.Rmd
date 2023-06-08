@@ -14,7 +14,7 @@ output:
 <!--- 
 
 # cd /Users/gabrielhoffman/workspace/repos/nps_ad/mg
-cd 
+
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/mg
 R --vanilla
 
