@@ -163,7 +163,19 @@ res = do.call(rbind, res)
 ```{r plot.subtype, fig.height=12, fig.width=12}
 res$pvalue = pmax(res[['Pr...t..']], 1e-10)
 
-ggplot(res, aes(subtype, Estimate, fill=-log10(pvalue))) +
+res %>%
+	filter(coef = "braak") %>%
+	ggplot(aes(subtype, Estimate, fill=-log10(pvalue))) +
+	geom_bar(stat="identity") +
+	theme_classic() +
+	theme(aspect.ratio=1) +
+	facet_wrap(~ Dataset, nrow=2) +
+	coord_flip() +
+	scale_fill_gradient(name=bquote(-log[10]~p), low="black", high="red", limits=c(0, 10))
+
+res %>%
+	filter(coef = "log(ngenes)") %>%
+	ggplot(aes(subtype, Estimate, fill=-log10(pvalue))) +
 	geom_bar(stat="identity") +
 	theme_classic() +
 	theme(aspect.ratio=1) +
