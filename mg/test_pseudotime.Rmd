@@ -164,7 +164,7 @@ res = do.call(rbind, res)
 res$pvalue = pmax(res[['Pr...t..']], 1e-10)
 
 res %>%
-	filter(coef = "braak") %>%
+	filter(coef == "braak") %>%
 	ggplot(aes(subtype, Estimate, fill=-log10(pvalue))) +
 	geom_bar(stat="identity") +
 	theme_classic() +
@@ -174,7 +174,7 @@ res %>%
 	scale_fill_gradient(name=bquote(-log[10]~p), low="black", high="red", limits=c(0, 10))
 
 res %>%
-	filter(coef = "log(ngenes)") %>%
+	filter(coef == "log(n_genes)") %>%
 	ggplot(aes(subtype, Estimate, fill=-log10(pvalue))) +
 	geom_bar(stat="identity") +
 	theme_classic() +
