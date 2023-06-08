@@ -58,7 +58,7 @@ file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_p
 # saveRDS(colData(sce), file="/sc/arion/scratch/hoffmg01/data/colData.RDS")
 sce_colData = readRDS("/sc/arion/scratch/hoffmg01/data/colData.RDS")
 
-files = dir("/sc/arion/scratch/hoffmg01/data/", recursive=TRUE, full.names=TRUE)
+files = dir("/sc/arion/scratch/hoffmg01/data/", pattern="*csv.gz",recursive=TRUE, full.names=TRUE)
 names(files) = gsub(".csv", "", paste(basename(dirname(files)), basename(files), sep="/"))
 
 dfList = lapply( names(files)[1:2], function(id){
