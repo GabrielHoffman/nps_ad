@@ -212,19 +212,20 @@ sce_AH = sce[,sce$subclass %in% c('MG_Adapt', 'MG_Homeo')]
 sce_PVM = sce[,sce$subclass %in% c('MG_PVM')]
 ```
 
-```{r make.plots, eval=FALSE}
+```{r make.plots, eval=FALSE, fig.height=12, fig.width=12}
 df = data.frame(colData(sce_AH), 
 	gene = logcounts(sce_AH)["PTPRG",])
 
 df %>%
-	filter(gene > 8.1, !is.na(dpt_pseudotime)) %>%
+	filter( !is.na(dpt_pseudotime)) %>%
 	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
 	geom_point() +
 	geom_smooth(method="rlm") + 
 	theme_classic() +
 	theme(aspect.ratio=1) +
 	ylab("PTPRG") +
-	ggtitle("Adapt + Homeo")
+	ggtitle("Adapt + Homeo") +
+	facet_wrap(~ subtype)
 
 df = data.frame(colData(sce_PVM), 
 	gene = logcounts(sce_PVM)["PTPRG",])
@@ -237,7 +238,8 @@ df %>%
 	theme_classic() +
 	theme(aspect.ratio=1) +
 	ylab("PTPRG") +
-	ggtitle("PVM")
+	ggtitle("PVM") +
+	facet_wrap(~ subtype)
 ```
 
 
