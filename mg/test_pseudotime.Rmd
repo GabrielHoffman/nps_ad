@@ -140,7 +140,7 @@ res = lapply(names(dfList), function(id){
 		if( grepl("fresh_mg", id) ){
 			form = dpt_pseudotime ~ braak + (1|Channel) + age + (1|sex) + PMI + log(n_genes) + (1|predicted_phase)
 		}else{
-			form = dpt_pseudotime ~ braak + (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) #+ (1|predicted_phase)
+			form = dpt_pseudotime ~ braak + (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) + (1|predicted_phase)
 		}
 
 		include = data$subtype == st
