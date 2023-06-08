@@ -73,8 +73,9 @@ names(dfList) = names(files)[1:2]
 dfList2 = lapply( names(files)[3:4], function(id){
 
 	df = read_csv(files[id])
+	colnames(df)[1] = "idx"
 
-	df = cbind(df[,1:3], sce_colData[df[["...1"]]+1,])
+	df = cbind(df[,1:3], sce_colData[df$idx+1,])
 
 	df
 	})
@@ -116,6 +117,66 @@ names(res) = names(dfList)
 ```{r show.lmer, cache=FALSE}
 res
 ```
+
+# Test pseudotime
+```{r testPT}
+library(dreamlet)
+library(MASS)
+file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
+sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE)
+
+counts(sce) = assay(sce, "X")
+logcounts(sce) = computeLogCPM(sce)
+
+colData(sce)$dpt_pseudotime = rep(NA, ncol(sce))
+
+idx = dfList[[3]]$idx + 1
+colData(sce)$dpt_pseudotime[idx] = dfList[[3]]$dpt_pseudotime
+
+idx = dfList[[4]]$idx + 1
+colData(sce)$dpt_pseudotime[idx] = dfList[[4]]$dpt_pseudotime
+
+sce_AH = sce[,sce$subclass %in% c('MG_Adapt', 'MG_Homeo')]
+sce_PVM = sce[,sce$subclass %in% c('MG_PVM')]
+
+
+df = data.frame(colData(sce_AH), 
+	gene = logcounts(sce_AH)["PTPRG",])
+
+df %>%
+	filter(gene > 8.1, !is.na(dpt_pseudotime)) %>%
+	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
+	geom_point() +
+	geom_smooth(method="rlm") + 
+	theme_classic() +
+	theme(aspect.ratio=1) +
+	ylab("PTPRG") +
+	ggtitle("Adapt + Homeo")
+
+df = data.frame(colData(sce_PVM), 
+	gene = logcounts(sce_PVM)["PTPRG",])
+
+df %>%
+	filter(!is.na(dpt_pseudotime)) %>%
+	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
+	geom_point() +
+	geom_smooth(method="rlm") + 
+	theme_classic() +
+	theme(aspect.ratio=1) +
+	ylab("PTPRG") +
+	ggtitle("PVM")
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 <!---
