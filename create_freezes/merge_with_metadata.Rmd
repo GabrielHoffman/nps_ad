@@ -14,6 +14,7 @@ output:
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/create_freezes/
 ml python git pandoc
+ml gcc/11.2.0
 git pull origin master
 R --vanilla
 
@@ -82,14 +83,16 @@ merge_with_metadata = function(h5ad_file){
   #------------------------
 
   # Load metadata
-  df_meta = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/syn26527784_latest.csv", show_col_types=FALSE)
-  rownames(df_meta) = df_meta$SubID
+  file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/syn26527784_latest.csv"
+  df_meta = read.csv(file)
+  # rownames(df_meta) = df_meta$SubID
 
   # get order of matching
   i = match(sceCombine$SubID, df_meta$SubID)
+  exclude = colnames(df_meta) %in% colnames(colData(sceCombine))
 
   # Assign new metadata
-  colData(sceCombine) = cbind(colData(sceCombine), df_meta[i,])
+  colData(sceCombine) = cbind(colData(sceCombine), df_meta[i,!exclude,drop=FALSE])
 
   # Load data for batching and sequencing
   # df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv", show_col_types=FALSE)
