@@ -191,7 +191,7 @@ res %>%
 
 
 # Test pseudotime
-```{r testPT, eval=FALSE, echo=FALSE}
+```{r testPT}
 library(dreamlet)
 library(MASS)
 file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
@@ -212,7 +212,7 @@ sce_AH = sce[,sce$subclass %in% c('MG_Adapt', 'MG_Homeo')]
 sce_PVM = sce[,sce$subclass %in% c('MG_PVM')]
 ```
 
-```{r make.plots, eval=FALSE, fig.height=12, fig.width=12}
+```{r make.plots, fig.height=12, fig.width=12}
 df = data.frame(colData(sce_AH), 
 	gene = logcounts(sce_AH)["PTPRG",])
 
