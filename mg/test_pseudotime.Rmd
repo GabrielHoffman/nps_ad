@@ -148,9 +148,12 @@ res = lapply(names(dfList), function(id){
 
 		fit = lmer(form, data2, control=lme4::lmerControl(optimizer="Nelder_Mead"))
 
+		df = data.frame(coef(summary(fit)))
+		df = data.frame(coef = rownames(df), df)
+
 		data.frame( Dataset = id, 
 					subtype = st,
-					t(coef(summary(fit))["braak",]))
+					df)
 	})
 	do.call(rbind, res)
 })
@@ -176,7 +179,7 @@ ggplot(res, aes(subtype, Estimate, fill=-log10(pvalue))) +
 
 
 # Test pseudotime
-```{r testPT, eval=FALSE}
+```{r testPT, eval=FALSE, echo=FALSE}
 library(dreamlet)
 library(MASS)
 file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
