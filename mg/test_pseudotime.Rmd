@@ -92,7 +92,7 @@ names(dfList2) = names(files)[3:4]
 dfList = c(dfList, dfList2)
 ```
 
-```{r plots}
+```{r plots, fig.width=12}
 fitList = lapply(names(dfList), function(id){
 	message(id)
 	ggplot(dfList[[id]], aes(as.character(braak), dpt_pseudotime, fill=subtype)) +
@@ -101,7 +101,7 @@ fitList = lapply(names(dfList), function(id){
 	theme(aspect.ratio=1) +
 	xlab("Braak") + 
 	ggtitle(id) +
-	facet_grid(~ subtype, rows=2)
+	facet_wrap(~ subtype, nrow=2)
 })
 fitList
 ```
