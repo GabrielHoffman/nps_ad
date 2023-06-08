@@ -54,7 +54,9 @@ library(SingleCellExperiment)
 ```{r analysis}
 # PsychAD MicroPVM + metadata
 file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
-sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE)
+# sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE)
+# saveRDS(colData(sce), file="/sc/arion/scratch/hoffmg01/data/colData.RDS")
+sce_colData = readRDS("/sc/arion/scratch/hoffmg01/data/colData.RDS")
 
 files = dir("/sc/arion/scratch/hoffmg01/data/", recursive=TRUE, full.names=TRUE)
 names(files) = gsub(".csv", "", paste(basename(dirname(files)), basename(files), sep="/"))
@@ -72,7 +74,7 @@ dfList2 = lapply( names(files)[3:4], function(id){
 
 	df = read_csv(files[id])
 
-	df = cbind(df[,1:3], colData(sce)[df[["...1"]]+1,])
+	df = cbind(df[,1:3], sce_colData[df[["...1"]]+1,])
 
 	df
 	})
