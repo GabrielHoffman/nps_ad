@@ -95,12 +95,13 @@ dfList = c(dfList, dfList2)
 ```{r plots}
 fitList = lapply(names(dfList), function(id){
 	message(id)
-	ggplot(dfList[[id]], aes(as.character(braak), dpt_pseudotime, fill=braak)) +
+	ggplot(dfList[[id]], aes(as.character(braak), dpt_pseudotime, fill=subtype)) +
 	geom_violin() +
 	theme_classic() +
 	theme(aspect.ratio=1) +
 	xlab("Braak") + 
-	ggtitle(id)
+	ggtitle(id) +
+	facet_grid(~ subtype, nrow=2)
 })
 fitList
 ```
