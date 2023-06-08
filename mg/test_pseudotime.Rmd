@@ -98,7 +98,7 @@ fitList = lapply(names(dfList), function(id){
 	ggplot(dfList[[id]], aes(as.character(braak), dpt_pseudotime, fill=subtype)) +
 	geom_violin() +
 	theme_classic() +
-	theme(aspect.ratio=1) +
+	theme(aspect.ratio=1, legend.position="none") +
 	xlab("Braak") + 
 	ggtitle(id) +
 	facet_wrap(~ subtype, nrow=2)
