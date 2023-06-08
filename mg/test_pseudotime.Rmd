@@ -1,0 +1,109 @@
+---
+title: "Test pseudotime"
+subtitle: 'Fresh Microglia and NPSAD'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+    toc: true
+    smart: false
+---
+
+
+<!--- 
+
+cd /Users/gabrielhoffman/workspace/repos/nps_ad/mg
+R --vanilla
+
+rmarkdown::render("test_pseudotime.Rmd");
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+
+```{r load.packages}
+library(tidyverse)
+library(variancePartition)
+library(lmerTest)
+library(ggplot2)
+library(zellkonverter)
+library(SingleCellExperiment)
+```
+
+```{r analysis}
+# PsychAD MicroPVM + metadata
+file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
+sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE)
+
+files = dir("/Users/gabrielhoffman/Downloads/data-2/", recursive=TRUE, full.names=TRUE)
+names(files) = gsub(".csv", "", paste(basename(dirname(files)), basename(files), sep="/"))
+
+dfList = lapply( names(files)[1:2], function(id){
+
+	df = read_csv(files[id])
+	df$Donor =  gsub("-[GCTA]+", "", df$barcodekey)
+
+	df
+	})
+names(dfList) = names(files)[1:2]
+
+
+
+
+
+```
+
+```{r plots}
+fitList = lapply(names(dfList), function(id){
+
+	ggplot(dfList[[id]], aes(as.character(braak), dpt_pseudotime, fill=braak)) +
+	geom_violin() +
+	theme_classic() +
+	theme(aspect.ratio=1) +
+	xlab("Braak") + 
+	ggtitle(id)
+})
+fitList
+```
+
+
+```{r lmer}
+res = lapply(names(dfList), function(id){
+
+	form = dpt_pseudotime ~ braak + (1|subtype) + (1|Donor)
+
+	fit = lmer(form, dfList[[id]], REML=FALSE)
+
+	list(vp = calcVarPart(fit), summary = coef(summary(fit)))
+})
+names(res) = names(dfList)
+```
+
+```{r show.lmer}
+res
+```
+
+
+<!---
+
+PsychAD metadata
+/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/clinical_metadata.csv
+/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/clinical_metadata_sampleSets_latest.RDS
+--->
+
