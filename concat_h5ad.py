@@ -109,7 +109,7 @@ def main(argv):
    print( "Combine", len(h5adfiles), "H5AD files")
 
    if ondisk:
-      concat_on_disk(list_pth, outfile)
+      concat_on_disk(h5adfiles, outfile)
    else:
       # Create anndata array
       print(" Reading files...")
