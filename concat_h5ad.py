@@ -14,7 +14,7 @@ def main(argv):
    outfile = ''
    ondisk = False
    try:
-      opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+      opts, args = getopt.getopt(argv,"hi:o:d",["ifile=","ofile="])
    except getopt.GetoptError:
       print('concat_h5ad.py -i <file of h5ad files> -o <outfile h5ad>')
       sys.exit(2)
