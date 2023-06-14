@@ -9,68 +9,6 @@ from scipy import sparse
 from anndata._core.sparse_dataset import SparseDataset
 from anndata.experimental import read_elem, write_elem
 
-def main(argv):
-   infile = ''
-   outfile = ''
-   ondisk = False
-   try:
-      opts, args = getopt.getopt(argv,"dhi:o:",["ifile=","ofile="])
-   except getopt.GetoptError:
-      print('concat_h5ad.py -i <file of h5ad files> -o <outfile h5ad>')
-      sys.exit(2)
-   for opt, arg in opts:
-      if opt == '-h':
-         print('concat_h5ad.py -i <file of h5ad files> --ondisk -o <outfile h5ad>')
-         sys.exit()
-      elif opt in ("-i", "--ifile"):
-         infile = arg
-      elif opt in ("-o", "--ofile"):
-         outfile = arg
-      elif opt in ("-d", "--ondisk"):
-         ondisk = True
-
-   if infile == None:
-      print("Must specify infile")
-      sys.exit(2)      
-
-   if outfile == '':
-      print("Must specify outfile")
-      sys.exit(2)   
-
-   # Run code data
-   ################
-
-   # read list of h5a files
-   h5adfiles = open(infile, "r").read().split('\n')
-
-   # remove blank lines
-   h5adfiles = list(filter(None, h5adfiles))
-
-   print( "Combine", len(h5adfiles), "H5AD files")
-
-   if ondisk:
-      concat_on_disk(list_pth, outfile)
-   else:
-      # Create anndata array
-      print(" Reading files...")
-      adatas = [ad.read(file) for file in h5adfiles] 
-
-      # Concatenate data
-      print(" Concatenating data...")
-      adata = ad.concat(adatas[:])
-
-      # add .var data (i.e. rowData) to new object
-      adata.var = adatas[1].var
-
-      # Write to disk
-      print(" Writing to H5AD...")
-      adata.write( outfile, compression="lzf" )
-
-if __name__ == "__main__":
-   main(sys.argv[1:])
-
-
-
 # From Donghoon Lee
 def read_everything_but_X(pth) -> ad.AnnData:
     # read all keys but X and raw
@@ -130,3 +68,66 @@ def concat_on_disk(input_pths, output_pth, temp_pth='temp.h5ad'):
                 # ELSE: src is in csr format
                 else:
                     mtx.append(SparseDataset(src['X']))
+                    
+def main(argv):
+   infile = ''
+   outfile = ''
+   ondisk = False
+   try:
+      opts, args = getopt.getopt(argv,"dhi:o:",["ifile=","ofile="])
+   except getopt.GetoptError:
+      print('concat_h5ad.py [-d] -i <file of h5ad files> -o <outfile h5ad>')
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print('concat_h5ad.py -i <file of h5ad files> --ondisk -o <outfile h5ad>')
+         sys.exit()
+      elif opt in ("-i", "--ifile"):
+         infile = arg
+      elif opt in ("-o", "--ofile"):
+         outfile = arg
+      elif opt in ("-d", "--ondisk"):
+         ondisk = True
+
+   if infile == None:
+      print("Must specify infile")
+      sys.exit(2)      
+
+   if outfile == '':
+      print("Must specify outfile")
+      sys.exit(2)   
+
+   # Run code data
+   ################
+
+   # read list of h5a files
+   h5adfiles = open(infile, "r").read().split('\n')
+
+   # remove blank lines
+   h5adfiles = list(filter(None, h5adfiles))
+
+   print( "Combine", len(h5adfiles), "H5AD files")
+
+   if ondisk:
+      concat_on_disk(list_pth, outfile)
+   else:
+      # Create anndata array
+      print(" Reading files...")
+      adatas = [ad.read(file) for file in h5adfiles] 
+
+      # Concatenate data
+      print(" Concatenating data...")
+      adata = ad.concat(adatas[:])
+
+      # add .var data (i.e. rowData) to new object
+      adata.var = adatas[1].var
+
+      # Write to disk
+      print(" Writing to H5AD...")
+      adata.write( outfile, compression="lzf" )
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
+
+
+
