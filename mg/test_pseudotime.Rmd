@@ -66,7 +66,7 @@ sce_colData_fresh = readRDS("/sc/arion/scratch/hoffmg01/data/colData_fresh.RDS")
 
 files = dir("/sc/arion/scratch/hoffmg01/data/", pattern="*csv*",recursive=TRUE, full.names=TRUE)
 names(files) = gsub(".csv", "", paste(basename(dirname(files)), basename(files), sep="/"))
-
+ 
 dfList = lapply( names(files)[1:2], function(id){
 
 	df = read_csv(files[id])
