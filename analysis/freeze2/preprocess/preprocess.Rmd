@@ -20,7 +20,8 @@ params:
 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
-ml python git pandoc
+ml python git pandoc 
+ml gcc/11.2.0
 git pull origin master
 R --vanilla
 
@@ -34,11 +35,11 @@ path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 
 # March 26
 h5ad_files = c(
-RUSH = "RUSH_2023-06-04_12_07.h5ad", 
-HBCC = "HBCC_2023-06-04_12_22.h5ad",
-MSSM = "MSSM_2023-06-04_12_56.h5ad",
-# FULL = "",
-AGING = "AGING_2023-06-04_16_14.h5ad")
+RUSH = "RUSH_2023-06-08_21_44.h5ad", 
+HBCC = "HBCC_2023-06-08_21_58.h5ad",
+MSSM = "MSSM_2023-06-08_22_31.h5ad",
+FULL = "FULL_2023-06-08_23_53.h5ad",
+AGING = "AGING_2023-06-09_01_45.h5ad")
 
 h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
@@ -165,9 +166,9 @@ for(cluster_id in cluster_id_options ){
 
     # formula
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + (1|Sex) + scale(Age)
+      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes)
     }else{      
-      form = ~ (1|Sex) + scale(Age)
+      form = ~ Sex + scale(Age) + log(n_genes)
     }
 
     message(cluster_id, ' ',sample_id)
@@ -341,7 +342,7 @@ plotViolin(df_cellScore, assays=ctorder)
 
 
 ### Show cell markers
-```{r cellMarkers}
+```{r cellMarkers, echo=FALSE, eval=FALSE}
 genes = c('RBFOX3', 'MEG3', 'SLC17A7',
 'RBFOX3', 'MEG3', 'GAD1', 'GAD2', 'GRIK1',
 'SST',
@@ -363,7 +364,7 @@ rownames(df_sub) = df_genes$SYMBOL[idx]
 plotPercentBars(df_cellScore, genes=unique(genes), assays=ctorder)  
 ```
 
-```{r heatmap, fig.height=7, fig.width=7}
+```{r heatmap, fig.height=7, fig.width=7, echo=FALSE, eval=FALSE}
 dreamlet::plotHeatmap(df_cellScore, genes=unique(genes), assays=ctorder)  
 ```
 
@@ -371,7 +372,7 @@ dreamlet::plotHeatmap(df_cellScore, genes=unique(genes), assays=ctorder)
 # Process data: log2 CPM + voom precision weights
 ```{r voom}
 # Normalize and apply voom
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell)
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell) + log(n_genes)
 
 res.proc = processAssays( pb, form, BPPARAM = bpparam)
 ```
@@ -383,7 +384,7 @@ plotVoom( res.proc, ncol=4, assays=ctorder)
 
 # Variance Partitioning Analysis
 ```{r varPart}
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell)
+form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell) + log(n_genes)
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = bpparam)
 ```
