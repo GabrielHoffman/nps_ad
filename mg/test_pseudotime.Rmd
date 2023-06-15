@@ -55,16 +55,16 @@ library(SingleCellExperiment)
 # PsychAD MicroPVM + metadata
 file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
 # sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE)
-# saveRDS(colData(sce), file="/sc/arion/scratch/hoffmg01/data/colData.RDS")
-sce_colData = readRDS("/sc/arion/scratch/hoffmg01/data/colData.RDS")
+# saveRDS(colData(sce), file="/sc/arion/scratch/hoffmg01/data/colData_psychad.RDS")
+sce_colData_psychad = readRDS("/sc/arion/scratch/hoffmg01/data/colData_psychad.RDS")
 
 # Fresh MG
 file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/4_qc/230424_FreshMG_freeze3_MicroPVM_anno_meta_HGNC_log1p.h5ad"
-# sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE, obsp=FALSE)
-# saveRDS(colData(sce), file="/sc/arion/scratch/hoffmg01/data/colData_fresh.RDS")
+# sce2 = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE, obsp=FALSE)
+# saveRDS(colData(sce2), file="/sc/arion/scratch/hoffmg01/data/colData_fresh.RDS")
 sce_colData_fresh = readRDS("/sc/arion/scratch/hoffmg01/data/colData_fresh.RDS")
 
-files = dir("/sc/arion/scratch/hoffmg01/data/", pattern="*csv.gz",recursive=TRUE, full.names=TRUE)
+files = dir("/sc/arion/scratch/hoffmg01/data/", pattern="*csv*",recursive=TRUE, full.names=TRUE)
 names(files) = gsub(".csv", "", paste(basename(dirname(files)), basename(files), sep="/"))
 
 dfList = lapply( names(files)[1:2], function(id){
@@ -84,7 +84,7 @@ dfList2 = lapply( names(files)[3:4], function(id){
 	colnames(df)[1] = "idx"
 
 	# USe subtype 
-	df2 = cbind(df, sce_colData[df$idx+1,])
+	df2 = cbind(df[,1:3], sce_colData_psychad[df$idx+1,])
 
 	droplevels(df2)
 	})
@@ -194,60 +194,126 @@ knitr::knit_exit()
 
 
 # Test pseudotime
+# ```{r testPT}
+# library(dreamlet)
+# library(MASS)
+# file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
+# sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE)
+
+# counts(sce) = assay(sce, "X")
+# logcounts(sce) = computeLogCPM(sce)
+
+# colData(sce)$dpt_pseudotime = rep(NA, ncol(sce))
+
+# idx = dfList[[3]]$idx + 1
+# colData(sce)$dpt_pseudotime[idx] = dfList[[3]]$dpt_pseudotime
+
+# idx = dfList[[4]]$idx + 1
+# colData(sce)$dpt_pseudotime[idx] = dfList[[4]]$dpt_pseudotime
+
+# sce_AH = sce[,sce$subclass %in% c('MG_Adapt', 'MG_Homeo')]
+# sce_PVM = sce[,sce$subclass %in% c('MG_PVM')]
+# ```
+
+# ```{r make.plots, fig.height=12, fig.width=12}
+# df = data.frame(colData(sce_AH), 
+# 	gene = logcounts(sce_AH)["PTPRG",])
+
+# df %>%
+# 	filter( !is.na(dpt_pseudotime)) %>%
+# 	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
+# 	geom_point() +
+# 	geom_smooth(method="lm", color="red") + 
+# 	theme_classic() +
+# 	theme(aspect.ratio=1) +
+# 	ylab("PTPRG") +
+# 	ggtitle("Adapt + Homeo") +
+# 	facet_wrap(~ subtype)
+
+# df = data.frame(colData(sce_PVM), 
+# 	gene = logcounts(sce_PVM)["PTPRG",])
+
+# df %>%
+# 	filter(!is.na(dpt_pseudotime)) %>%
+# 	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
+# 	geom_point() +
+# 	geom_smooth(method="lm", color="red") + 
+# 	theme_classic() +
+# 	theme(aspect.ratio=1) +
+# 	ylab("PTPRG") +
+# 	ggtitle("PVM") +
+# 	facet_wrap(~ subtype)
+# ```
+
+
+
+
+# Fresh MG
+# Test pseudotime
 ```{r testPT}
 library(dreamlet)
 library(MASS)
-file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/5_taxonomy/1_scANVI_psychAD_annotation/230420_PsychAD_MicroPVM_independent_meta_scANVI_new-umap.h5ad"
-sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE)
+file = "/sc/arion/projects/Microglia/scRNAseq_proc/freeze3/4_qc/230424_FreshMG_freeze3_MicroPVM_anno_meta_HGNC_log1p.h5ad"
+sce.in = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, uns=FALSE, layers=FALSE, obsm=FALSE, obsp=FALSE, raw=TRUE)
+sce = swapAltExp(sce.in, "raw")
+rownames(sce) = rownames(sce.in)
+
 
 counts(sce) = assay(sce, "X")
-logcounts(sce) = computeLogCPM(sce)
+sce$lib.size = colSums2(counts(sce))
 
 colData(sce)$dpt_pseudotime = rep(NA, ncol(sce))
+colData(sce)$Dataset = rep(NA, ncol(sce))
 
-idx = dfList[[3]]$idx + 1
-colData(sce)$dpt_pseudotime[idx] = dfList[[3]]$dpt_pseudotime
+idx = match(colnames(sce), dfList[[1]]$barcodekey)
+colData(sce)$dpt_pseudotime[!is.na(idx)] = dfList[[1]]$dpt_pseudotime[idx[!is.na(idx)]]
+colData(sce)$Dataset[!is.na(idx)]  = "Adapt_Homeo"
 
-idx = dfList[[4]]$idx + 1
-colData(sce)$dpt_pseudotime[idx] = dfList[[4]]$dpt_pseudotime
+idx = match(colnames(sce), dfList[[2]]$barcodekey)
+colData(sce)$dpt_pseudotime[!is.na(idx)] = dfList[[1]]$dpt_pseudotime[idx[!is.na(idx)]]
+colData(sce)$Dataset[!is.na(idx)]  = "MG_PVM"
 
-sce_AH = sce[,sce$subclass %in% c('MG_Adapt', 'MG_Homeo')]
-sce_PVM = sce[,sce$subclass %in% c('MG_PVM')]
+form = y ~ offset(log(lib.size)) + scale(dpt_pseudotime) + scale(age) + sex + scale(PMI) + scale(log(n_genes)) + (1|Channel) 
+
+data = colData(sce)[,c('Dataset', 'subtype', all.vars(form)[-1])]
+data$y = counts(sce)['PTPRG',]
+
+
+data2 = data[which(data$Dataset == 'Adapt_Homeo'),]
+data2 = data2[data2$subtype == 'MG_Adapt_AIF1',]
+data2 = as.data.frame(data2)
+
+fit = glmer.nb(form, data2)
+
+library(glmmTMB)
+form = y ~ offset(log(lib.size)) + scale(dpt_pseudotime) + scale(age) + sex + scale(PMI) + scale(log(n_genes)) + (1|Channel) 
+
+fit2 = glmmTMB(form, data2, family=nbinom1)
+
+library(NBZIMM)
+# f1 = glmm.nb(y ~ Days + Age + Race + preg + offset(log(N)), random = ~ 1 | subject)
+
+form = y ~ scale(dpt_pseudotime) + scale(age) + sex + scale(PMI) + scale(log(n_genes)) + offset(log(lib.size))
+fit3 = glmm.nb(form, random = ~ 1|Channel, data)
+
+
+
+data = colData(sce)
+data$y = counts(sce)['PTPRG',]
+form = y ~ offset(log(lib.size)) + PMI
+df = as.data.frame(data[,all.vars(form)])
+
+
+fit = glm.nb(form, df)
+
+summary(fit)
+
+
+
+
+
+
 ```
-
-```{r make.plots, fig.height=12, fig.width=12}
-df = data.frame(colData(sce_AH), 
-	gene = logcounts(sce_AH)["PTPRG",])
-
-df %>%
-	filter( !is.na(dpt_pseudotime)) %>%
-	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
-	geom_point() +
-	geom_smooth(method="lm", color="red") + 
-	theme_classic() +
-	theme(aspect.ratio=1) +
-	ylab("PTPRG") +
-	ggtitle("Adapt + Homeo") +
-	facet_wrap(~ subtype)
-
-df = data.frame(colData(sce_PVM), 
-	gene = logcounts(sce_PVM)["PTPRG",])
-
-df %>%
-	filter(!is.na(dpt_pseudotime)) %>%
-	ggplot(aes(dpt_pseudotime, gene, color=Braak)) +
-	geom_point() +
-	geom_smooth(method="lm", color="red") + 
-	theme_classic() +
-	theme(aspect.ratio=1) +
-	ylab("PTPRG") +
-	ggtitle("PVM") +
-	facet_wrap(~ subtype)
-```
-
-
-
-
 
 
 
