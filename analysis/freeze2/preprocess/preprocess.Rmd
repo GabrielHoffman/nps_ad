@@ -124,7 +124,17 @@ sce = readH5AD(params$DATASET, use_hdf5=TRUE, verbose=TRUE)
 assayNames(sce)[1] = "counts"
 
 # order of cell types used for plotting
-ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_IT', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', "EN_L6_IT_1", "EN_L6_IT_2", 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo', "Immune")
+# Compute pseudobulk at multiple levels
+ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_ET', 'EN_L5_IT', 'EN_L5_6_NP', 'EN_L6B', 'EN_L6_CT', 'EN_L6_IT', "EN_L6_IT_1", "EN_L6_IT_2", 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_LAMP5_LHX6', 'IN_LAMP5_RELN', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro', 'PVM', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','SMC', 'Endo', "Immune")
+
+included = (levels(sce$subclass) %in% ctorder)
+
+if( any(!included) ){
+  stop("subclass levels not in ctorder")
+}
+
+# only keep ctorder entries that are in sce$subclass
+ctorder = ctorder[ctorder %in% levels(sce$subclass)]
 
 bpparam = SnowParam(12)
 ```
