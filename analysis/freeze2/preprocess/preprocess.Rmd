@@ -15,7 +15,7 @@ params:
 <!--- 
 
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=30000] -W 128:00 -P acc_CommonMind -n 12 bash
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=40000] -W 128:00 -P acc_CommonMind -n 12 bash
 
 
 
@@ -54,6 +54,10 @@ x %>%
 
 
 run("AGING")
+
+
+run("FULL")
+
 
 
 run("RUSH")
@@ -136,7 +140,7 @@ if( any(!included) ){
 # only keep ctorder entries that are in sce$subclass
 ctorder = ctorder[ctorder %in% levels(sce$subclass)]
 
-bpparam = SnowParam(12)
+bpparam = SnowParam(8)
 ```
 
 # Compute pseudobulk at multiple levels
