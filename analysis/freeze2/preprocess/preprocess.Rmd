@@ -15,7 +15,7 @@ params:
 <!--- 
 
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=80000] -W 128:00 -P acc_CommonMind -n 12 bash
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=50000] -W 128:00 -P acc_CommonMind -n 12 bash
 
 
 
@@ -144,7 +144,7 @@ bpparam = SnowParam(8)
 ```
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 # Create pseudo-bulk SingleCellExperiment
 cluster_id_options = c("bulk", "class", "subclass", "subtype")
 sample_id_options = c("Channel", "SubID")
