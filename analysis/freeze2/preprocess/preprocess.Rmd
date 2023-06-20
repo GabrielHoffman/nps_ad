@@ -15,7 +15,7 @@ params:
 <!--- 
 
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=40000] -W 128:00 -P acc_CommonMind -n 12 bash
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=80000] -W 128:00 -P acc_CommonMind -n 12 bash
 
 
 
@@ -182,7 +182,7 @@ for(cluster_id in cluster_id_options ){
 
     # formula
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + (1|poolID) + Sex + scale(Age) + log(n_genes)
+      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes)
     }else{      
       form = ~ Sex + scale(Age) + log(n_genes)
     }
