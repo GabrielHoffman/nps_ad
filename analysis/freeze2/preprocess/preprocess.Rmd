@@ -76,6 +76,8 @@ run("MSSM")
 
 params = list(DATASET = h5ad_files["AGING"])
 
+params = list(DATASET = h5ad_files["FULL"])
+
 # Try to merge MSSM
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 30 bash
 
@@ -177,14 +179,14 @@ for(cluster_id in cluster_id_options ){
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
+    message(cluster_id, ' ', sample_id)
+
     # formula
     if( sample_id == "Channel"){
       form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes)
     }else{      
       form = ~ Sex + scale(Age) + log(n_genes)
     }
-
-    message(cluster_id, ' ',sample_id)
 
     # Read pseudobulk RDS 
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
