@@ -135,7 +135,7 @@ res
 
 # Analysis per cell type
 ```{r lmer.subtype}
-traits = c("CERAD", "Braak", "braak", 'dementia', "AD_LessStrict_Feb23", "AD_Strict_Feb23")
+traits = c("CERAD", "Braak", 'dementia', "AD_LessStrict_Feb23", "AD_Strict_Feb23")
 
 res = lapply(names(dfList), function(id){
 
@@ -182,7 +182,7 @@ res = do.call(rbind, res)
 
 
 ```{r plot.subtype, fig.height=12, fig.width=12}
-# res$pvalue = pmax(res[['Pr...t..']], 1e-10)
+res$pvalue = pmax(res[['Pr...t..']], 1e-10)
 
 fitList = lapply(traits, function(trait){
 	res[res$coef == trait,] %>%
