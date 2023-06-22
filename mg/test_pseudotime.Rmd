@@ -46,6 +46,7 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(variancePartition)
 library(lmerTest)
+library(parallel)
 library(ggplot2)
 library(zellkonverter)
 library(SingleCellExperiment)
@@ -134,15 +135,15 @@ res
 
 # Analysis per cell type
 ```{r lmer.subtype}
-traits = c("dx", "CERAD", "Braak", "braak", 'dementia', "AD_LessStrict_Feb23", "AD_Strict_Feb23")
+traits = c("CERAD", "Braak", "braak", 'dementia', "AD_LessStrict_Feb23", "AD_Strict_Feb23")
 
 res = lapply(names(dfList), function(id){
 
 	data = dfList[[id]]
 
-	res = lapply(unique(data$subtype), function(st){
+	res = lapply(as.character(unique(data$subtype)), function(st){
 		res = lapply(traits, function(trait){
-			message(trait)
+			cat(id, st, trait, "\n")
 
 			if( grepl("fresh_mg", id) ){
 				form = dpt_pseudotime ~ (1|Channel) + age + (1|sex) + PMI + log(n_genes) + (1|predicted_phase)
@@ -154,6 +155,10 @@ res = lapply(names(dfList), function(id){
 			form = as.formula(paste(x[2], x[1], x[3], "+", trait))
 
 			include = data$subtype == st
+
+			if( !(trait %in% colnames(data)) ){
+				return(NULL)
+			}
 			data2 = droplevels(data[include,all.vars(form)])
 
 			fit = lmer(form, data2, control=lme4::lmerControl(optimizer="Nelder_Mead"))
@@ -164,7 +169,7 @@ res = lapply(names(dfList), function(id){
 			data.frame( Dataset = id, 
 						subtype = st,
 						trait = trait,
-						df)
+						df[trait,])
 		})
 		do.call(rbind, res)
 	})
