@@ -143,7 +143,6 @@ res = lapply(names(dfList), function(id){
 
 	res = lapply(as.character(unique(data$subtype)), function(st){
 		res = lapply(traits, function(trait){
-			cat(id, st, trait, "\n")
 
 			if( grepl("fresh_mg", id) ){
 				form = dpt_pseudotime ~ (1|Channel) + age + (1|sex) + PMI + log(n_genes) + (1|predicted_phase)
@@ -176,8 +175,8 @@ res = lapply(names(dfList), function(id){
 	do.call(rbind, res)
 })
 res = do.call(rbind, res)
+rownames(reS) = c()
 ```
-
 
 
 
