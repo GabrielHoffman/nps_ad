@@ -48,6 +48,7 @@ library(variancePartition)
 library(lmerTest)
 library(parallel)
 library(ggplot2)
+library(RNOmni)
 library(zellkonverter)
 library(SingleCellExperiment)
 ```
@@ -199,18 +200,71 @@ fitList
 
 
 
+# Rank transform pseudotime
 
-Pseudotime
+```{r lmer.subtype2}
+traits = c("CERAD", "Braak", 'dementia', "AD_LessStrict_Feb23", "AD_Strict_Feb23")
 
- test other phenotypes
- heatmap of mean PT over brack stage
+res = lapply(names(dfList), function(id){
 
- not interested in p-values
- 	want to see which effect size is the largest
+	data = dfList[[id]]
 
- restrict to Age > 40
- 
- use robust regression or rank transform	
+	res = lapply(as.character(unique(data$subtype)), function(st){
+		res = lapply(traits, function(trait){
+
+			if( grepl("fresh_mg", id) ){
+				form = rankNorm(dpt_pseudotime) ~ (1|Channel) + age + (1|sex) + PMI + log(n_genes) + (1|predicted_phase)
+			}else{
+				form = rankNorm(dpt_pseudotime) ~ (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) + (1|predicted_phase)
+			}
+			
+			x = as.character(form)
+			form = as.formula(paste(x[2], x[1], x[3], "+", trait))
+
+			include = data$subtype == st
+
+			if( !(trait %in% colnames(data)) ){
+				return(NULL)
+			}
+			data2 = droplevels(data[include,all.vars(form)])
+
+			fit = lmer(form, data2, control=lme4::lmerControl(optimizer="Nelder_Mead"))
+
+			df = data.frame(coef(summary(fit)))
+			df = data.frame(coef = rownames(df), df)
+
+			data.frame( Dataset = id, 
+						subtype = st,
+						trait = trait,
+						df[trait,])
+		})
+		do.call(rbind, res)
+	})
+	do.call(rbind, res)
+})
+res = do.call(rbind, res)
+rownames(res) = c()
+```
+
+
+
+```{r plot.subtype2, fig.height=12, fig.width=12}
+res$pvalue = pmax(res[['Pr...t..']], 1e-10)
+
+fitList = lapply(traits, function(trait){
+	res[res$coef == trait,] %>%
+		ggplot(aes(subtype, Estimate, fill=-log10(pvalue))) +
+		geom_bar(stat="identity") +
+		theme_classic() +
+		theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+		facet_wrap(~ Dataset, nrow=2) +
+		coord_flip() +
+		scale_fill_gradient(name=bquote(-log[10]~p), low="black", high="red", limits=c(0, 10)) +
+		ggtitle(trait)
+})
+fitList
+```
+
 
 
 
