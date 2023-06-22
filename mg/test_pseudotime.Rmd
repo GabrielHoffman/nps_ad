@@ -213,9 +213,9 @@ res = lapply(names(dfList), function(id){
 		res = lapply(traits, function(trait){
 
 			if( grepl("fresh_mg", id) ){
-				form = rankNorm(dpt_pseudotime) ~ (1|Channel) + age + (1|sex) + PMI + log(n_genes) + (1|predicted_phase)
+				form = RankNorm(dpt_pseudotime) ~ (1|Channel) + age + (1|sex) + PMI + log(n_genes) + (1|predicted_phase)
 			}else{
-				form = rankNorm(dpt_pseudotime) ~ (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) + (1|predicted_phase)
+				form = RankNorm(dpt_pseudotime) ~ (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) + (1|predicted_phase)
 			}
 			
 			x = as.character(form)
