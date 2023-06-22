@@ -182,27 +182,20 @@ res = do.call(rbind, res)
 
 
 ```{r plot.subtype, fig.height=12, fig.width=12}
-res$pvalue = pmax(res[['Pr...t..']], 1e-10)
+# res$pvalue = pmax(res[['Pr...t..']], 1e-10)
 
-res %>%
-	filter(coef == "braak") %>%
-	ggplot(aes(subtype, Estimate, fill=-log10(pvalue))) +
-	geom_bar(stat="identity") +
-	theme_classic() +
-	theme(aspect.ratio=1) +
-	facet_wrap(~ Dataset, nrow=2) +
-	coord_flip() +
-	scale_fill_gradient(name=bquote(-log[10]~p), low="black", high="red", limits=c(0, 10))
-
-res %>%
-	filter(coef == "log(n_genes)") %>%
-	ggplot(aes(subtype, Estimate, fill=-log10(pvalue))) +
-	geom_bar(stat="identity") +
-	theme_classic() +
-	theme(aspect.ratio=1) +
-	facet_wrap(~ Dataset, nrow=2) +
-	coord_flip() +
-	scale_fill_gradient(name=bquote(-log[10]~p), low="black", high="red", limits=c(0, 10))
+fitList = lapply(traits, function(trait){
+	res[res$coef == trait,] %>%
+		ggplot(aes(subtype, Estimate, fill=-log10(pvalue))) +
+		geom_bar(stat="identity") +
+		theme_classic() +
+		theme(aspect.ratio=1) +
+		facet_wrap(~ Dataset, nrow=2) +
+		coord_flip() +
+		scale_fill_gradient(name=bquote(-log[10]~p), low="black", high="red", limits=c(0, 10)) +
+		ggtitle(trait)
+})
+fitList
 ```
 
 
@@ -223,7 +216,7 @@ Pseudotime
 
 
 
-```{r exit, cache=FALSE}
+```{r exit, cache=FALSE, echo=FALSE}
 knitr::knit_exit()
 ```
 
