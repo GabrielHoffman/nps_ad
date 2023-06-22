@@ -148,7 +148,7 @@ if( any(!included) ){
 # only keep ctorder entries that are in sce$subclass
 ctorder = ctorder[ctorder %in% levels(sce$subclass)]
 
-bpparam = SnowParam(8)
+bpparam = SnowParam(3)
 ```
 
 # Compute pseudobulk at multiple levels
@@ -175,7 +175,7 @@ for(cluster_id in cluster_id_options ){
 ```
 
 # Compute `processAssays()` at multiple levels
-```{r processAssays}
+```{r processAssays, eval=FALSE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
