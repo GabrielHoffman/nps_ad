@@ -131,36 +131,50 @@ names(res) = names(dfList)
 res
 ```
 
+
 # Analysis per cell type
 ```{r lmer.subtype}
+traits = c("dx", "CERAD", "Braak", "braak", 'dementia', "AD_LessStrict_Feb23", "AD_Strict_Feb23")
+
 res = lapply(names(dfList), function(id){
 
 	data = dfList[[id]]
 
 	res = lapply(unique(data$subtype), function(st){
+		res = lapply(traits, function(trait){
+			message(trait)
 
-		if( grepl("fresh_mg", id) ){
-			form = dpt_pseudotime ~ braak + (1|Channel) + age + (1|sex) + PMI + log(n_genes) + (1|predicted_phase)
-		}else{
-			form = dpt_pseudotime ~ braak + (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) + (1|predicted_phase)
-		}
+			if( grepl("fresh_mg", id) ){
+				form = dpt_pseudotime ~ (1|Channel) + age + (1|sex) + PMI + log(n_genes) + (1|predicted_phase)
+			}else{
+				form = dpt_pseudotime ~ (1|Channel) + age + (1|sex) + PMI + (1|poolID) + log(n_genes) + (1|predicted_phase)
+			}
+			
+			x = as.character(form)
+			form = as.formula(paste(x[2], x[1], x[3], "+", trait))
 
-		include = data$subtype == st
-		data2 = droplevels(data[include,all.vars(form)])
+			include = data$subtype == st
+			data2 = droplevels(data[include,all.vars(form)])
 
-		fit = lmer(form, data2, control=lme4::lmerControl(optimizer="Nelder_Mead"))
+			fit = lmer(form, data2, control=lme4::lmerControl(optimizer="Nelder_Mead"))
 
-		df = data.frame(coef(summary(fit)))
-		df = data.frame(coef = rownames(df), df)
+			df = data.frame(coef(summary(fit)))
+			df = data.frame(coef = rownames(df), df)
 
-		data.frame( Dataset = id, 
-					subtype = st,
-					df)
+			data.frame( Dataset = id, 
+						subtype = st,
+						trait = trait,
+						df)
+		})
+		do.call(rbind, res)
 	})
 	do.call(rbind, res)
 })
 res = do.call(rbind, res)
 ```
+
+
+
 
 ```{r plot.subtype, fig.height=12, fig.width=12}
 res$pvalue = pmax(res[['Pr...t..']], 1e-10)
@@ -185,6 +199,21 @@ res %>%
 	coord_flip() +
 	scale_fill_gradient(name=bquote(-log[10]~p), low="black", high="red", limits=c(0, 10))
 ```
+
+
+
+
+Pseudotime
+
+ test other phenotypes
+ heatmap of mean PT over brack stage
+
+ not interested in p-values
+ 	want to see which effect size is the largest
+
+ restrict to Age > 40
+ 
+ use robust regression or rank transform	
 
 
 
