@@ -110,7 +110,7 @@ library(tidyverse)})
 
 # read processed data
 path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/")
-pattern = paste0(toupper(params$dataset), "_2023-04-01.*_processAssays_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
+pattern = paste0(toupper(params$dataset), "_2023-06.*_processAssays_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
 file = dir(path, pattern=pattern, full.names=TRUE)
 
 res.proc = readRDS( file )
