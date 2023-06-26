@@ -2,6 +2,7 @@
 # Write LSF job files to run dreamlet on contrasts
 
 # Load CONTRASTS and metadata
+# synapse: syn51114763
 load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
 
 write_job = function( variable_type, ctst_key, dataset, method, SampleLevel, AnnoLevel){
@@ -42,8 +43,8 @@ ctst_key = '", ctst_key, "'))")
 
 ml hdf5/1.12.1 libpng/16 R/4.2.0 pandoc/2.6
 
-R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_420
-R_LIBS=${R_LIBS_USER}:/hpc/users/hoffmg01/.Rlib/R_420:/hpc/packages/minerva-centos7/rpackages/4.2.0/site-library:/hpc/packages/minerva-centos7/rpackages/bioconductor/3.15
+R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_430
+R_LIBS=${R_LIBS_USER}:/hpc/packages/minerva-centos7/rpackages/4.3.0/site-library:/hpc/packages/minerva-centos7/rpackages/bioconductor/3.17
 
 Rscript -e \"", cmd, "\"
 
