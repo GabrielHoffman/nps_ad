@@ -47,6 +47,12 @@ Rscript -e "rmarkdown::render(\"$DIR/run_dreamlet_contrasts.Rmd\", output_file =
 params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", ctst_key = \"$ctst_key\"))"
 
 
+params = list(dataset = 'Aging',
+variable_type = 'ORD', 
+SampleLevel = 'Channel', 
+AnnoLevel = 'subclass', 
+ctst_key = 'Aging')
+
 --->
 
 
@@ -164,10 +170,9 @@ cobj = crumblr(cellCounts(pb))
 idx = !is.na(colData(pb)[,ctr$variable])
 vp.c = fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
 
-col = c(brewer.pal(ncol(vp.c)-1, "Set1"), "grey85")
-fig.vp = plotPercentBars( sortCols(vp.c), col=col )
+fig.vp = plotPercentBars( sortCols(vp.c) )
 
-plotVarPart(sortCols(vp.c), label.angle=60, ncol=4, col=col ) + theme(aspect.ratio=1)
+plotVarPart(sortCols(vp.c), label.angle=60, ncol=4 ) + theme(aspect.ratio=1)
 
 if( ! is.null(ctr$contrasts) & !any(is.na(ctr$contrasts)) ){
   L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
@@ -178,6 +183,11 @@ if( ! is.null(ctr$contrasts) & !any(is.na(ctr$contrasts)) ){
 
 fit = dream( cobj, form, colData(pb), L = L)
 fit = eBayes(fit)
+
+# get coeffs for ordinal test
+if( params$variable_type == "ORD" ){
+  ctr$contrasts = grep(paste0("^", ctr$contrasts, "."), colnames(coef(fit)), value=TRUE)
+}
 ```
 
 ### Formulas
@@ -194,11 +204,17 @@ n retained: `r nrow(fit$design)`
 ```{r topTable, results="asis"}
 res = lapply(ctr$contrasts, function(ctst){
   topTable(fit, coef=ctst, number=Inf) %>%
-    select(logFC, AveExpr,  t, P.Value, adj.P.Val)  %>%
-    kable(caption = ctst) 
+      select(logFC, AveExpr,  t, P.Value, adj.P.Val) %>%
+      kable(caption = ctst) 
+  
 })
 names(res) = ctr$contrasts
-res
+
+if( params$variable_type == "ORD" ){
+  topTable(fit, coef=ctr$contrasts, number=Inf) %>%
+      select(AveExpr, F, P.Value, adj.P.Val)  %>%
+      kable(caption = paste(ctr$contrasts, collapse = " + "))
+}
 ```
 
 
