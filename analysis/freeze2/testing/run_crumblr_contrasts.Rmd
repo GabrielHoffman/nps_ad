@@ -83,6 +83,7 @@ knitr::opts_chunk$set(
 
 
 # Construct regression contrasts
+`
 ```{r init, echo=FALSE, results="asis"}
 res = with(params, paste0('params = list(dataset = "', dataset, '",\n', 
   'variable_type = "', variable_type, '",\n', 
@@ -91,6 +92,7 @@ res = with(params, paste0('params = list(dataset = "', dataset, '",\n',
   'ctst_key = "', ctst_key, '")'))
 cat(res)
 ```
+`
 
 ```{r exit, cache=FALSE}
 knitr::knit_exit()
