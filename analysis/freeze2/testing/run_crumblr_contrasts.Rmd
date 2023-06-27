@@ -89,7 +89,7 @@ res = with(params, paste0('params = list(dataset = "', dataset, '",\n',
   'SampleLevel = "', SampleLevel, '",\n', 
   'AnnoLevel = "', AnnoLevel, '",\n', 
   'ctst_key = "', ctst_key, '")'))
-cat(res)
+knit_print(res)
 ```
 
 ```{r exit, cache=FALSE}
