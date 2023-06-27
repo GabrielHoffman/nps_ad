@@ -89,7 +89,7 @@ res = with(params, paste0('params = list(dataset = "', dataset, '",\n',
   'SampleLevel = "', SampleLevel, '",\n', 
   'AnnoLevel = "', AnnoLevel, '",\n', 
   'ctst_key = "', ctst_key, '")'))
-knit_print(res)
+knitr::knit_print(res)
 ```
 
 ```{r exit, cache=FALSE}
