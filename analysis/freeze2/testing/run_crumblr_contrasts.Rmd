@@ -147,7 +147,7 @@ if( params$SampleLevel == "Channel" ){
 ```
 
 # crumblr analysis
-```{r analysis}
+```{r analysis, message=TRUE}
 # combine base covariance with testing variables
 covariates = setdiff(union(covariates_base, ctr$covariates_incl), ctr$covariates_excl)
 
