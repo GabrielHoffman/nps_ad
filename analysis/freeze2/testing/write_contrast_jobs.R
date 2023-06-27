@@ -41,6 +41,9 @@ ctst_key = '", ctst_key, "'))")
 #BSUB -eo ", logs, "%J.stderr
 #BSUB -L /bin/bash
 
+cd ",
+outpath, 
+"
 ml hdf5/1.12.1 libpng/16 R/4.3.0 pandoc/2.6
 
 R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_430
