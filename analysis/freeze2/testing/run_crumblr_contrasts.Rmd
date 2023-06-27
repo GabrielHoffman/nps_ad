@@ -116,7 +116,6 @@ ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
 ```
 
 
-`r knitr::knit_exit()`
 
 
 
@@ -189,8 +188,12 @@ cobj = crumblr(cellCounts(pb))
 
 # filter samples for this variable
 idx = !is.na(colData(pb)[,ctr$variable])
+```
 
+
+```{r conditional_block, eval=(sum(idx) == 0)}
 # if no samples retained, exit
+knitr::knit_exit()
 ```
 
 
