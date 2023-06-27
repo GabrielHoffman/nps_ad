@@ -154,7 +154,7 @@ pb = readRDS( file )
 
 covariates_base = c("scale(Age)", "(1|Sex)", "scale(PMI)") 
 if( params$SampleLevel == "Channel" ){
-  covariates_base = c(covariates_base, "(1|SubID)", "(1|poolID)")
+  covariates_base = c(covariates_base, "(1|SubID)")
 }
 ```
 
@@ -207,13 +207,7 @@ knitr::knit_exit()
 
 ```{r test2}
 # variance partitioning
-vp.c = tryCatch(
-    fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,]), 
-    error = function(e){
-      form <<- update(form, ~ . - (1 | poolID))
-      form.vp <<- update(form.vp,  ~ . - (1 | poolID))
-    fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
-      })
+vp.c = fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
 
 # write to file
 file = paste0(outpath, "/varPart.tsv")
@@ -264,7 +258,7 @@ res = lapply(ctr$contrasts, function(ctst){
       kable(caption = ctst) 
 })
 names(res) = ctr$contrasts
-
+res
 
 # Write to file
 res = lapply(ctr$contrasts, function(ctst){
