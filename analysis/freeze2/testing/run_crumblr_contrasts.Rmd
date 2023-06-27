@@ -376,7 +376,7 @@ figList = lapply(ctr$contrasts, function(ctst){
 
   # correlation 
   # get covariance matrix
-  V = vcov(fit, cobj, coef=ctst)
+  V = vcov(fit, cobj[rownames(fit),], coef=ctst)
 
   # convert to correlation matrix
   V = cov2cor(V)
