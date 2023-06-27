@@ -186,11 +186,9 @@ cobj = crumblr(cellCounts(pb))
 idx = !is.na(colData(pb)[,ctr$variable])
 
 # if no samples retained, exit
-browser()
+
 if( sum(idx) == 0 ){
-  message("EXIT")
-  cat("EXIT")
-  knitr::knit_exit()
+  cat(knitr::knit_exit())
 }
 
 # variance partitioning
