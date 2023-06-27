@@ -209,17 +209,16 @@ if( params$variable_type == "ORD" ){
 ### Formulas
 
 formula: 
-```{r results="asis", echo=FALSE} 
-cat(paste0(as.character(form), collapse=' '))
+```{r echo=FALSE} 
+paste0(as.character(form), collapse=' ')
 ```
 
 formula vp: 
-```{r results="asis", echo=FALSE} 
-cat(paste0(as.character(form.vp), collapse=' '))
+```{r echo=FALSE} 
+paste0(as.character(form.vp), collapse=' ')
 ```
 
 n samples: `r ncol(cobj)`
-
 n retained: `r nrow(fit$design)`
 
 # Results
