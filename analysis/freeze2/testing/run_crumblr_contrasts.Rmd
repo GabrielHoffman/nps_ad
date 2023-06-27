@@ -343,7 +343,7 @@ plot_grid(fig1, fig2, nrow=1)
 
 ### Multivariate test along hierarchy
 ```{r sd, fig.width=15, fig.height=8}
-hc = buildClusterTreeFromPB(pb)
+hc = buildClusterTreeFromPB(pb, assays=rownames(fit))
 
 figList = lapply(ctr$contrasts, function(ctst){
 
