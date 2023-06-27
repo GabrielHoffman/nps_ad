@@ -71,12 +71,15 @@ run("HBCC")
 run("MSSM")
 
 
-# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_AGING.html
+# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_FULL.html
 
 
 params = list(DATASET = h5ad_files["AGING"])
 
 params = list(DATASET = h5ad_files["FULL"])
+
+
+params = list(DATASET = h5ad_files["MSSM"])
 
 # Try to merge MSSM
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 30 bash
@@ -152,7 +155,7 @@ bpparam = SnowParam(3)
 ```
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=FALSE}
+```{r combineData, message=TRUE, eval=TRUE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
@@ -175,7 +178,7 @@ for(cluster_id in cluster_id_options ){
 ```
 
 # Compute `processAssays()` at multiple levels
-```{r processAssays, eval=FALSE}
+```{r processAssays, eval=TRUE, message=TRUE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
@@ -183,9 +186,9 @@ for(cluster_id in cluster_id_options ){
 
     # formula
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes)
+      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) + (1|Source)
     }else{      
-      form = ~ Sex + scale(Age) + log(n_genes)
+      form = ~ Sex + scale(Age) + log(n_genes) + (1|Source)
     }
 
     # Read pseudobulk RDS 
@@ -199,6 +202,7 @@ for(cluster_id in cluster_id_options ){
 
     # processAssays
     res.proc = processAssays( pb, form, BPPARAM = bpparam)
+    flush(stderr())
 
     # Save processed object to RDS
     file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
@@ -209,6 +213,7 @@ for(cluster_id in cluster_id_options ){
       message("residuals...")
       fit = dreamlet(res.proc, form, 
                       BPPARAM = bpparam )
+      flush(stderr())
 
       for( CT in assayNames(res.proc) ){
         message(paste0("   ", CT))
