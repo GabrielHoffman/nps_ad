@@ -187,6 +187,8 @@ idx = !is.na(colData(pb)[,ctr$variable])
 
 # if no samples retained, exit
 if( sum(idx) == 0 ){
+  message("EXIT")
+  cat("EXIT")
   knitr::knit_exit()
 }
 
