@@ -82,7 +82,14 @@ knitr::opts_chunk$set(
 <font size="4">__SampleLevel:__ `r params$SampleLevel`</font>
 
 
-# Construct regression contrasts
+Job script
+`
+```{r init, echo=FALSE, results="asis"}
+res = with(params, paste0(dataset, ctst_key, SampleLevel, AnnoLevel, "crumblr.lsf", sep="_"))
+cat(res)
+```
+`
+
 Initialize with this line of code to reproduce results
 `
 ```{r init, echo=FALSE, results="asis"}
@@ -96,6 +103,7 @@ cat(res)
 `
 
 
+# Construct regression contrasts
 ```{r get.contrast}
 # Load CONTRASTS and metadata
 load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
