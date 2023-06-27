@@ -198,7 +198,6 @@ knitr::knit_exit()
 
 
 ```{r test2}
-
 # variance partitioning
 vp.c = fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
 
