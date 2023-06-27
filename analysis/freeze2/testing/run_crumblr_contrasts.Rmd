@@ -238,7 +238,8 @@ if( params$variable_type == "ORD" ){
 tab = topTable(fit, coef=ctr$contrasts[1], number=Inf) 
 id = rownames(tab)[1]
 
-# fit = dream( cobj, form, colData(pb), L = L)
+# Plot observed CLR transform of top hit
+#----------------------------------------
 data = data.frame(respValue = cobj$E[id,], colData(pb)[,all.vars(form)])
 data$xvalue = data[[ctr$variable[1]]]
 
@@ -258,13 +259,15 @@ if( params$variable_type %in% c("ORD", "CAT") ){
     geom_point()
 }
 
+# Plot CLR residuals of top hit
+#------------------------------
 form2 = as.formula(paste('~ 0 + ', ctr$contrasts[1]))
 
 resids = fitVarPartModel(cobj, form, data, fxn = function(fit){
   residuals(fit) + get_prediction( fit, form2)
   })
 
-data2 = data.frame(data, resids = resids[[id]])
+data2 = merge(data, data.frame(resids = resids[[id]]), by="row.names")
 
 fig2 = ggplot(data2, aes(xvalue, resids)) +
     theme_classic() +
