@@ -66,6 +66,9 @@ df = expand.grid( 	SampleLevel = SampleLevel,
 					variable_type = names(CONTRASTS),
 					method = method)
 
+# Remove bulk/dreamlet
+df = df[!with(df, AnnoLevel=="bulk" & method == 'crumblr'),]
+
 for(i in seq(nrow(df))){
 
 	for(ctst_key in names(CONTRASTS[[df$variable_type[i]]]) ){

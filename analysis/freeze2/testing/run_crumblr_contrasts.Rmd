@@ -182,8 +182,15 @@ colData(pb) = cbind(colData(pb), metadata_sub[idx,!cols])
 # crumblr + dream
 cobj = crumblr(cellCounts(pb))
 
-# variance partitioning
+# filter samples for this variable
 idx = !is.na(colData(pb)[,ctr$variable])
+
+# if no samples retained, exit
+if( sum(idx) == 0 ){
+  knitr::knit_exit()
+}
+
+# variance partitioning
 vp.c = fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
 
 fig.vp = plotPercentBars( sortCols(vp.c) )
