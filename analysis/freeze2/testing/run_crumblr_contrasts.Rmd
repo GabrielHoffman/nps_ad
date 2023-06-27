@@ -69,15 +69,31 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-# Construct regression contrasts
+# Parameters
 
-```{r init, echo=FALSE}
+<font size="4">__Evaluating dataset:__ `r params$dataset` </font>
+
+<font size="4">__Variable type:__ `r params$variable_type`</font>
+
+<font size="4">__Contrast:__ `r params$ctst_key`</font>
+
+<font size="4">__AnnoLevel:__ `r params$AnnoLevel`</font>
+
+<font size="4">__SampleLevel:__ `r params$SampleLevel`</font>
+
+
+# Construct regression contrasts
+```{r init, echo=FALSE, results="asis"}
 res = with(params, paste0('params = list(dataset = "', dataset, '",\n', 
   'variable_type = "', variable_type, '",\n', 
   'SampleLevel = "', SampleLevel, '",\n', 
   'AnnoLevel = "', AnnoLevel, '",\n', 
   'ctst_key = "', ctst_key, '")'))
 cat(res)
+```
+
+```{r exit, cache=FALSE}
+knitr::knit_exit()
 ```
 
 ```{r get.contrast}
@@ -99,16 +115,6 @@ if( ctr$variable == "c07x"){
 ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
 ```
 
-
-<font size="5">__Evaluating dataset:__ `r params$dataset` </font>
-
-<font size="5">__Variable type:__ `r params$variable_type`</font>
-
-<font size="5">__Contrast:__ `r params$ctst_key`</font>
-
-<font size="5">__AnnoLevel:__ `r params$AnnoLevel`</font>
-
-<font size="5">__SampleLevel:__ `r params$SampleLevel`</font>
 
 
 # Load data
@@ -245,7 +251,8 @@ fig1 = ggplot(data, aes(xvalue, respValue)) +
 
 if( params$variable_type %in% c("ORD", "CAT") ){
   fig1 = fig1 + 
-    geom_boxplot(aes(fill=xvalue)) 
+    geom_boxplot(aes(fill=xvalue)) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1))
 }else{
   fig1 = fig1 + 
     geom_point()
