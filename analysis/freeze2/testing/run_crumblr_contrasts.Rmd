@@ -186,18 +186,10 @@ cobj = crumblr(cellCounts(pb))
 idx = !is.na(colData(pb)[,ctr$variable])
 
 # if no samples retained, exit
-
-knitr::opts_chunk$set(echo = TRUE, error = TRUE)
-
-knitr::knit_hooks$set(error = function(x, options) { 
-  knitr::knit_exit()
-})
-stop("ahhhh")
-print("sdf")
-# if( sum(idx) == 0 ){
-#   cat(knitr::knit_exit())
-# }
 ```
+
+`r knitr::knit_exit()`
+
 
 ```{r test2}
 
