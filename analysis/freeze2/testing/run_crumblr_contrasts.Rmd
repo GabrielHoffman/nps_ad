@@ -69,6 +69,16 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
+# Construct regression contrasts
+
+```{r init, echo=FALSE}
+res = with(params, paste0('params = list(dataset = "', dataset, '",\n', 
+  'variable_type = "', variable_type, '",\n', 
+  'SampleLevel = "', SampleLevel, '",\n', 
+  'AnnoLevel = "', AnnoLevel, '",\n', 
+  'ctst_key = "', ctst_key, '")'))
+cat(res)
+```
 
 ```{r get.contrast}
 # Load CONTRASTS and metadata
@@ -200,7 +210,7 @@ n samples: `r ncol(cobj)`
 
 n retained: `r nrow(fit$design)`
 
-
+# Results
 ```{r topTable, results="asis"}
 res = lapply(ctr$contrasts, function(ctst){
   topTable(fit, coef=ctst, number=Inf) %>%
@@ -216,6 +226,60 @@ if( params$variable_type == "ORD" ){
       kable(caption = paste(ctr$contrasts, collapse = " + "))
 }
 ```
+
+# Plot of top association
+```{r plot.line}
+tab = topTable(fit, coef=ctr$contrasts[1], number=Inf) 
+id = rownames(tab)[1]
+
+# fit = dream( cobj, form, colData(pb), L = L)
+data = data.frame(respValue = cobj$E[id,], colData(pb)[,all.vars(form)])
+data$xvalue = data[[ctr$variable[1]]]
+
+fig1 = ggplot(data, aes(xvalue, respValue)) +
+    theme_classic() +
+    theme(aspect.ratio=1, legend.position="none", plot.title = element_text(hjust = 0.5)) + 
+    xlab(ctr$variable[1]) + 
+    ylab(paste(id, '(CLR transform)')) +
+    ggtitle(ctr$contrasts[1]) 
+
+if( params$variable_type %in% c("ORD", "CAT") ){
+  fig1 = fig1 + 
+    geom_boxplot(aes(fill=xvalue)) 
+}else{
+  fig1 = fig1 + 
+    geom_point()
+}
+
+form2 = as.formula(paste('~ 0 + ', ctr$contrasts[1]))
+
+resids = fitVarPartModel(cobj, form, data, fxn = function(fit){
+  residuals(fit) + get_prediction( fit, form2)
+  })
+
+data2 = data.frame(data, resids = resids[[id]])
+
+fig2 = ggplot(data2, aes(xvalue, resids)) +
+    theme_classic() +
+    theme(aspect.ratio=1, legend.position="none", plot.title = element_text(hjust = 0.5)) + 
+    xlab(ctr$variable[1]) + 
+    ylab(paste(id, '(CLR residuals)')) +
+    ggtitle(ctr$contrasts[1]) 
+
+if( params$variable_type %in% c("ORD", "CAT") ){
+  fig2 = fig2 + 
+    geom_boxplot(aes(fill=xvalue)) 
+}else{
+  fig2 = fig2 + 
+    geom_point()
+}
+
+plot_grid(fig1, fig2, nrow=1)
+```
+
+
+
+
 
 
 ### Multivariate test along hierarchy
