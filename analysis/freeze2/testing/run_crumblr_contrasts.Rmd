@@ -209,6 +209,11 @@ knitr::knit_exit()
 # variance partitioning
 vp.c = fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
 
+# write to file
+file = paste0(outpath, "/varPart.tsv")
+write.table(vp.c, file=file, quote=FALSE, sep="\t")
+R.utils::gzip(file, overwrite=TRUE)
+
 fig.vp = plotPercentBars( sortCols(vp.c) )
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4 ) + theme(aspect.ratio=1)
@@ -264,6 +269,7 @@ names(res) = ctr$contrasts
 tab = lapply(names(res), function(id){
   data.frame(id, res[[id]])
   })
+tab = do.call(rbind, tab)
 
 file = paste0(outpath, "/topTable.tsv")
 write.table(tab, file=file, quote=FALSE, row.names=FALSE, sep="\t")
@@ -342,6 +348,10 @@ hc = buildClusterTreeFromPB(pb)
 figList = lapply(ctr$contrasts, function(ctst){
 
   res = treeTest( fit, cobj, hc, coef=ctst)
+
+  # save result
+  file = paste0(outpath, "/treeTest_", gsub(" ", "", ctst), ".RDS")
+  saveRDS(res, file)
 
   fig1 = plotTreeTest(res) + theme(legend.position="none") + ggtitle(ctst)
 
