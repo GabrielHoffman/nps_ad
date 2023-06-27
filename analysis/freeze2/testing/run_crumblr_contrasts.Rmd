@@ -84,7 +84,7 @@ knitr::opts_chunk$set(
 
 Job script
 `
-```{r init, echo=FALSE, results="asis"}
+```{r script, echo=FALSE, results="asis"}
 res = with(params, paste0(dataset, ctst_key, SampleLevel, AnnoLevel, "crumblr.lsf", sep="_"))
 cat(res)
 ```
