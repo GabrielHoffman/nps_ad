@@ -207,7 +207,13 @@ knitr::knit_exit()
 
 ```{r test2}
 # variance partitioning
-vp.c = fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
+vp.c = tryCatch(
+    fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,]), 
+    error = function(e){
+      form <<- update(form, ~ . - (1 | poolID))
+      form.vp <<- update(form.vp,  ~ . - (1 | poolID))
+    fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
+      })
 
 # write to file
 file = paste0(outpath, "/varPart.tsv")
