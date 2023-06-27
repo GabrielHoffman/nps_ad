@@ -83,6 +83,7 @@ knitr::opts_chunk$set(
 
 
 # Construct regression contrasts
+Initialize with this line of code to reproduce results
 `
 ```{r init, echo=FALSE, results="asis"}
 res = with(params, paste0('params = list(dataset = "', dataset, '",\n', 
@@ -94,9 +95,6 @@ cat(res)
 ```
 `
 
-```{r exit, cache=FALSE}
-knitr::knit_exit()
-```
 
 ```{r get.contrast}
 # Load CONTRASTS and metadata
