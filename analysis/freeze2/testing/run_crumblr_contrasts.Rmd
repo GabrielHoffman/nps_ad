@@ -246,6 +246,15 @@ res = lapply(ctr$contrasts, function(ctst){
 })
 names(res) = ctr$contrasts
 
+# Write to file
+tab = lapply(names(res), function(id){
+  data.frame(id, res[[id]])
+  })
+
+file = paste0(outpath, "/topTable.tsv")
+write.table(tab, file=file, quote=FALSE, row.names=FALSE, sep="\t")
+R.utils::gzip(file, overwrite=TRUE)
+
 if( params$variable_type == "ORD" ){
   topTable(fit, coef=ctr$contrasts, number=Inf) %>%
       select(AveExpr, F, P.Value, adj.P.Val)  %>%
