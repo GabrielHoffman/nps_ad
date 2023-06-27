@@ -186,6 +186,9 @@ cobj = crumblr(cellCounts(pb))
 idx = !is.na(colData(pb)[,ctr$variable])
 
 # if no samples retained, exit
+
+knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+
 knitr::knit_hooks$set(error = function(x, options) { 
   knitr::knit_exit()
 })
