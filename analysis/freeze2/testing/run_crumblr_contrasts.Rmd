@@ -85,7 +85,7 @@ knitr::opts_chunk$set(
 Job script
 `
 ```{r script, echo=FALSE, results="asis"}
-res = with(params, paste0(dataset, ctst_key, SampleLevel, AnnoLevel, "crumblr.lsf", sep="_"))
+res = with(params, paste(dataset, ctst_key, SampleLevel, AnnoLevel, "crumblr.lsf", sep="_"))
 cat(res)
 ```
 `
@@ -246,15 +246,21 @@ n retained: `r nrow(fit$design)`
 
 # Results
 ```{r topTable, results="asis"}
+# Write to HTML
 res = lapply(ctr$contrasts, function(ctst){
   topTable(fit, coef=ctst, number=Inf) %>%
-      select(logFC, AveExpr,  t, P.Value, adj.P.Val) %>%
+      select(logFC, AveExpr, t, P.Value, adj.P.Val) %>%
       kable(caption = ctst) 
-  
 })
 names(res) = ctr$contrasts
 
+
 # Write to file
+res = lapply(ctr$contrasts, function(ctst){
+  topTable(fit, coef=ctst, number=Inf)
+})
+names(res) = ctr$contrasts
+
 tab = lapply(names(res), function(id){
   data.frame(id, res[[id]])
   })
