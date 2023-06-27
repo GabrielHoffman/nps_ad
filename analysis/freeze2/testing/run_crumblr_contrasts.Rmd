@@ -116,7 +116,7 @@ ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
 ```
 
 
-`r cat("knitr::knit_exit()")`
+`r knitr::knit_exit()`
 
 
 
