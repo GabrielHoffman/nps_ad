@@ -208,13 +208,19 @@ if( params$variable_type == "ORD" ){
 
 ### Formulas
 
-formula: `r paste0(as.character(form), collapse=' '), results="asis"`
+formula: 
+```{r results="asis"} 
+paste0(as.character(form), collapse=' ')
+```
 
-formula vp: `r paste0(as.character(form.vp), collapse=' '), results="asis"`
+formula vp: 
+```{r results="asis"} 
+paste0(as.character(form.vp), collapse=' ')
+```
 
-n samples: `r ncol(cobj), results="asis"`
+n samples: `r ncol(cobj)`
 
-n retained: `r nrow(fit$design), results="asis"`
+n retained: `r nrow(fit$design)`
 
 # Results
 ```{r topTable, results="asis"}
