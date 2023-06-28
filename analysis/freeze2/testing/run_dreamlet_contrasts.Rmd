@@ -66,6 +66,40 @@ knitr::opts_chunk$set(
 ```
 
 
+# Parameters
+
+<font size="4">__Evaluating dataset:__ `r params$dataset` </font>
+
+<font size="4">__Variable type:__ `r params$variable_type`</font>
+
+<font size="4">__Contrast:__ `r params$ctst_key`</font>
+
+<font size="4">__AnnoLevel:__ `r params$AnnoLevel`</font>
+
+<font size="4">__SampleLevel:__ `r params$SampleLevel`</font>
+
+
+Job script
+`
+```{r script, echo=FALSE, results="asis"}
+res = with(params, paste(dataset, ctst_key, SampleLevel, AnnoLevel, "crumblr.lsf", sep="_"))
+cat(res)
+```
+`
+
+Initialize with this line of code to reproduce results
+`
+```{r init, echo=FALSE, results="asis"}
+res = with(params, paste0('params = list(dataset = "', dataset, '",\n', 
+  'variable_type = "', variable_type, '",\n', 
+  'SampleLevel = "', SampleLevel, '",\n', 
+  'AnnoLevel = "', AnnoLevel, '",\n', 
+  'ctst_key = "', ctst_key, '")'))
+cat(res)
+```
+`
+
+
 ```{r get.contrast}
 # Load CONTRASTS and metadata
 load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
@@ -84,17 +118,6 @@ if( ctr$variable == "c07x"){
 # make this a random effect
 ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
 ```
-
-
-<font size="5">__Evaluating dataset:__ `r params$dataset` </font>
-
-<font size="5">__Variable type:__ `r params$variable_type`</font>
-
-<font size="5">__Contrast:__ `r params$ctst_key`</font>
-
-<font size="5">__AnnoLevel:__ `r params$AnnoLevel`</font>
-
-<font size="5">__SampleLevel:__ `r params$SampleLevel`</font>
 
 
 # Load data
@@ -117,7 +140,7 @@ res.proc = readRDS( file )
 
 covariates_base = c("Age", "(1|Sex)", "PMI") 
 if( params$SampleLevel == "Channel" ){
-  covariates_base = c(covariates_base, "(1|SubID)", "(1|pool)")
+  covariates_base = c(covariates_base, "(1|SubID)")
 }
 ```
 
@@ -176,13 +199,21 @@ if( is.null(coefNames(fit)) ){
 
 ### Formulas
 
-formula: `r paste0(as.character(form), collapse=' ')`
+formula: 
+```{r echo=FALSE} 
+paste0(as.character(form), collapse=' ')
+```
 
-formula vp: `r paste0(as.character(form.vp), collapse=' ')`
+formula vp: 
+```{r echo=FALSE} 
+paste0(as.character(form.vp), collapse=' ')
+```
 
 n samples: `r ncol(cobj)`
-
 n retained: `r nrow(fit$design)`
+
+
+
 
 # Gene set analysis
 ```
