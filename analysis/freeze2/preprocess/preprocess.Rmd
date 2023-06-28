@@ -196,7 +196,7 @@ for(cluster_id in cluster_id_options ){
 
     pb = readRDS(paste0(filePrefix, ".RDS"))
 
-    if( "poolID" %in% colnames(colData(pb)) ){
+    if( "poolID" %in% colnames(colData(pb)) & names(params$DATASET) == "FULL" ){
       form = update(form, ~ . + (1|poolID))
     }
 
