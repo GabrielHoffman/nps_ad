@@ -115,9 +115,9 @@ outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/
 ctr = CONTRASTS[[params$variable_type]][[params$ctst_key]]
 
 # Remove contrasts that fail
-if( ctr$variable == "c07x"){
-  ctr$contrasts = ctr$contrasts[!grepl("c07xBD", ctr$contrasts)]
-}
+# if( ctr$variable == "c07x"){
+#   ctr$contrasts = ctr$contrasts[!grepl("c07xBD", ctr$contrasts)]
+# }
 
 # make this a random effect
 ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
@@ -206,6 +206,10 @@ knitr::knit_exit()
 
 
 ```{r test2}
+# remove constant variables
+form.vp = removeConstantTerms(form.vp, as.data.frame(colData(pb)[idx,all.vars(form.vp)]))
+form = removeConstantTerms(form, as.data.frame(colData(pb)[idx,all.vars(form)]))
+
 # variance partitioning
 vp.c = fitExtractVarPartModel(cobj[,idx], form.vp, colData(pb)[idx,])
 
