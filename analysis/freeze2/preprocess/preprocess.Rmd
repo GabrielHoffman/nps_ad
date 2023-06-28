@@ -15,7 +15,7 @@ params:
 <!--- 
 
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=50000] -W 128:00 -P acc_CommonMind -n 12 bash
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=50000] -W 72:00 -P acc_CommonMind -n 12 bash
 
 
 
@@ -47,7 +47,7 @@ run = function(x){
   system("git pull origin master");
 
   tmp.dir = paste0("/sc/arion/scratch/hoffmg01/", x, "_", round(runif(1)*1e7))
-  create.folder(tmp.dir)
+  dir.create(tmp.dir)
   setwd(tmp.dir)
 
   fold = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess"
@@ -160,7 +160,7 @@ bpparam = SnowParam(3)
 ```
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
@@ -183,7 +183,7 @@ for(cluster_id in cluster_id_options ){
 ```
 
 # Compute `processAssays()` at multiple levels
-```{r processAssays, eval=TRUE, message=TRUE}
+```{r processAssays, eval=TRUE, message=TRUE, warning=TRUE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
