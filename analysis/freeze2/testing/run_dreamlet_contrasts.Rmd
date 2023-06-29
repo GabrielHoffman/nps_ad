@@ -340,7 +340,6 @@ file = paste0(outpath, "/formula.txt")
 write(as.character(form), file)
 
 # save DE results
-
 res = lapply(coef.test, function(coef_key){
   tab = topTable(fit, coef = coef_key, number=Inf )
   tab$coef = coef_key
