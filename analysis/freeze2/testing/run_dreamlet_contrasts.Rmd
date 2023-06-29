@@ -188,7 +188,6 @@ bpparam = SnowParam(4)
 
 # run dreamlet
 fit = dreamlet( res.proc, form, 
-            assays = "Astro",
             contrasts = ctr$contrasts,
             BPPARAM = bpparam)
 ```
