@@ -199,7 +199,7 @@ idx = !is.na(colData(pb)[,ctr$variable])
 ```
 
 
-```{r conditional_block, eval=(sum(idx) < 7)|(nrow(cobj)==1)}
+```{r conditional_block, eval=(sum(idx) <= 10)|(nrow(cobj)==1)}
 # if no samples retained, exit
 knitr::knit_exit()
 ```
