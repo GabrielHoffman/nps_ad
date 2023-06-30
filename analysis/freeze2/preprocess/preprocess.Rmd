@@ -81,6 +81,9 @@ params = list(DATASET = h5ad_files["FULL"])
 
 params = list(DATASET = h5ad_files["MSSM"])
 
+
+params = list(DATASET = h5ad_files["RUSH"])
+
 # Try to merge MSSM
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 30 bash
 
