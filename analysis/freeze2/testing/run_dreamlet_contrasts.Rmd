@@ -210,9 +210,6 @@ formula vp:
 paste0(as.character(form.vp), collapse=' ')
 ```
 
-n samples: `r ncol(cobj)`
-n retained: `r nrow(fit$design)`
-
 
 
 
