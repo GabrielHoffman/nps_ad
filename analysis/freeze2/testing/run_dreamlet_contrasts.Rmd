@@ -228,11 +228,6 @@ res.zenith = lapply(coef.test, function(coef){
   zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
   })   
 res.zenith = do.call(rbind, res.zenith)
-
-# mashr
-# res.mashr = lapply( unique(res.zenith$coef), function(coef_key){
-#   run_mash(fit, coef=coef_key)
-# })
 ```
 
 # Plot results
@@ -315,7 +310,6 @@ tmp = sapply( unique(res.zenith$coef), function(coef_key){
   file = paste0(outpath, "/nDE_", gsub(" ", "_", coef_key), ".pdf")
   ggsave(file, fig, width=12)
 })
-
 ```
 
 # Save results
