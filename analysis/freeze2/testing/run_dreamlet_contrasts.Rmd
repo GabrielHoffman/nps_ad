@@ -214,7 +214,7 @@ paste0(as.character(form.vp), collapse=' ')
 
 
 # Gene set analysis
-```
+```{r zenith}
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
    
