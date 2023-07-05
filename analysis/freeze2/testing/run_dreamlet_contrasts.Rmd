@@ -184,7 +184,7 @@ cols = colnames(metadata_sub) %in% colnames(colData(res.proc))
 # colData(res.proc) = cbind(colData(res.proc), metadata_sub[idx,!cols])
 res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 
-bpparam = SnowParam(4)
+bpparam = SnowParam(3)
 
 # run dreamlet
 fit = dreamlet( res.proc, form, 

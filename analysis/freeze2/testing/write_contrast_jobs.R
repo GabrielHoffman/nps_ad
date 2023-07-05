@@ -34,7 +34,7 @@ ctst_key = '", ctst_key, "'))")
 #BSUB -P acc_CommonMind
 #BSUB -q premium
 #BSUB -n 6
-#BSUB -R rusage[mem=8000]
+#BSUB -R rusage[mem=12000]
 #BSUB -R span[hosts=1]
 #BSUB -W 48:00
 #BSUB -o ", logs, "%J.stdout
