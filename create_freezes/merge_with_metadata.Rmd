@@ -94,6 +94,16 @@ merge_with_metadata = function(h5ad_file){
   # Assign new metadata
   colData(sceCombine) = cbind(colData(sceCombine), df_meta[i,!exclude,drop=FALSE])
 
+  # new Bioassay info
+  file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/Bioassay_Table_Tissue_Prep.tsv"
+  df = read.table(file, header=TRUE, sep="\t")
+
+  idx = match(sceCombine$SubID, df$true_SubID)
+
+  sceCombine$BatchID = paste0("Set_", df$Set_number[idx])
+
+  tab = table(sceCombine$BatchID, sceCombine$poolID)
+
   # Load data for batching and sequencing
   # df_batching = read_csv("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/NYGC_projID_date_poolID_flowcell_lane.csv", show_col_types=FALSE)
   # df_batching$date = as.character(df_batching$date)
@@ -317,7 +327,23 @@ cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/
 # something about starting a new shell
 # using interactive lsf job works, but not automated job
 
+# If H5AD is written using -ondisk, it is not compressed
+# Perform compress afterward
+conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
 
+alias python=/hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/bin/python
+
+import anndata as ad
+import h5py
+
+infile = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2023-06-08_23_53.h5ad"
+outfile = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2023-06-08_23_53_v2.h5ad"
+
+# file-backed H5AD
+adata = ad.read(infile, backed='r')
+
+# Write to disk with compression
+adata.write( outfile, compression="lzf" )
 
 ```
 
