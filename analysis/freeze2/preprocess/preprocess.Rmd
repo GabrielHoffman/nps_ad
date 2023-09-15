@@ -32,11 +32,11 @@ path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 
 # March 26
 h5ad_files = c(
-RUSH = "RUSH_2023-06-08_21_44.h5ad", 
-HBCC = "HBCC_2023-06-08_21_58.h5ad",
-MSSM = "MSSM_2023-06-08_22_31.h5ad",
-FULL = "FULL_2023-06-08_23_53.h5ad",
-AGING = "AGING_2023-06-09_01_45.h5ad")
+RUSH = "RUSH_2023-09-12_16_13.h5ad", 
+HBCC = "HBCC_2023-09-12_16_28.h5ad",
+MSSM = "MSSM_2023-09-12_17_04.h5ad",
+FULL = "FULL_2023-09-12_18_32.h5ad",
+AGING = "AGING_2023-09-12_20_35.h5ad")
 
 h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
@@ -55,13 +55,6 @@ run = function(x){
 }
 
 
-run("AGING")
-
-
-run("FULL")
-
-
-
 run("RUSH")
 
 
@@ -69,6 +62,16 @@ run("HBCC")
 
 
 run("MSSM")
+
+
+run("FULL")
+
+
+run("AGING")
+
+
+
+
 
 
 # https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/preprocess/preprocess_FULL.html
