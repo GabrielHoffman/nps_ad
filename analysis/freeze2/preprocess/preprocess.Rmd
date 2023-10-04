@@ -20,8 +20,7 @@ params:
 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
-ml python git pandoc 
-ml gcc/11.2.0
+ml python git pandoc gcc/11.2.0
 git pull origin master
 R --vanilla --no-restore
 
@@ -40,18 +39,23 @@ AGING = "AGING_2023-09-12_20_35.h5ad")
 
 h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
-run = function(x){
+create_job = function(x){
   system("git pull origin master");
 
   tmp.dir = paste0("/sc/arion/scratch/hoffmg01/", x, "_", round(runif(1)*1e7))
   dir.create(tmp.dir)
   setwd(tmp.dir)
 
-  fold = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess"
-  x %>% 
-    walk(function(x) render(paste0(fold, "/preprocess.Rmd"),
-            params = list(DATASET = h5ad_files[x]),
-            output_file = paste0(fold, "/preprocess_", x, ".html")))
+  # create tmp Rmd for each dataset
+  fldr = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/"
+  file.orig = paste0(fldr, "preprocess.Rmd")
+  file = paste0(fldr, "preprocess_", x,".Rmd") 
+  file.copy(file.orig, file)
+
+  # x %>% 
+  #   walk(function(x) render(file,
+  #           params = list(DATASET = h5ad_files[x]),
+  #           output_file = paste0(fold, "/preprocess_", x, ".html")))
 }
 
 
@@ -64,7 +68,7 @@ run("HBCC")
 run("MSSM")
 
 
-run("FULL")
+# run("FULL")
 
 
 run("AGING")
