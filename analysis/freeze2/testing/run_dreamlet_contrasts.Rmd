@@ -144,7 +144,7 @@ stopifnot(length(file) ==1)
 
 res.proc = readRDS( file )
 
-covariates_base = c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)") 
+covariates_base = c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)", "(1|BatchID)") 
 if( params$SampleLevel == "Channel" ){
   covariates_base = c(covariates_base, "(1|SubID)")
 }
