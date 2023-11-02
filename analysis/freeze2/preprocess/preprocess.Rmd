@@ -178,7 +178,7 @@ bpparam = SnowParam(4)
 ```
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=FALSE}
+```{r combineData, message=TRUE, eval=TRUE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
