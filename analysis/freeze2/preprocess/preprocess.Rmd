@@ -178,7 +178,7 @@ bpparam = SnowParam(4)
 ```
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
@@ -209,9 +209,9 @@ for(cluster_id in cluster_id_options ){
 
     # formula
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) + (1|Source)
+      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) + (1|prep) + (1|BatchID)
     }else{      
-      form = ~ Sex + scale(Age) + log(n_genes) + (1|Source)
+      form = ~ Sex + scale(Age) + log(n_genes) + (1|prep) + (1|BatchID)
     }
 
     # Read pseudobulk RDS 
