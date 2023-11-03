@@ -147,7 +147,7 @@ library(tidyverse)})
 
 # read processed data
 path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/")
-pattern = paste0(toupper(params$dataset), "_2023-06.*_PB_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
+pattern = paste0(toupper(params$dataset), "_2023-09.*_PB_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
 file = dir(path, pattern=pattern, full.names=TRUE)
 
 pb = readRDS( file )
