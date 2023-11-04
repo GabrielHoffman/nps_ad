@@ -33,7 +33,7 @@ ctst_key = '", ctst_key, "'))")
 #BSUB -J ", suffix, "_", method, "
 #BSUB -P acc_CommonMind
 #BSUB -q premium
-#BSUB -n 6
+#BSUB -n 10
 #BSUB -R rusage[mem=16000]
 #BSUB -R span[hosts=1]
 #BSUB -W 48:00
