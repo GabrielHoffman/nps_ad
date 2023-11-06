@@ -186,6 +186,10 @@ res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 
 bpparam = SnowParam(3)
 
+if( is.na(ctr$contrasts) ){
+  ctr$contrasts = NULL
+}
+
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts,
@@ -193,10 +197,11 @@ fit = dreamlet( res.proc, form,
 ```
 
 ```{r mashr}
-res_mash <- run_mash(fit, ctr$contrasts)
-
-file = paste0(outpath, "/res_mash.RDS")
-saveRDS(res_mash, file=file)
+if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){   
+  res_mash <- run_mash(fit, ctr$variable)
+  file = paste0(outpath, "/res_mash.RDS")
+  saveRDS(res_mash, file=file)
+}
 ```
 
 
@@ -323,6 +328,9 @@ tmp = sapply( unique(res.zenith$coef), function(coef_key){
 ```{r save.results}
 file = paste0(outpath, "/fit.RDS")
 saveRDS(fit, file=file)
+
+file = paste0(outpath, "/ctr.RDS")
+saveRDS(ctr, file=file)
 
 file = paste0(outpath, "/res_zenith.RDS")
 saveRDS(res.zenith, file=file)
