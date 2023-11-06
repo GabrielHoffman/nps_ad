@@ -197,7 +197,7 @@ fit = dreamlet( res.proc, form,
 ```
 
 ```{r mashr}
-if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){   
+if( !is.null(ctr$contrasts) ){   
   res_mash <- run_mash(fit, ctr$variable)
   file = paste0(outpath, "/res_mash.RDS")
   saveRDS(res_mash, file=file)
@@ -229,17 +229,25 @@ paste0(as.character(form.vp), collapse=' ')
 ```{r zenith}
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
-   
-if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){   
-  coef.test = ctr$variable
-}else{
-  coef.test = ctr$contrasts 
-}
 
-res.zenith = lapply(coef.test, function(coef){
-  zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
-  })   
-res.zenith = do.call(rbind, res.zenith)
+if( params$variable_type == "ORD" ){
+  
+  pattern = paste0("^", ctr$variable)
+  coef.test = grep(pattern, coefNames(fit), value=TRUE)
+
+  res.zenith = zenith_gsa(fit, coef = coef.test, go.gs, progressbar=FALSE)
+}else{     
+  if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){   
+    coef.test = ctr$variable
+  }else{
+    coef.test = ctr$contrasts 
+  }
+
+  res.zenith = lapply(coef.test, function(coef){
+    zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
+    })   
+  res.zenith = do.call(rbind, res.zenith)
+}
 ```
 
 # Plot results
