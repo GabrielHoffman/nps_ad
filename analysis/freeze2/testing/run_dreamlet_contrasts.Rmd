@@ -189,7 +189,14 @@ bpparam = SnowParam(3)
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts,
-            BPPARAM = bpparam)
+            BPPARAM = bpparam, assays="Micro")
+```
+
+```{r mashr}
+res_mash <- run_mash(fit, ctr$contrasts)
+
+file = paste0(outpath, "/res_mash.RDS")
+saveRDS(res_mash, file=file)
 ```
 
 
@@ -337,9 +344,20 @@ res = lapply(coef.test, function(coef_key){
 })
 res = do.call(rbind, res)
 
-file = paste0(outpath, "/df_DE.tsv")
-write.table(df_DE, file, sep="\t", quote=FALSE, row.names=FALSE)
+file = paste0(outpath, "/topTable_DE.tsv")
+write.table(res, file, sep="\t", quote=FALSE, row.names=FALSE)
 R.utils::gzip(file, overwrite=TRUE)
+
+if( params$variable_type == "ORD" ){
+
+  # save DE results
+  tab = topTable(fit, coef = coef.test, number=Inf )
+  tab$coef = "joint"
+
+  file = paste0(outpath, "/topTable_DE_joint.tsv")
+  write.table(tab, file, sep="\t", quote=FALSE, row.names=FALSE)
+  R.utils::gzip(file, overwrite=TRUE)
+}
 ```
 
 

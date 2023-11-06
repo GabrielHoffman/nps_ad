@@ -232,7 +232,7 @@ if( ! is.null(ctr$contrasts) & !any(is.na(ctr$contrasts)) ){
 fit = dream( cobj, form, colData(pb), L = L)
 fit = eBayes(fit)
 
-# get coeffs for ordinal test
+# get coefs for ordinal test
 if( params$variable_type == "ORD" ){
   ctr$contrasts = grep(paste0("^", ctr$contrasts, "."), colnames(coef(fit)), value=TRUE)
 }
@@ -266,7 +266,8 @@ res
 
 # Write to file
 res = lapply(ctr$contrasts, function(ctst){
-  topTable(fit, coef=ctst, number=Inf)
+  tab = topTable(fit, coef=ctst, number=Inf)
+  data.frame(CellType = rownames(tab), tab)
 })
 names(res) = ctr$contrasts
 
@@ -283,6 +284,12 @@ if( params$variable_type == "ORD" ){
   topTable(fit, coef=ctr$contrasts, number=Inf) %>%
       select(AveExpr, F, P.Value, adj.P.Val)  %>%
       kable(caption = paste(ctr$contrasts, collapse = " + "))
+
+  tab = topTable(fit, coef=ctr$contrasts, number=Inf)
+  tab = data.frame(CellType = rownames(tab), tab)
+  file = paste0(outpath, "/topTable_joint.tsv")
+  write.table(tab, file=file, quote=FALSE, row.names=FALSE, sep="\t")
+  R.utils::gzip(file, overwrite=TRUE)
 }
 ```
 
