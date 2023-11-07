@@ -193,11 +193,16 @@ if( is.na(ctr$contrasts) ){
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts,
-            BPPARAM = bpparam)
+            BPPARAM = bpparam, 
+            assays = assayNames(res.proc)[1])
 ```
 
 ```{r mashr}
 if( !is.null(ctr$contrasts) ){   
+  res_mash <- run_mash(fit, ctr$contrasts)
+  file = paste0(outpath, "/res_mash.RDS")
+  saveRDS(res_mash, file=file)
+}else if( !is.null(ctr$variable) ){   
   res_mash <- run_mash(fit, ctr$variable)
   file = paste0(outpath, "/res_mash.RDS")
   saveRDS(res_mash, file=file)
