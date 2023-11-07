@@ -193,8 +193,7 @@ if( is.na(ctr$contrasts) ){
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts,
-            BPPARAM = bpparam, 
-            assays = assayNames(res.proc)[1:2])
+            BPPARAM = bpparam)
 ```
 
 ```{r mashr}
