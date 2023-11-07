@@ -197,14 +197,16 @@ fit = dreamlet( res.proc, form,
 ```
 
 ```{r mashr}
-if( !is.null(ctr$contrasts) ){   
-  res_mash <- run_mash(fit, ctr$contrasts)
-  file = paste0(outpath, "/res_mash.RDS")
-  saveRDS(res_mash, file=file)
-}else if( !is.null(ctr$variable) ){   
-  res_mash <- run_mash(fit, ctr$variable)
-  file = paste0(outpath, "/res_mash.RDS")
-  saveRDS(res_mash, file=file)
+if( length(assayNames(fit)) > 1 ){
+  if( !is.null(ctr$contrasts) ){   
+    res_mash <- run_mash(fit, ctr$contrasts)
+    file = paste0(outpath, "/res_mash.RDS")
+    saveRDS(res_mash, file=file)
+  }else if( !is.null(ctr$variable) ){   
+    res_mash <- run_mash(fit, ctr$variable)
+    file = paste0(outpath, "/res_mash.RDS")
+    saveRDS(res_mash, file=file)
+  }
 }
 ```
 
