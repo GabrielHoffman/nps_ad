@@ -209,9 +209,9 @@ for(cluster_id in cluster_id_options ){
 
     # formula
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) + (1|prep) + (1|BatchID)
+      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) + (1|prep) #+ (1|BatchID)
     }else{      
-      form = ~ Sex + scale(Age) + log(n_genes) + (1|prep) + (1|BatchID)
+      form = ~ Sex + scale(Age) + log(n_genes) + (1|prep) #+ (1|BatchID)
     }
 
     # Read pseudobulk RDS 
@@ -219,9 +219,9 @@ for(cluster_id in cluster_id_options ){
 
     pb = readRDS(paste0(filePrefix, ".RDS"))
 
-    if( "poolID" %in% colnames(colData(pb)) & names(params$DATASET) == "FULL" ){
-      form = update(form, ~ . + (1|poolID))
-    }
+    # if( "poolID" %in% colnames(colData(pb)) & names(params$DATASET) == "FULL" ){
+    #   form = update(form, ~ . + (1|poolID))
+    # }
 
     # processAssays
     res.proc = processAssays( pb, form, BPPARAM = bpparam)
