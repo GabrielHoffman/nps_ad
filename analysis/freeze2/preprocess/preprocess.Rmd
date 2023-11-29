@@ -17,7 +17,7 @@ params:
 
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=50000] -W 72:00 -P acc_CommonMind -n 12 bash
 
-
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=10000] -W 36:00 -P acc_CommonMind -n 12 bash
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 ml python git pandoc gcc/11.2.0
@@ -29,7 +29,6 @@ library(tidyverse)
 
 path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 
-# March 26
 h5ad_files = c(
 RUSH = "RUSH_2023-09-12_16_13.h5ad", 
 HBCC = "HBCC_2023-09-12_16_28.h5ad",
@@ -60,10 +59,14 @@ create_job = function(x){
 
 run = function(x){
 
+  # copy to process_{DATASET}.Rmd and execute
   fldr = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/"
-  file = paste0(fldr, "preprocess_", x,".Rmd")
+  file1 = paste0(fldr, "preprocess.Rmd")
+  file2 = paste0(fldr, "preprocess_", x,".Rmd")
 
-  render(file,
+  file.copy(file1, file2)
+
+  render(file2,
           params = list(DATASET = h5ad_files[x]),
           output_file = paste0(fldr, "/preprocess_", x, ".html"))
 }
