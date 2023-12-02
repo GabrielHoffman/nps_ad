@@ -17,6 +17,8 @@ params:
 
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=50000] -W 72:00 -P acc_CommonMind -n 12 bash
 
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=20000] -W 64:00 -P acc_CommonMind -n 12 bash
+
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=10000] -W 36:00 -P acc_CommonMind -n 12 bash
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
@@ -148,9 +150,6 @@ library(cowplot)
 library(org.Hs.eg.db)
 library(R.utils)
 })
-
-# update block size for reading h5ad file from disk
-setAutoBlockSize(1e9)
 ```
 
 ## H5AD
@@ -212,9 +211,9 @@ for(cluster_id in cluster_id_options ){
 
     # formula
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) + (1|prep) #+ (1|BatchID)
+      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) + (1|prep) 
     }else{      
-      form = ~ Sex + scale(Age) + log(n_genes) + (1|prep) #+ (1|BatchID)
+      form = ~ Sex + scale(Age) + log(n_genes) + (1|prep) 
     }
 
     # Read pseudobulk RDS 
@@ -258,7 +257,13 @@ for(cluster_id in cluster_id_options ){
         write.table( data, file=file, quote=FALSE, sep="\t")
         gzip(file, overwrite=TRUE)
       }
+      rm(data)
+      gc()
     }
+
+    rm(pb)
+    rm(res.proc)
+    gc()
   }
 }
 ```
