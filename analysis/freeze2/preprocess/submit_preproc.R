@@ -6,7 +6,7 @@ spec = matrix(c(
     ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
-stopifnot( ! opt$cohrot %in% c("RUSH", "HBCC", "MSSM", "FULL", "AGING"))
+stopifnot( ! opt$cohort %in% c("RUSH", "HBCC", "MSSM", "FULL", "AGING"))
 
 library(rmarkdown)
 library(tidyverse)

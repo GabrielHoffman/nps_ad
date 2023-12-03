@@ -15,11 +15,17 @@ params:
 <!--- 
 
 
+# batching
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
+
+./submit_preproc.R --cohort test
+./submit_preproc.sh 
+
+
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=50000] -W 72:00 -P acc_CommonMind -n 12 bash
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=20000] -W 64:00 -P acc_CommonMind -n 12 bash
+# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=30000] -W 64:00 -P acc_CommonMind -n 12 bash
 
-# bsub -Is -q premium -R span[hosts=1] -R rusage[mem=10000] -W 36:00 -P acc_CommonMind -n 12 bash
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 ml python git pandoc gcc/11.2.0
