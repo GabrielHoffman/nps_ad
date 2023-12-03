@@ -12,7 +12,7 @@
 #BSUB -cwd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 
 source /hpc/users/hoffmg01/.bash_profile
-ml R/4.3.0
+ml R/4.3.0 pandoc
 
 echo $1
 ./submit_preproc.R --cohort $1
