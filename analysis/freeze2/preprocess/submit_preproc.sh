@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash --login
 #BSUB -J $1
 #BSUB -P acc_CommonMind
 #BSUB -q premium
