@@ -6,8 +6,8 @@
 #BSUB -R span[hosts=1]
 #BSUB -R rusage[mem=50000]
 #BSUB -W 96:00 
-#BSUB -o ./$1_%J.stdout
-#BSUB -eo ./$1_%J.stderr
+#BSUB -o /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/_%J.stdout
+#BSUB -eo /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/_%J.stderr
 #BSUB -L /bin/bash
 #BSUB -cwd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 
