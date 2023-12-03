@@ -4,7 +4,7 @@
 #BSUB -q premium
 #BSUB -n 12
 #BSUB -R span[hosts=1]
-#BSUB -R usage[mem=50000]
+#BSUB -R rusage[mem=50000]
 #BSUB -W 96:00 
 #BSUB -o ./$1_%J.stdout
 #BSUB -eo ./$1_%J.stderr
