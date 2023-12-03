@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/bash 
 #BSUB -J $1
 #BSUB -P acc_CommonMind
 #BSUB -q premium
@@ -6,8 +6,8 @@
 #BSUB -R span[hosts=1]
 #BSUB -R usage[mem=50000]
 #BSUB -W 96:00 
-#BSUB -o ./${1}_%J.stdout
-#BSUB -eo ./${1}_%J.stderr
+#BSUB -o ./$1_%J.stdout
+#BSUB -eo ./$1_%J.stderr
 #BSUB -L /bin/bash
 #BSUB -cwd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 
