@@ -11,11 +11,7 @@
 #BSUB -L /bin/bash
 #BSUB -cwd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 
-ml purge
-ml python git pandoc gcc/11.2.0
-ml R/4.3.0 
-export R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_430/
-export R_LIBS=\$R_LIBS_USER:\$R_LIBS
+source ~/.bash_profile
 
 echo $1
 ./submit_preproc.R --cohort $1
