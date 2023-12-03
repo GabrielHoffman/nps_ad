@@ -18,8 +18,11 @@ params:
 # batching
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 
-./submit_preproc.R --cohort test
-./submit_preproc.sh 
+# ./submit_preproc.R --cohort test
+sed 's/$1/RUSH/g' ./submit_preproc.sh | bsub
+sed 's/$1/HBCC/g' ./submit_preproc.sh | bsub
+sed 's/$1/MSSM/g' ./submit_preproc.sh | bsub
+sed 's/$1/AGING/g' ./submit_preproc.sh | bsub
 
 
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=50000] -W 72:00 -P acc_CommonMind -n 12 bash

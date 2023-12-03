@@ -6,12 +6,12 @@
 #BSUB -R span[hosts=1]
 #BSUB -R rusage[mem=50000]
 #BSUB -W 96:00 
-#BSUB -o /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/_%J.stdout
-#BSUB -eo /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/_%J.stderr
+#BSUB -o /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/logs/%J.stdout
+#BSUB -eo /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/logs/%J.stderr
 #BSUB -L /bin/bash
 #BSUB -cwd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
 
-source ~/.bash_profile
+source /hpc/users/hoffmg01/.bash_profile
 
 echo $1
 ./submit_preproc.R --cohort $1
