@@ -17,5 +17,6 @@ ml R/4.3.0
 export R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_430/
 export R_LIBS=\$R_LIBS_USER:\$R_LIBS
 
+echo $1
 ./submit_preproc.R --cohort $1
 
