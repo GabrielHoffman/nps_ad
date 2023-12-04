@@ -3,8 +3,8 @@
 #BSUB -P acc_CommonMind
 #BSUB -q premium
 #BSUB -n 12
-#BSUB -R span[hosts=1]
-#BSUB -R rusage[mem=50000]
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=50000]"
 #BSUB -W 96:00 
 #BSUB -o /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/logs/$1_%J.stdout
 #BSUB -eo /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/logs/$1_%J.stderr
