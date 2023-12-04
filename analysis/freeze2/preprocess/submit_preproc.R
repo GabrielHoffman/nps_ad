@@ -8,8 +8,10 @@ opt = getopt(spec)
 
 stopifnot( opt$cohort %in% c("RUSH", "HBCC", "MSSM", "FULL", "AGING"))
 
+suppressWarnings({
 library(rmarkdown)
 library(tidyverse)
+})
 
 path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 
