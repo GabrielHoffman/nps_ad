@@ -14,6 +14,8 @@
 source /hpc/users/hoffmg01/.bash_profile
 ml R/4.3.0 pandoc
 
+export R_LIBS=/hpc/users/hoffmg01/.Rlib/R_430:/hpc/packages/minerva-centos7/rpackages/4.3.0/site-library:/hpc/packages/minerva-centos7/rpackages/bioconductor/3.17
+
 echo $1
 ./submit_preproc.R --cohort $1
 
