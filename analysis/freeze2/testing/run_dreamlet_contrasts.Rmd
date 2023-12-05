@@ -156,7 +156,7 @@ if( params$SampleLevel == "Channel" ){
 covariates = setdiff(union(covariates_base, ctr$covariates_incl), ctr$covariates_excl)
 
 # user-specified formula
-if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){
+if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
   form = paste0("~ ", ctr$variable, " + ", paste0(covariates, collapse=" + "))  
   form.vp = form
 }else{
@@ -186,7 +186,7 @@ res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 
 bpparam = SnowParam(3)
 
-if( is.na(ctr$contrasts) ){
+if( any(is.na(ctr$contrasts)) ){
   ctr$contrasts = NULL
 }
 
@@ -243,7 +243,7 @@ if( params$variable_type == "ORD" ){
 
   res.zenith = zenith_gsa(fit, coef = coef.test, go.gs, progressbar=FALSE)
 }else{     
-  if( is.null(ctr$contrasts) || is.na(ctr$contrasts) ){   
+  if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){   
     coef.test = ctr$variable
   }else{
     coef.test = ctr$contrasts 
