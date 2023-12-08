@@ -50,7 +50,7 @@ run = function(x){
   file1 = paste0(fldr, "preprocess.Rmd")
   file2 = paste0(fldr, "preprocess_", x,".Rmd")
 
-  file.copy(file1, file2)
+  file.copy(file1, file2, overwrite=TRUE)
 
   render(file2,
           params = list(DATASET = h5ad_files[x]),
