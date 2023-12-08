@@ -189,7 +189,7 @@ bpparam = SnowParam(4)
 ```
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
@@ -217,6 +217,9 @@ for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
     message(cluster_id, ' ', sample_id)
+
+    txt = paste(cluster_id, sample_id, "\n")
+    write(txt, file="log.log", append=FALSE)
 
     # formula
     if( sample_id == "Channel"){
