@@ -270,6 +270,7 @@ tmp = sapply( unique(res.zenith$coef), function(coef_key){
   fig = plotZenithResults(df, 5, 1)
   file = paste0(outpath, "/zenith_", gsub(" ", "_", coef_key), ".pdf")
   ggsave(file=file, fig, height=40, width=20)
+  fig
   })
 
 # plotVolcano
@@ -278,6 +279,7 @@ tmp = sapply( unique(res.zenith$coef), function(coef_key){
   fig = plotVolcano( fit, coef = coef_key, assays=ctorder )
   file = paste0(outpath, "/plotVolcano_", gsub(" ", "_", coef_key), ".pdf")
   ggsave(file=file, fig, height=20)
+  fig
   })
 
 estimatepi1 = function(p){
@@ -335,6 +337,7 @@ tmp = sapply( unique(res.zenith$coef), function(coef_key){
 
   file = paste0(outpath, "/nDE_", gsub(" ", "_", coef_key), ".pdf")
   ggsave(file, fig, width=12)
+  fig
 })
 ```
 
@@ -365,6 +368,9 @@ res = lapply(coef.test, function(coef_key){
   tab
 })
 res = do.call(rbind, res)
+res$Dataset = toupper(params$dataset)
+res$SampleLevel = params$SampleLevel
+res$AnnoLevel = params$AnnoLevel
 
 file = paste0(outpath, "/topTable_DE.tsv")
 write.table(res, file, sep="\t", quote=FALSE, row.names=FALSE)
