@@ -219,7 +219,8 @@ for(cluster_id in cluster_id_options ){
     message(cluster_id, ' ', sample_id)
 
     txt = paste(cluster_id, sample_id, "\n")
-    write(txt, file="log.log", append=FALSE)
+    outfile = paste0('log/', basename(params$DATASET), '.log')
+    write(txt, file=outfile, append=TRUE)
 
     # formula
     if( sample_id == "Channel"){
