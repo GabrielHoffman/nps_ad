@@ -158,7 +158,9 @@ library(ggplot2)
 library(cowplot) 
 library(org.Hs.eg.db)
 library(R.utils)
+library(RhpcBLASctl)
 })
+omp_set_num_threads(1)
 ```
 
 ## H5AD
@@ -236,18 +238,21 @@ for(cluster_id in cluster_id_options ){
 
     # formula
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) + (1|prep) 
+      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) 
     }else{      
-      form = ~ Sex + scale(Age) + log(n_genes) + (1|prep) 
+      form = ~ Sex + scale(Age) + log(n_genes) 
     }
 
     # Read pseudobulk RDS 
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
-
     pb = readRDS(paste0(filePrefix, ".RDS"))
 
+    # Read weights
+    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_pbWeights_", sample_id, "_", cluster_id)
+    W.list = readRDS(paste0(filePrefix, ".RDS"))
+
     # processAssays
-    res.proc = processAssays( pb, form, BPPARAM = bpparam)
+    res.proc = processAssays( pb, form, BPPARAM = bpparam, weightsList = W.list)
     flush(stderr())
 
     # Save processed object to RDS
