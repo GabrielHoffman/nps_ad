@@ -170,7 +170,7 @@ assayNames(sce)[1] = "counts"
 
 # Create pseudo-bulk SingleCellExperiment
 cluster_id_options = c("bulk", "class", "subclass", "subtype")
-sample_id_options = c("Channel", "SubID")
+sample_id_options = c("SubID") #c("Channel", "SubID")
 
 sce$bulk = "bulk"
 
