@@ -23,6 +23,7 @@ R --vanilla --no-restore
 system("git pull origin master")
 rmarkdown::render("examine_covariates.Rmd")
 
+# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/covariates/examine_covariates.html
 
 --->
 
@@ -118,7 +119,7 @@ pcids = colnames(df_pca)[-1]
 res = C[!(rownames(C) %in% pcids), pcids]
 ```
 
-```{r cor, cache=FALSE}
+```{r cor, cache=FALSE, fig.height=20}
 ncols = 50
 fcol = colorRampPalette(c("blue", "white", "red"))(ncols)
 
@@ -131,7 +132,7 @@ pheatmap(res,
   cluster_cols=TRUE)
 ```
 
-```{r cor.abs, cache=FALSE}
+```{r cor.abs, cache=FALSE, fig.height=20}
 ncols = 50
 fcol = colorRampPalette(c("white", "red"))(ncols)
 pheatmap(abs(res), 
