@@ -20,8 +20,8 @@ ml python git pandoc gcc/11.2.0
 git pull origin master
 R --vanilla --no-restore
 
-
-rmarkdown::redner("examine_covariates.Rmd")
+system("git pull origin master")
+rmarkdown::render("examine_covariates.Rmd")
 
 
 --->
@@ -56,11 +56,12 @@ synLogin()
 ```{r analysis}
 # Read gene expression files
 # Perform PCA
-files = dir("~/Downloads/", pattern = "MSSM_2023-09-12_17_04_residualsPearson_SubID_class_.*.tsv.gz", full.names=TRUE)
+folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/"
+files = dir(folder, pattern = "MSSM_2023-09-12_17_04_residualsPearson_SubID_class_.*.tsv.gz", full.names=TRUE)
 
 df_pca = lapply(files, function(file){
 
-  df_expr = read.table(file, header=TRUE, row.names=1)
+  df_expr = read.table(file, header=TRUE, row.names=1, nrow=10)
 
   dcmp = prcomp(t(df_expr))
 
@@ -72,7 +73,7 @@ df_pca = do.call(rbind, df_pca) %>%
     values_from = c("PC1", "PC2", "PC3", "PC4", "PC5"))
 ```
 
-```{r downstream}
+```{r downstream, cache=FALSE}
 # Read metadata files
 df_cov_wet = read_tsv(synGet("syn51375322")$path)
 df_cov_dry = read_tsv(synGet("syn51276625")$path, skip=2)
