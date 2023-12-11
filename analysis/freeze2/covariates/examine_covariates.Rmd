@@ -143,7 +143,7 @@ df_res = lapply(names(df_pca), function(cohort){
 df_res = do.call(cbind, df_res)
 ```
 
-```{r cor, cache=FALSE, fig.height=20, fig.width=20}
+```{r cor, cache=FALSE, fig.height=15, fig.width=15}
 ncols = 50
 fcol = colorRampPalette(c("blue", "white", "red"))(ncols)
 
@@ -156,7 +156,7 @@ pheatmap(df_res,
   cluster_cols=TRUE)
 ```
 
-```{r cor.abs, cache=FALSE, fig.height=20, fig.width=20}
+```{r cor.abs, cache=FALSE, fig.height=12, fig.width=12}
 ncols = 50
 fcol = colorRampPalette(c("white", "red"))(ncols)
 pheatmap(abs(df_res), 
