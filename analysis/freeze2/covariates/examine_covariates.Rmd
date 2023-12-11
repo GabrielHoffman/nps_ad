@@ -141,6 +141,7 @@ df_res = lapply(names(df_pca), function(cohort){
   res
 })
 df_res = do.call(cbind, df_res)
+rownames(df_res) = gsub("_2023-09-12", "", rownames(df_res))
 ```
 
 ```{r cor, cache=FALSE, fig.height=15, fig.width=15}
@@ -156,7 +157,7 @@ pheatmap(df_res,
   cluster_cols=TRUE)
 ```
 
-```{r cor.abs, cache=FALSE, fig.height=15, fig.width=15}
+```{r cor.abs, cache=FALSE, fig.height=15, fig.width=15, dev}
 ncols = 50
 fcol = colorRampPalette(c("white", "red"))(ncols)
 pheatmap(abs(df_res), 
