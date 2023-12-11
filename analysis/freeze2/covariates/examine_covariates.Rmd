@@ -141,7 +141,7 @@ df_res = lapply(names(df_pca), function(cohort){
   res
 })
 df_res = do.call(cbind, df_res)
-rownames(df_res) = gsub("_2023-09-12", "", rownames(df_res))
+colnames(df_res) = gsub("_2023-09-12", "", colnames(df_res))
 ```
 
 ```{r cor, cache=FALSE, fig.height=15, fig.width=15}
