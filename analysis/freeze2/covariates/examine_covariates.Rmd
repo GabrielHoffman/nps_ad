@@ -157,7 +157,7 @@ pheatmap(df_res,
   cluster_cols=TRUE)
 ```
 
-```{r cor.abs, cache=FALSE, fig.height=15, fig.width=15, dev}
+```{r cor.abs, cache=FALSE, fig.height=15, fig.width=15}
 ncols = 50
 fcol = colorRampPalette(c("white", "red"))(ncols)
 pheatmap(abs(df_res), 
