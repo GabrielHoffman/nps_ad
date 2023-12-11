@@ -65,7 +65,7 @@ files = dir(folder, pattern = ".*2023-09.*_residualsPearson_SubID_class_.*.tsv.g
 
 pcaList = lapply(files, function(file){
 
-  df_expr = read.table(file, header=TRUE, row.names=1, nrow=10)
+  df_expr = read.table(file, header=TRUE, row.names=1)
 
   dcmp = prcomp(t(df_expr))
 
