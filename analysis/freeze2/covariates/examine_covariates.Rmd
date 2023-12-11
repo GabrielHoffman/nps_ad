@@ -61,20 +61,32 @@ synLogin()
 # Read gene expression files
 # Perform PCA
 folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/"
-files = dir(folder, pattern = "MSSM_2023-09-12_17_04_residualsPearson_SubID_class_.*.tsv.gz", full.names=TRUE)
+files = dir(folder, pattern = ".*2023-09.*_residualsPearson_SubID_class_.*.tsv.gz", full.names=TRUE)
 
-df_pca = lapply(files, function(file){
+pcaList = lapply(files, function(file){
 
   df_expr = read.table(file, header=TRUE, row.names=1, nrow=10)
 
   dcmp = prcomp(t(df_expr))
 
   CT = gsub(".*_(\\S+).tsv.gz", "\\1", basename(file))
-  tibble(data.frame(ID = rownames(dcmp$x), class = CT, dcmp$x[, 1:5]))
+  cohort = gsub("^(\\S+)_20.*$", "\\1", basename(file))
+  tibble(data.frame(ID = rownames(dcmp$x), class = CT, cohort = cohort, dcmp$x[, 1:5]))
   })
-df_pca = do.call(rbind, df_pca) %>%
-  pivot_wider(names_from = "class", 
-    values_from = c("PC1", "PC2", "PC3", "PC4", "PC5"))
+
+cohorts = gsub("^(\\S+)_20.*$", "\\1", basename(files))
+pcids = c("PC1", "PC2", "PC3", "PC4", "PC5")
+
+df_pca = lapply(unique(cohorts), function(chrt){
+
+  i = which(chrt == cohorts)
+
+  do.call(rbind, pcaList[i]) %>%
+      select(!one_of('cohort')) %>%
+      pivot_wider(names_from = c("class"), 
+      values_from = pcids)
+  }) 
+names(df_pca) = unique(cohorts)
 ```
 
 ```{r downstream, cache=FALSE}
@@ -106,27 +118,36 @@ df = lapply(donors, function(id){
     data.frame(ID = id, .)
 })
 df = do.call(rbind, df) %>% as_tibble
+```
 
+```{r merge, cache=FALSE}
+df_res = lapply(names(df_pca), function(cohort){
 
-df_merge = df %>%
-      inner_join(df_pca, by="ID")
+  df_merge = df %>%
+        inner_join(df_pca[[cohort]], by="ID")
 
-cv = colVars(as.matrix(df_merge[,-1]), na.rm=TRUE)
-exclude = c("ID", names(cv)[cv==0])
+  cv = colVars(as.matrix(df_merge[,-1]), na.rm=TRUE)
+  exclude = c("ID", names(cv)[cv==0])
 
-C = df_merge %>%
-  select(-one_of(exclude)) %>%
-  cor(use="pairwise.complete")
+  C = df_merge %>%
+    select(-one_of(exclude)) %>%
+    cor(use="pairwise.complete")
 
-pcids = colnames(df_pca)[-1]
-res = C[!(rownames(C) %in% pcids), pcids]
+  include = grep("^PC\\d_", rownames(C))
+
+  res = C[-include, include]
+
+  colnames(res) = paste(cohort, colnames(res), sep=": ")
+  res
+})
+df_res = do.call(cbind, df_res)
 ```
 
 ```{r cor, cache=FALSE, fig.height=15, fig.width=7}
 ncols = 50
 fcol = colorRampPalette(c("blue", "white", "red"))(ncols)
 
-pheatmap(res, 
+pheatmap(df_res, 
   breaks = seq(-1, 1, length.out=ncols+1),
   color = fcol,
   fontsize = 6,
@@ -138,7 +159,7 @@ pheatmap(res,
 ```{r cor.abs, cache=FALSE, fig.height=12, fig.width=5}
 ncols = 50
 fcol = colorRampPalette(c("white", "red"))(ncols)
-pheatmap(abs(res), 
+pheatmap(abs(df_res), 
   breaks = seq(0, 1, length.out=ncols+1),
   color = fcol,
   fontsize = 6,
