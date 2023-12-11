@@ -1,0 +1,145 @@
+---
+title: "Examine technical variables"
+subtitle: 'Identify variables to include as covariates'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+params:
+  DATASET: NULL
+---
+
+
+<!--- 
+
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/covariates/
+
+rmarkdown::redner("examine_covariates.Rmd")
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = FALSE,
+  cache.lazy = FALSE)
+```
+
+
+```{r load.packages, cache=FALSE}
+library(synapser)
+library(tidyverse)
+library(matrixStats)
+library(ggplot2)
+library(RColorBrewer)
+library(pheatmap)
+
+synLogin()
+```
+
+```{r analysis}
+
+# Read gene expression files
+# Perform PCA
+files = dir("~/Downloads/", pattern = "MSSM_2023-09-12_17_04_residualsPearson_SubID_class_.*.tsv.gz", full.names=TRUE)
+
+df_pca = lapply(files, function(file){
+
+  df_expr = read.table(file, header=TRUE, row.names=1)
+
+  dcmp = prcomp(t(df_expr))
+
+  CT = gsub(".*_(\\S+).tsv.gz", "\\1", basename(file))
+  tibble(data.frame(ID = rownames(dcmp$x), class = CT, dcmp$x[, 1:5]))
+  })
+df_pca = do.call(rbind, df_pca) %>%
+  pivot_wider(names_from = "class", 
+    values_from = c("PC1", "PC2", "PC3", "PC4", "PC5"))
+
+
+
+# Read metadata files
+df_cov_wet = read_tsv(synGet("syn51375322")$path)
+df_cov_dry = read_tsv(synGet("syn51276625")$path, skip=2)
+
+# donor list
+donorList = strsplit(df_cov_dry$EXPECTED_DONORS, " ")
+donors = unique(unlist(donorList))
+
+# numeric columns
+cols =  df_cov_dry %>% 
+    summarise_all(class) %>% 
+    gather(col_name, col_type) %>%
+    filter(col_type == "numeric") %>%
+    pull(col_name)
+
+# extact mean value per donor
+df = lapply(donors, function(id){
+
+  # which row
+  i = which(sapply(donorList, function(x) id %in% x))
+
+  df_cov_dry[i,cols] %>%
+    colMeans %>%
+    data.frame %>%
+    t() %>%
+    data.frame(ID = id, .)
+})
+df = do.call(rbind, df) %>% as_tibble
+
+
+df_merge = df %>%
+      inner_join(df_pca, by="ID")
+
+cv = colVars(as.matrix(df_merge[,-1]), na.rm=TRUE)
+exclude = c("ID", names(cv)[cv==0])
+
+C = df_merge %>%
+  select(-one_of(exclude)) %>%
+  cor(use="pairwise.complete")
+
+pcids = colnames(df_pca)[-1]
+res = C[!(rownames(C) %in% pcids), pcids]
+```
+
+```{r cor, cache=FALSE}
+ncols = 50
+fcol = colorRampPalette(c("blue", "white", "red"))(ncols)
+
+pheatmap(res, 
+  breaks = seq(-1, 1, length.out=ncols+1),
+  color = fcol,
+  fontsize = 6,
+  cellheight = 5,
+  cellwidth=5, 
+  cluster_cols=TRUE)
+```
+
+```{r cor.abs, cache=FALSE}
+ncols = 50
+fcol = colorRampPalette(c("white", "red"))(ncols)
+pheatmap(abs(res), 
+  breaks = seq(0, 1, length.out=ncols+1),
+  color = fcol,
+  fontsize = 6,
+  cellheight = 5,
+  cellwidth=5, 
+  cluster_cols=TRUE)
+```
+
+
+
+
+
