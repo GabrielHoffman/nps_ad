@@ -202,7 +202,7 @@ if( length(assayNames(fit)) > 1 ){
     res_mash <- run_mash(fit, ctr$contrasts)
     file = paste0(outpath, "/res_mash.RDS")
     saveRDS(res_mash, file=file)
-  }else if( !is.null(ctr$variable) ){   
+  }else if( !is.null(ctr$variable) & ctr$variable %in% coefNames(fit) ){   
     res_mash <- run_mash(fit, ctr$variable)
     file = paste0(outpath, "/res_mash.RDS")
     saveRDS(res_mash, file=file)
