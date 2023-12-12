@@ -276,7 +276,7 @@ tab = lapply(names(res), function(id){
   })
 tab = do.call(rbind, tab)
 
-file = paste0(outpath, "/topTable.tsv")
+file = paste0(outpath, "/topTable_crumblr.tsv")
 write.table(tab, file=file, quote=FALSE, row.names=FALSE, sep="\t")
 R.utils::gzip(file, overwrite=TRUE)
 
@@ -287,7 +287,7 @@ if( params$variable_type == "ORD" ){
 
   tab = topTable(fit, coef=ctr$contrasts, number=Inf)
   tab = data.frame(CellType = rownames(tab), tab)
-  file = paste0(outpath, "/topTable_joint.tsv")
+  file = paste0(outpath, "/topTable_crumblr_joint.tsv")
   write.table(tab, file=file, quote=FALSE, row.names=FALSE, sep="\t")
   R.utils::gzip(file, overwrite=TRUE)
 }
