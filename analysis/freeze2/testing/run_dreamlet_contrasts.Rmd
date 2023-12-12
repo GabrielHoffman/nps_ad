@@ -129,7 +129,7 @@ library(tidyverse)
 library(zenith)
 library(qvalue)
 library(cowplot)
-library(tidyverse)})
+})
 
 # read processed data
 path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/")
@@ -381,9 +381,8 @@ res$Dataset = toupper(params$dataset)
 res$SampleLevel = params$SampleLevel
 res$AnnoLevel = params$AnnoLevel
 
-file = paste0(outpath, "/topTable.tsv")
-write.table(res, file, sep="\t", quote=FALSE, row.names=FALSE)
-R.utils::gzip(file, overwrite=TRUE)
+file = paste0(outpath, "/topTable.tsv.gz")
+write_tsv(res, file)
 
 if( params$variable_type == "ORD" ){
 
