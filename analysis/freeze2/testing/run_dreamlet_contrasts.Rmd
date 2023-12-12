@@ -196,6 +196,7 @@ fit = dreamlet( res.proc, form,
             BPPARAM = bpparam)
 ```
 
+
 ```{r mashr}
 if( length(assayNames(fit)) > 1 ){
   if( !is.null(ctr$contrasts) ){   
@@ -278,6 +279,14 @@ tmp = sapply( unique(res.zenith$coef), function(coef_key){
 
   fig = plotVolcano( fit, coef = coef_key, assays=ctorder )
   file = paste0(outpath, "/plotVolcano_", gsub(" ", "_", coef_key), ".pdf")
+  ggsave(file=file, fig, height=20)
+  fig
+  })
+
+tmp = sapply( unique(res.zenith$coef), function(coef_key){
+
+  fig = plotBeeswarm( fit, coef = coef_key)
+  file = paste0(outpath, "/plotBeeswarm_", gsub(" ", "_", coef_key), ".pdf")
   ggsave(file=file, fig, height=20)
   fig
   })
@@ -372,7 +381,7 @@ res$Dataset = toupper(params$dataset)
 res$SampleLevel = params$SampleLevel
 res$AnnoLevel = params$AnnoLevel
 
-file = paste0(outpath, "/topTable_DE.tsv")
+file = paste0(outpath, "/topTable.tsv")
 write.table(res, file, sep="\t", quote=FALSE, row.names=FALSE)
 R.utils::gzip(file, overwrite=TRUE)
 
@@ -382,7 +391,7 @@ if( params$variable_type == "ORD" ){
   tab = topTable(fit, coef = coef.test, number=Inf )
   tab$coef = "joint"
 
-  file = paste0(outpath, "/topTable_DE_joint.tsv")
+  file = paste0(outpath, "/topTable_joint.tsv")
   write.table(tab, file, sep="\t", quote=FALSE, row.names=FALSE)
   R.utils::gzip(file, overwrite=TRUE)
 }
