@@ -374,9 +374,10 @@ write(as.character(form), file)
 res = lapply(coef.test, function(coef_key){
   tab = topTable(fit, coef = coef_key, number=Inf )
   tab$coef = coef_key
-  tab
-})
-res = do.call(rbind, res)
+  tab %>% 
+    as_tibble
+}) %>%
+  bind_rows
 res$Dataset = toupper(params$dataset)
 res$SampleLevel = params$SampleLevel
 res$AnnoLevel = params$AnnoLevel
