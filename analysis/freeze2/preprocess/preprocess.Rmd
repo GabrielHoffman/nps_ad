@@ -310,7 +310,7 @@ augment_data = function(pb){
   if( pb$Source[1] == "R" ){
     prefix = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/metadata/"
     file = paste0(prefix, "clinical_metadata_full.csv")
-    df = read_csv( files, how_col_types = FALSE )
+    df = read_csv( files, show_col_types = FALSE )
 
     i = match(colnames(pb), df$SubID)
     colData(pb) = cbind(colData(pb), df[i,"cogdx",drop=FALSE])
