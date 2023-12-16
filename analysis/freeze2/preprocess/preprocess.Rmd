@@ -266,10 +266,10 @@ augment_data = function(pb){
   #------------------------------
   prefix = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/metadata/"
   file = paste0(prefix, "Bioassay_Table_Pool_Wet.tsv")
-  df_cov_wet = read_tsv( file )
+  df_cov_wet = read_tsv( file, show_col_types = FALSE )
 
   file = paste0(prefix, "Bioassay_Table_Pool_Dry.tsv")
-  df_cov_dry = read_tsv( file , skip=2)
+  df_cov_dry = read_tsv( file, skip=2,show_col_types = FALSE)
 
   # donor list
   donorList = strsplit(df_cov_dry$EXPECTED_DONORS, " ")
@@ -307,10 +307,10 @@ augment_data = function(pb){
 
   # add cogdx for rush
   #-------------------
-  if( levels(pb$Source) == "R" ){
+  if( pb$Source[1] == "R" ){
     prefix = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/metadata/"
     file = paste0(prefix, "clinical_metadata_full.csv")
-    df = read_csv( file )
+    df = read_csv( fileshow_col_types = FALSE )
 
     i = match(colnames(pb), df$SubID)
     colData(pb) = cbind(colData(pb), df[i,"cogdx",drop=FALSE])
@@ -362,7 +362,7 @@ for(cluster_id in cluster_id_options ){
 }
 ```
 
-
+  pb = augment_data( pbList[["AGING"]] )
 
 
 
@@ -378,9 +378,23 @@ for(cluster_id in cluster_id_options ){
     write(txt, file=outfile, append=TRUE)
 
     # formula
-    form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + log(n_genes) 
+    form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + (1|mod_cogdx) + log(n_genes) 
     if( sample_id == "Channel"){
       form = update(form,  ~ . + (1|SubID))
+    }
+
+    # remove absent terms
+    if( nlevels(pb$Source) == 1 && levels(pb$Source) == "R"){
+      form = update(form,  ~ . - mod_Plq_Mn - (1|mod_CDRScore) - mod_Cognitive_Resilience)
+    }
+    if( nlevels(pb$Source) == 1 && levels(pb$Source) == "M"){
+      form = update(form,  ~ . - (1|mod_cogdx))
+    }
+    if( nlevels(pb$Source) == 1 && levels(pb$Source) == "H"){
+      form = update(form,  ~ . - (1|mod_BRAAK_AD) - mod_Plq_Mn - (1|mod_CERAD) - (1|mod_CDRScore) - (1|mod_Cognitive_Resilience) - (1|DementiaType) - (1|mod_cogdx) - mod_Cognitive_Resilience)
+    }
+    if( nlevels(pb$Source) == 2){
+      form = update(form,  ~ . - (1|MajorDisease) - (1|DementiaType) - (1|mod_cogdx)) 
     }
 
     # Read pseudobulk RDS 
