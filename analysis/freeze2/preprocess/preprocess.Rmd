@@ -190,6 +190,140 @@ ctorder = ctorder[ctorder %in% levels(sce$subclass)]
 bpparam = SnowParam(4)
 ```
 
+
+# Prepare covariates
+```{r prep.covs}
+augment_data = function(pb){
+
+  # Combine and modify disease phenotypes
+  #######################################
+  cn1 = c( 'MCI', 'SCZ', 'AD')
+  cn2 = c( 'DLBD', 'Dementia', 'FTD')
+  cn_bd = c("BD_unspecific", "BD_I", "BD_II")
+  cn_all = c(cn1, cn2, cn_bd)
+
+  info = data.frame(colData(pb)[,cn_all])
+  info[is.na(info)] = 0
+
+  # code BD
+  info$BD = apply(info[,cn_bd], 1, function(x) ifelse(length(unique(x)) == 1, 0, 1))
+
+  for(id in colnames(info)){
+    info[,id] = factor(c("no", id)[info[,id]+1], levels=c("no", id))
+  }
+
+  # set 1
+  cn1 = c(cn1, "BD")
+  ph1 = apply(info[,cn1], 1, function(x) paste(x[x!="no"], collapse="/"))
+  ph1[ph1 == "SCZ/AD"] = "AD"
+  ph1[ph1 == "MCI/SCZ"] = "SCZ"
+  ph1[ph1 == ""] = "none"
+  # sort(table(ph1))
+  pb$MajorDisease = factor(ph1)
+
+  # set2
+  ph2 = apply(info[,cn2], 1, function(x) paste(x[x!="no"], collapse="/"))
+  ph2[ph2 == "Dementia/FTD"] = "FTD"
+  ph2[ph2 == "DLBD/Dementia"] = "DLBD"
+  ph2[ph2 == ""] = "none"
+  # sort(table(ph2))
+  pb$DementiaType = factor(ph2)
+
+  if( length(unique(pb$DementiaType)) == 1){
+    pb$DementiaType = c()
+  }
+  if( length(unique(pb$MajorDisease)) == 1){
+    pb$MajorDisease = c()
+  }
+
+  # metrics
+  if( any(!is.na(pb$BRAAK_AD)) ){
+    pb$mod_BRAAK_AD = factor(as.character(pb$BRAAK_AD))
+    pb$mod_BRAAK_AD[is.na(pb$mod_BRAAK_AD)] = 2
+  }
+
+  if( any(!is.na(pb$Plq_Mn)) ){
+    pb$mod_Plq_Mn = pb$Plq_Mn
+    pb$mod_Plq_Mn[is.na(pb$mod_Plq_Mn)] = mean(pb$mod_Plq_Mn, na.rm=TRUE)
+  }
+
+  if( any(!is.na(pb$CERAD)) ){  
+    pb$mod_CERAD = pb$CERAD
+    pb$mod_CERAD[is.na(pb$mod_CERAD)] = mean(pb$mod_CERAD, na.rm=TRUE)
+  }
+
+  if( any(!is.na(pb$CDRScore)) ){
+    pb$mod_CDRScore = pb$CDRScore
+    pb$mod_CDRScore[is.na(pb$mod_CDRScore)] = mean(pb$mod_CDRScore, na.rm=TRUE)
+  }
+
+  if( any(!is.na(pb$Cognitive_Resilience)) ){
+    pb$mod_Cognitive_Resilience = pb$Cognitive_Resilience
+    pb$mod_Cognitive_Resilience[is.na(pb$mod_Cognitive_Resilience)] = mean(pb$mod_Cognitive_Resilience, na.rm=TRUE)
+  }
+
+  # Merge with technical metadata
+  #------------------------------
+  prefix = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/metadata/"
+  file = paste0(prefix, "Bioassay_Table_Pool_Wet.tsv")
+  df_cov_wet = read_tsv( file )
+
+  file = paste0(prefix, "Bioassay_Table_Pool_Dry.tsv")
+  df_cov_dry = read_tsv( file , skip=2)
+
+  # donor list
+  donorList = strsplit(df_cov_dry$EXPECTED_DONORS, " ")
+  donors = unique(unlist(donorList))
+
+  # numeric columns
+  cols =  df_cov_dry %>% 
+      summarise_all(class) %>% 
+      gather(col_name, col_type) %>%
+      filter(col_type == "numeric") %>%
+      pull(col_name)
+
+  # extact mean value per donor
+  df = lapply(donors, function(id){
+
+    # which row
+    i = which(sapply(donorList, function(x) id %in% x))
+
+    df_cov_dry[i,cols] %>%
+      colMeans %>%
+      data.frame %>%
+      t() %>%
+      data.frame(ID = id, .)
+  })
+  df = do.call(rbind, df) %>% as_tibble
+  df$REPLICATE = c()
+
+  # remove duplicated cols
+  cn = gsub("...\\d+", "", colnames(df))
+  df = df[,!duplicated(cn)]
+  colnames(df) = gsub("...\\d+", "", colnames(df))
+
+  i = match(colnames(pb), df$ID)
+  colData(pb) = cbind(colData(pb), df[i,])
+
+  # add cogdx for rush
+  #-------------------
+  if( levels(pb$Source) == "R" ){
+    prefix = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/metadata/"
+    file = paste0(prefix, "clinical_metadata_full.csv")
+    df = read_csv( file )
+
+    i = match(colnames(pb), df$SubID)
+    colData(pb) = cbind(colData(pb), df[i,"cogdx",drop=FALSE])
+
+    pb$mod_cogdx = factor(pb$cogdx)
+    pb$mod_cogdx[is.na(pb$mod_cogdx)] = 4
+  }
+
+  pb
+}
+```
+
+
 # Compute pseudobulk at multiple levels
 ```{r combineData, message=TRUE, eval=TRUE}
 for(cluster_id in cluster_id_options ){
@@ -201,6 +335,9 @@ for(cluster_id in cluster_id_options ){
       cluster_id = cluster_id,
       sample_id = sample_id,
       BPPARAM = bpparam)
+
+    # augment pseudobulk with additional metadata
+    pb = augment_data( pb )
 
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
 
@@ -225,6 +362,10 @@ for(cluster_id in cluster_id_options ){
 }
 ```
 
+
+
+
+
 # Compute `processAssays()` at multiple levels
 ```{r processAssays, eval=TRUE, message=TRUE, warning=TRUE}
 for(cluster_id in cluster_id_options ){
@@ -237,10 +378,9 @@ for(cluster_id in cluster_id_options ){
     write(txt, file=outfile, append=TRUE)
 
     # formula
+    form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + log(n_genes) 
     if( sample_id == "Channel"){
-      form = ~ (1|SubID) + Sex + scale(Age) + log(n_genes) 
-    }else{      
-      form = ~ Sex + scale(Age) + log(n_genes) 
+      form = update(form,  ~ . + (1|SubID))
     }
 
     # Read pseudobulk RDS 
