@@ -310,7 +310,7 @@ augment_data = function(pb){
   if( pb$Source[1] == "R" ){
     prefix = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/metadata/"
     file = paste0(prefix, "clinical_metadata_full.csv")
-    df = read_csv( files, show_col_types = FALSE )
+    df = read_csv( file, show_col_types = FALSE )
 
     i = match(colnames(pb), df$SubID)
     colData(pb) = cbind(colData(pb), df[i,"cogdx",drop=FALSE])
@@ -362,8 +362,6 @@ for(cluster_id in cluster_id_options ){
 }
 ```
 
-  pb = augment_data( pbList[["AGING"]] )
-
 
 
 # Compute `processAssays()` at multiple levels
@@ -376,6 +374,10 @@ for(cluster_id in cluster_id_options ){
     txt = paste(cluster_id, sample_id, "\n")
     outfile = paste0('logs/', basename(params$DATASET), '.log')
     write(txt, file=outfile, append=TRUE)
+
+    # Read pseudobulk RDS 
+    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
+    pb = readRDS(paste0(filePrefix, ".RDS"))
 
     # formula
     form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + (1|mod_cogdx) + log(n_genes) 
@@ -395,11 +397,7 @@ for(cluster_id in cluster_id_options ){
     }
     if( nlevels(pb$Source) == 2){
       form = update(form,  ~ . - (1|MajorDisease) - (1|DementiaType) - (1|mod_cogdx)) 
-    }
-
-    # Read pseudobulk RDS 
-    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
-    pb = readRDS(paste0(filePrefix, ".RDS"))
+    }  
 
     # Read weights
     filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_pbWeights_", sample_id, "_", cluster_id)
