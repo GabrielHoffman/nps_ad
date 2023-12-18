@@ -60,7 +60,7 @@ create_job = function(x){
   fldr = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/"
   file.orig = paste0(fldr, "preprocess.Rmd")
   file = paste0(fldr, "preprocess_", x,".Rmd") 
-  file.copy(file.orig, file)
+  file.copy(file.orig, file, overwrite=FALSE)
 
   # x %>% 
   #   walk(function(x) render(file,
@@ -75,7 +75,7 @@ run = function(x){
   file1 = paste0(fldr, "preprocess.Rmd")
   file2 = paste0(fldr, "preprocess_", x,".Rmd")
 
-  file.copy(file1, file2)
+  file.copy(file1, file2, overwrite=FALSE)
 
   render(file2,
           params = list(DATASET = h5ad_files[x]),
