@@ -118,6 +118,10 @@ params = list(DATASET = h5ad_files["MSSM"])
 
 params = list(DATASET = h5ad_files["RUSH"])
 
+
+params = list(DATASET = h5ad_files["HBCC"])
+
+
 # Try to merge MSSM
 # bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 30 bash
 
@@ -325,7 +329,7 @@ augment_data = function(pb){
 
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
@@ -366,6 +370,9 @@ for(cluster_id in cluster_id_options ){
 
 # Compute `processAssays()` at multiple levels
 ```{r processAssays, eval=TRUE, message=TRUE, warning=TRUE}
+rm(bpparam)
+bpparam = SnowParam(4)
+
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
