@@ -352,16 +352,16 @@ for(cluster_id in cluster_id_options ){
     writeH5AD( pb, file = paste0(filePrefix, ".h5ad"), compression = "lzf" )
 
     # precision weights
-    W.list = pbWeights(sce,
-      cluster_id = cluster_id,
-      sample_id = sample_id, 
-      method = "delta",
-      maxRatio = 100)
+    # W.list = pbWeights(sce,
+    #   cluster_id = cluster_id,
+    #   sample_id = sample_id, 
+    #   method = "delta",
+    #   maxRatio = 100)
 
-    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_pbWeights_", sample_id, "_", cluster_id)
+    # filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_pbWeights_", sample_id, "_", cluster_id)
 
-    # Save as RDS
-    saveRDS(W.list, file = paste0(filePrefix, ".RDS"))
+    # # Save as RDS
+    # saveRDS(W.list, file = paste0(filePrefix, ".RDS"))
   }
 }
 ```
