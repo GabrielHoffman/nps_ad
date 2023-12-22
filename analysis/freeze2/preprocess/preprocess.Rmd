@@ -14,6 +14,17 @@ params:
 
 <!--- 
 
+~ Sex + scale(Age) + scale(PMI) + 
+  Plaque_mean + 
+  Cognitive_Resilience + 
+  (1|BRAAK_AD) +
+  (1|CERAD) + 
+  (1|CDRScore) + 
+  (1|MajorDisease) + 
+  (1|DementiaType) + 
+  (1|cogdx) + 
+  log(n_genes)
+
 
 # batching
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
@@ -49,24 +60,24 @@ AGING = "AGING_2023-09-12_20_35.h5ad")
 
 h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
-create_job = function(x){
-  # system("git pull origin master");
+# create_job = function(x){
+#   # system("git pull origin master");
 
-  tmp.dir = paste0("/sc/arion/scratch/hoffmg01/", x, "_", round(runif(1)*1e7))
-  dir.create(tmp.dir)
-  setwd(tmp.dir)
+#   tmp.dir = paste0("/sc/arion/scratch/hoffmg01/", x, "_", round(runif(1)*1e7))
+#   dir.create(tmp.dir)
+#   setwd(tmp.dir)
 
-  # create tmp Rmd for each dataset
-  fldr = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/"
-  file.orig = paste0(fldr, "preprocess.Rmd")
-  file = paste0(fldr, "preprocess_", x,".Rmd") 
-  file.copy(file.orig, file, overwrite=TRUE)
+#   # create tmp Rmd for each dataset
+#   fldr = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/"
+#   file.orig = paste0(fldr, "preprocess.Rmd")
+#   file = paste0(fldr, "preprocess_", x,".Rmd") 
+#   file.copy(file.orig, file, overwrite=TRUE)
 
-  # x %>% 
-  #   walk(function(x) render(file,
-  #           params = list(DATASET = h5ad_files[x]),
-  #           output_file = paste0(fold, "/preprocess_", x, ".html")))
-}
+#   # x %>% 
+#   #   walk(function(x) render(file,
+#   #           params = list(DATASET = h5ad_files[x]),
+#   #           output_file = paste0(fold, "/preprocess_", x, ".html")))
+# }
 
 run = function(x){
 
@@ -329,7 +340,7 @@ augment_data = function(pb){
 
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=FALSE}
+```{r combineData, message=TRUE, eval=TRUE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
