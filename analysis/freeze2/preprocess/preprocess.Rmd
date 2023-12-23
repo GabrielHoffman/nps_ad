@@ -340,7 +340,7 @@ augment_data = function(pb){
 
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
 
