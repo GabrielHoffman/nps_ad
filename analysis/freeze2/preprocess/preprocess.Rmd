@@ -422,7 +422,7 @@ for(cluster_id in cluster_id_options ){
     W.list = readRDS(paste0(filePrefix, ".RDS"))
 
     # processAssays
-    res.proc = processAssays( pb, form, BPPARAM = bpparam, weightsList = W.list)
+    res.proc = processAssays( pb, form, BPPARAM = bpparam, weightsList = W.list, min.count=20)
     flush(stderr())
 
     # Save processed object to RDS
