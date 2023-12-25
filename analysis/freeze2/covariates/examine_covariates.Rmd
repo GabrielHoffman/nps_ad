@@ -169,6 +169,59 @@ pheatmap(abs(df_res),
   cluster_cols=TRUE)
 ```
 
+# Correlation between covariates
+```{r cca}
+library(dreamlet)
+
+path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
+
+h5ad_files = c(
+RUSH = "RUSH_2023-09-12_16_13.h5ad", 
+HBCC = "HBCC_2023-09-12_16_28.h5ad",
+MSSM = "MSSM_2023-09-12_17_04.h5ad",
+FULL = "FULL_2023-09-12_18_32.h5ad",
+AGING = "AGING_2023-09-12_20_35.h5ad")
+
+h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
+
+sample_id = "SubID"
+cluster_id = "class"
+pbList = lapply( names(h5ad_files[-4]), function(id){
+
+  params = list(DATASET = h5ad_files[id])
+
+  filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
+  file = paste0(filePrefix, ".RDS")
+  readRDS(file)
+})
+names(pbList) = names(h5ad_files[-4])
+
+# formula
+form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + log(n_genes) 
+
+# make figures
+figList = lapply( names(pbList), function(id){
+
+  message(id)
+
+  pb.mod = pbList[[id]]
+
+  i = (all.vars(form) %in% colnames(colData(pb.mod))) 
+  vars.keep = all.vars(form)[i]
+
+  j = apply(colData(pb.mod)[,vars.keep,drop=FALSE], 2, function(x) length(unique(x)) > 1)
+  vars.keep = vars.keep[j]
+
+  form2 = paste("~", paste(vars.keep , collapse=" + "))
+
+  C = canCorPairs(form2, colData(pb.mod))
+
+  rownames(C) = gsub("mod_", "", rownames(C))
+  colnames(C) = gsub("mod_", "", colnames(C))
+
+  plotCorrMatrix(C, main=id)
+})
+```
 
 
 
