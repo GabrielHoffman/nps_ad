@@ -170,13 +170,13 @@ pheatmap(abs(df_res),
 ```
 
 # Sum across cell types
-```{r sums}
+```{r sums, fig.width=5, fig.width=15}
 library(ggplot2)
 
 df_rs = data.frame(name = rownames(df_res), 
-  corSum = rowSums(abs(df_res)))
+  corMean = rowMeans(abs(df_res)))
 
-ggplot(df_rs, aes(corSum, name)) +
+ggplot(df_rs, aes(corMean, name)) +
   geom_bar(stat="identity") +
   theme_classic() +
   theme(aspect.ratio=2)
@@ -187,7 +187,7 @@ ggplot(df_rs, aes(corSum, name)) +
 
 
 # Correlation between covariates
-```{r cca, fig.height=15}
+```{r cca, fig.height=15, eval=FALSE}
 library(dreamlet)
 
 path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
