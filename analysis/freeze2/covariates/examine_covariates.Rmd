@@ -169,8 +169,25 @@ pheatmap(abs(df_res),
   cluster_cols=TRUE)
 ```
 
+# Sum across cell types
+```{r sums}
+library(ggplot2)
+
+df_rs = data.frame(name = rownames(df_res), 
+  corSum = rowSums(abs(df_res)))
+
+ggplot(df_rs, aes(corSum, name)) +
+  geom_bar(stat="identity") +
+  theme_classic() +
+  theme(aspect.ratio=2)
+```
+
+
+
+
+
 # Correlation between covariates
-```{r cca}
+```{r cca, fig.height=15}
 library(dreamlet)
 
 path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
