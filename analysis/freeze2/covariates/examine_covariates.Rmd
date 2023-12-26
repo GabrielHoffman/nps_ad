@@ -170,7 +170,7 @@ pheatmap(abs(df_res),
 ```
 
 # Sum across cell types
-```{r sums, fig.width=5, fig.width=15}
+```{r sums, fig.width=6, fig.height=15}
 library(ggplot2)
 
 df_rs = data.frame(name = rownames(df_res), 
