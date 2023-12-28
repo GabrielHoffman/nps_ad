@@ -126,7 +126,7 @@ df_res = lapply(names(df_pca), function(cohort){
   df_merge = df %>%
         inner_join(df_pca[[cohort]], by="ID")
 
-  cv = colVars(as.matrix(df_merge[,-1]), na.rm=TRUE)
+  cv = matrixStats::colVars(as.matrix(df_merge[,-1]), na.rm=TRUE)
   exclude = c("ID", names(cv)[cv==0])
 
   C = df_merge %>%
