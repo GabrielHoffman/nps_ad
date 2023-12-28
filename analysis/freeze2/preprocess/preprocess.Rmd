@@ -437,7 +437,7 @@ for(cluster_id in cluster_id_options ){
     flush(stderr())
 
     # Save processed object to RDS
-    file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
+    file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/final/", gsub(".h5ad$", "", basename(params$DATASET)), "_processAssays_", sample_id, "_", cluster_id, ".RDS")
     saveRDS(res.proc, file)
 
     # Residuals
