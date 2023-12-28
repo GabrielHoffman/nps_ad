@@ -170,16 +170,18 @@ pheatmap(abs(df_res),
 ```
 
 # Sum across cell types
-```{r sums, fig.width=9, fig.height=20}
+```{r sums, fig.width=11, fig.height=20}
 library(ggplot2)
 
 df_rs = data.frame(name = rownames(df_res), 
   corMean = rowMeans(abs(df_res)))
 
+ymax = max(df_rs$corMean)*1.03
 ggplot(df_rs, aes(corMean, name)) +
   geom_bar(stat="identity") +
   theme_classic() +
-  theme(aspect.ratio=2)
+  theme(aspect.ratio=2) +
+  scale_x_continuous(limits=c(0, ymax), expand=c(0,0))
 ```
 
 
