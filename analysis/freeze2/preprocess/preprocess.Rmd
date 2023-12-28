@@ -287,7 +287,11 @@ augment_data = function(pb){
   df_cov_wet = read_tsv( file, show_col_types = FALSE )
 
   file = paste0(prefix, "Bioassay_Table_Pool_Dry.tsv")
-  df_cov_dry = read_tsv( file, skip=2,show_col_types = FALSE)
+  df_cov_dry = read_tsv( file, skip=2,show_col_types = FALSE, name_repair="minimal")
+
+  # remove duplicated cols
+  df_cov_dry = df_cov_dry[,!duplicated(colnames(df_cov_dry))]
+  colnames(df_cov_dry) = gsub(" ", "", colnames(df_cov_dry))
 
   # donor list
   donorList = strsplit(df_cov_dry$EXPECTED_DONORS, " ")
@@ -299,6 +303,7 @@ augment_data = function(pb){
       gather(col_name, col_type) %>%
       filter(col_type == "numeric") %>%
       pull(col_name)
+  cols = setdiff(cols, c("REPLICATE", "SET_NUMBER", "TIME_TAKEN", "MAP_SPEED"))
 
   # extact mean value per donor
   df = lapply(donors, function(id){
@@ -313,19 +318,13 @@ augment_data = function(pb){
       data.frame(ID = id, .)
   })
   df = do.call(rbind, df) %>% as_tibble
-  df$REPLICATE = c()
 
-  # remove duplicated cols
-  cn = gsub("...\\d+", "", colnames(df))
-  df = df[,!duplicated(cn)]
-  colnames(df) = gsub("...\\d+", "", colnames(df))
-
-  i = match(colnames(pb), df$ID)
+  i = match(pb$SubID, df$ID)
   colData(pb) = cbind(colData(pb), df[i,-c(1:3)])
 
   # Compute PC's of technical variables
   # append then to colData
-  X = scale(df[i,-c(1:3)])
+  X = scale(df[i,cols])
   X = X[,apply(X, 2, function(a) all(!is.nan(a)))]
   dcmp = prcomp(X)
   colnames(dcmp$x) = paste0("Tech", colnames(dcmp$x))
@@ -354,6 +353,8 @@ augment_data = function(pb){
 ```{r combineData, message=TRUE, eval=TRUE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in c("SubID", "Channel") ){
+
+    cat(cluster_id, ' ', sample_id)
 
     # Compute pseudobulk for each cell type
     pb = aggregateToPseudoBulk(sce,
