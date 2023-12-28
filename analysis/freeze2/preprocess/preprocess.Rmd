@@ -23,7 +23,10 @@ params:
   (1|MajorDisease) + 
   (1|DementiaType) + 
   (1|cogdx) + 
-  log(n_genes)
+  log(n_genes)+ 
+  TechPC1 + 
+  TechPC2 + 
+  TechPC3 
 
 
 # batching
