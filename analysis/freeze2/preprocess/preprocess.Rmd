@@ -319,8 +319,12 @@ augment_data = function(pb){
   })
   df = do.call(rbind, df) %>% as_tibble
 
-  i = match(pb$SubID, df$ID)
-  colData(pb) = cbind(colData(pb), df[i,-c(1:3)])
+  if( ! is.null(pb$SubID) ){
+    i = match(pb$SubID, df$ID)
+  }else{
+    i = match(colnames(pb), df$ID)
+  }
+  colData(pb) = cbind(colData(pb), df[i,-1])
 
   # Compute PC's of technical variables
   # append then to colData
@@ -333,11 +337,16 @@ augment_data = function(pb){
   # add cogdx for rush
   #-------------------
   if( pb$Source[1] == "R" ){
+    
     prefix = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/metadata/"
     file = paste0(prefix, "clinical_metadata_full.csv")
     df = read_csv( file, show_col_types = FALSE )
 
-    i = match(colnames(pb), df$SubID)
+    if( ! is.null(pb$SubID) ){
+      i = match(pb$SubID, df$SubID)
+    }else{
+      i = match(colnames(pb), df$SubID)
+    }
     colData(pb) = cbind(colData(pb), df[i,"cogdx",drop=FALSE])
 
     pb$mod_cogdx = factor(pb$cogdx)
