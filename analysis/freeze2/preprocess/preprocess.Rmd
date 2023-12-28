@@ -202,7 +202,7 @@ if( any(!included) ){
 # only keep ctorder entries that are in sce$subclass
 ctorder = ctorder[ctorder %in% levels(sce$subclass)]
 
-bpparam = SnowParam(4)
+bpparam = SnowParam(6)
 ```
 
 
@@ -318,7 +318,15 @@ augment_data = function(pb){
   colnames(df) = gsub("...\\d+", "", colnames(df))
 
   i = match(colnames(pb), df$ID)
-  colData(pb) = cbind(colData(pb), df[i,])
+  colData(pb) = cbind(colData(pb), df[i,-c(1:3)])
+
+  # Compute PC's of technical variables
+  # append then to colData
+  X = scale(df[i,-c(1:3)])
+  X = X[,apply(X, 2, function(a) all(!is.nan(a)))]
+  dcmp = prcomp(X)
+  colnames(dcmp$x) = paste0("Tech", colnames(dcmp$x))
+  colData(pb) = cbind(colData(pb), dcmp$x[, 1:3])
 
   # add cogdx for rush
   #-------------------
@@ -340,9 +348,9 @@ augment_data = function(pb){
 
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=FALSE}
+```{r combineData, message=TRUE, eval=TRUE}
 for(cluster_id in cluster_id_options ){
-  for(sample_id in sample_id_options ){
+  for(sample_id in c("SubID", "Channel") ){
 
     # Compute pseudobulk for each cell type
     pb = aggregateToPseudoBulk(sce,
@@ -382,7 +390,7 @@ for(cluster_id in cluster_id_options ){
 # Compute `processAssays()` at multiple levels
 ```{r processAssays, eval=TRUE, message=FALSE, warning=TRUE}
 rm(bpparam)
-bpparam = SnowParam(4)
+bpparam = SnowParam(6)
 
 for(cluster_id in cluster_id_options ){
   for(sample_id in sample_id_options ){
@@ -398,7 +406,7 @@ for(cluster_id in cluster_id_options ){
     pb = readRDS(paste0(filePrefix, ".RDS"))
 
     # formula
-    form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + (1|mod_cogdx) + log(n_genes) 
+    form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + (1|mod_cogdx) + log(n_genes) + TechPC1 + TechPC2 + TechPC3 
     if( sample_id == "Channel"){
       form = update(form,  ~ . + (1|SubID))
     }
@@ -439,14 +447,14 @@ for(cluster_id in cluster_id_options ){
       for( CT in assayNames(res.proc) ){
         message(paste0("   ", CT))
         # residuals
-        file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, "_", CT, ".tsv")
+        file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/", gsub(".h5ad$", "", basename(params$DATASET)), "_residuals_", sample_id, "_", cluster_id, "_", CT, ".tsv")
 
         data = format(residuals(fit[[CT]]), digits=5)
         write.table( data, file=file, quote=FALSE, sep="\t")
         gzip(file, overwrite=TRUE)
 
         # pearson residuals
-        file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/", gsub(".h5ad$", "", basename(params$DATASET)), "_residualsPearson_", sample_id, "_", cluster_id, "_", CT, ".tsv")
+        file = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/", gsub(".h5ad$", "", basename(params$DATASET)), "_residualsPearson_", sample_id, "_", cluster_id, "_", CT, ".tsv")
 
         data = residuals(fit[[CT]], res.proc[[CT]], type="pearson")        
         data = format(data, digits=5)
@@ -619,7 +627,7 @@ dreamlet::plotHeatmap(df_cellScore, genes=unique(genes), assays=ctorder)
 # Process data: log2 CPM + voom precision weights
 ```{r voom}
 # Normalize and apply voom
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell) + log(n_genes)
+form = ~ (1|SubID) + (1|Sex) + scale(Age) + scale(PMI) + log(n_genes) + TechPC1 + TechPC2 + TechPC3 
 
 res.proc = processAssays( pb, form, BPPARAM = bpparam)
 ```
@@ -631,7 +639,22 @@ plotVoom( res.proc, ncol=4, assays=ctorder)
 
 # Variance Partitioning Analysis
 ```{r varPart}
-form = ~ (1|SubID) + (1|poolID) + (1|Sex) + scale(Age) + (1|date) + (1|flowcell) + log(n_genes)
+ # formula
+form = ~ (1|SubID) + Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + (1|mod_cogdx) + log(n_genes) + TechPC1 + TechPC2 + TechPC3 
+
+# remove absent terms
+if( nlevels(pb$Source) == 1 && levels(pb$Source) == "R"){
+  form = update(form,  ~ . - mod_Plq_Mn - (1|mod_CDRScore) - mod_Cognitive_Resilience)
+}
+if( nlevels(pb$Source) == 1 && levels(pb$Source) == "M"){
+  form = update(form,  ~ . - (1|mod_cogdx))
+}
+if( nlevels(pb$Source) == 1 && levels(pb$Source) == "H"){
+  form = update(form,  ~ . - (1|mod_BRAAK_AD) - mod_Plq_Mn - (1|mod_CERAD) - (1|mod_CDRScore) - (1|mod_Cognitive_Resilience) - (1|DementiaType) - (1|mod_cogdx) - mod_Cognitive_Resilience)
+}
+if( nlevels(pb$Source) == 2){
+  form = update(form,  ~ . - (1|MajorDisease) - (1|DementiaType) - (1|mod_cogdx)) 
+}  
 
 res.vp = fitVarPart(res.proc, form, BPPARAM = bpparam)
 ```
