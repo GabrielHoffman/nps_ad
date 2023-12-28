@@ -298,12 +298,16 @@ augment_data = function(pb){
   donors = unique(unlist(donorList))
 
   # numeric columns
-  cols =  df_cov_dry %>% 
+  cols = df_cov_dry %>% 
       summarise_all(class) %>% 
       gather(col_name, col_type) %>%
       filter(col_type == "numeric") %>%
       pull(col_name)
   cols = setdiff(cols, c("REPLICATE", "SET_NUMBER", "TIME_TAKEN", "MAP_SPEED"))
+
+  # remove columns with zero variance
+  cv = colVars(as.matrix(df_cov_dry[,cols]), useNames=TRUE)
+  cols = setdiff(cols, names(cv)[cv==0])
 
   # extact mean value per donor
   df = lapply(donors, function(id){
@@ -328,16 +332,18 @@ augment_data = function(pb){
 
   # Compute PC's of technical variables
   # append then to colData
-  X = scale(df[i,cols])
-  X = X[,apply(X, 2, function(a) all(!is.nan(a)))]
-  dcmp = prcomp(X)
+  X = as.matrix(df[i,cols])
+  for(j in seq(ncol(X))){
+    X[is.na(X[,j]),j] = mean(X[,j], na.rm=TRUE)
+  }
+  dcmp = prcomp(scale(X))
   colnames(dcmp$x) = paste0("Tech", colnames(dcmp$x))
   colData(pb) = cbind(colData(pb), dcmp$x[, 1:3])
 
   # add cogdx for rush
   #-------------------
   if( pb$Source[1] == "R" ){
-    
+
     prefix = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/metadata/"
     file = paste0(prefix, "clinical_metadata_full.csv")
     df = read_csv( file, show_col_types = FALSE )
