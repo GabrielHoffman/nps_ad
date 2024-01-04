@@ -13,8 +13,7 @@ output:
 <!--- 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/create_freezes/
-ml python git pandoc
-ml gcc/11.2.0
+ml python git pandoc gcc/11.2.0
 git pull origin master
 R --vanilla
 
@@ -83,7 +82,8 @@ merge_with_metadata = function(h5ad_file){
   #------------------------
 
   # Load metadata
-  file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/syn26527784_latest.csv"
+  # file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/syn26527784_latest.csv"
+  file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/clinical_metadata_full.csv"
   df_meta = read.csv(file)
   # rownames(df_meta) = df_meta$SubID
 
@@ -307,6 +307,9 @@ bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_Common
 
 #BSUB 
 
+# convert basilisk version
+ sed -i 's/1.8.0/1.12.0/g' job*lsf
+
 # run each merging
 cd /sc/arion/scratch/hoffmg01/tmp/
 
@@ -319,6 +322,8 @@ done
 
 cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/
 
+mv /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2023-09-12_18_32.h5ad /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2023-09-12_18_32_orig.h5ad
+
 # # fails
 # ls job_RUSH_2023-02-07_11_20.lsf | parallel -P1 source
 
@@ -329,15 +334,15 @@ cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/
 
 # If H5AD is written using -ondisk, it is not compressed
 # Perform compress afterward
-conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0
+conda activate /hpc/users/hoffmg01/.cache/R/basilisk/1.12.0/0
 
-alias python=/hpc/users/hoffmg01/.cache/R/basilisk/1.8.0/0/bin/python
+alias python=/hpc/users/hoffmg01/.cache/R/basilisk/1.12.0/0/bin/python
 
 import anndata as ad
 import h5py
 
-infile = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2023-06-08_23_53.h5ad"
-outfile = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2023-06-08_23_53_v2.h5ad"
+infile = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2023-09-12_18_32_orig.h5ad"
+outfile = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/FULL_2023-09-12_18_32.h5ad"
 
 # file-backed H5AD
 adata = ad.read(infile, backed='r')
