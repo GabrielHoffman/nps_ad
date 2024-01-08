@@ -3,7 +3,7 @@
 
 # Load CONTRASTS and metadata
 # synapse: syn51114763
-load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
+load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/contrasts_for_dreamlet.Rdata")
 
 write_job = function( variable_type, ctst_key, dataset, method, SampleLevel, AnnoLevel){
 
@@ -94,5 +94,4 @@ for(i in seq(nrow(df))){
 		}
 	}
 }
-
-
+]
