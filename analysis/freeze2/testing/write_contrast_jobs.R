@@ -78,20 +78,35 @@ for(i in seq(nrow(df))){
 
 		dataset = gsub("([a-zA-Z]+).*", "\\1", ctst_key)
 
-		if( dataset %in% c("MSSM", "RUSH", "HBCC", "Aging") ){
-			dsArray = dataset
-		}else{
-			dsArray = c("MSSM", "RUSH", "HBCC")
-		}
-
-		for( ds in dsArray){
+		if( dataset %in% c("MSSM", "RUSH", "HBCC") ){
+			# evaluate in one dataset
 			write_job( 	df$variable_type[i], 
-						ctst_key, 
-						ds, 
-						df$method[i], 
-						df$SampleLevel[i], 
-						df$AnnoLevel[i])	
-		}
+							ctst_key, 
+							dataset, 
+							df$method[i], 
+							df$SampleLevel[i], 
+							df$AnnoLevel[i])	
+		}else if( ctst_key == "Dementia"){
+
+			for( ds in c("MSSM", "RUSH", "HBCC")){
+				write_job( 	df$variable_type[i], 
+							ctst_key, 
+							ds, 
+							df$method[i], 
+							df$SampleLevel[i], 
+							df$AnnoLevel[i])
+			}
+		}else if( ctst_key == "Aging"){
+			write_job( 	df$variable_type[i], 
+							"Aging", 
+							"Aging", 
+							df$method[i], 
+							df$SampleLevel[i], 
+							df$AnnoLevel[i])
+		}			
 	}
 }
+
+
+
 
