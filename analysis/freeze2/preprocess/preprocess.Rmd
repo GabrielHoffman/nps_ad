@@ -365,7 +365,7 @@ augment_data = function(pb){
 
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in c("SubID", "Channel") ){
 
@@ -445,11 +445,11 @@ for(cluster_id in cluster_id_options ){
     }  
 
     # Read weights
-    filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_pbWeights_", sample_id, "_", cluster_id)
-    W.list = readRDS(paste0(filePrefix, ".RDS"))
+    # filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_pbWeights_", sample_id, "_", cluster_id)
+    # W.list = readRDS(paste0(filePrefix, ".RDS"))
 
     # processAssays
-    res.proc = processAssays( pb, form, BPPARAM = bpparam, weightsList = W.list, min.samples=20)
+    res.proc = processAssays( pb, form, BPPARAM = bpparam, min.samples=20) #, weightsList = W.list
     flush(stderr())
 
     # Save processed object to RDS
@@ -556,7 +556,6 @@ fig.cells_subject
 
 ```{r exit}
 knitr::knit_exit()
-```
 
 ```{r read.pseudobulk}
 filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", "Channel", "_", "subclass")
