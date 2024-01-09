@@ -102,7 +102,7 @@ cat(res)
 
 ```{r get.contrast}
 # Load CONTRASTS and metadata
-load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
+load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/contrasts_for_dreamlet.Rdata")
 
 suffix2 = with(params, gsub(paste0(dataset, "/", dataset, "/"), paste0(dataset, "/"), paste0(toupper(dataset), "/", ctst_key, "/", SampleLevel, "/", AnnoLevel)))
 
@@ -132,8 +132,8 @@ library(cowplot)
 })
 
 # read processed data
-path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/")
-pattern = paste0(toupper(params$dataset), "_2023-09.*_processAssays_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
+path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/final/")
+pattern = paste0(toupper(params$dataset), "_2024-01.*_processAssays_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
 file = dir(path, pattern=pattern, full.names=TRUE)
 if( length(file) == 2){                 
   a = file.info(file)$ctime

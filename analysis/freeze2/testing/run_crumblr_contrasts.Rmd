@@ -106,7 +106,7 @@ cat(res)
 # Construct regression contrasts
 ```{r get.contrast}
 # Load CONTRASTS and metadata
-load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrasts_for_dreamlet.Rdata")
+load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/contrasts_for_dreamlet.Rdata")
 
 suffix2 = with(params, gsub(paste0(dataset, "/", dataset, "/"), paste0(dataset, "/"), paste0(toupper(dataset), "/", ctst_key, "/", SampleLevel, "/", AnnoLevel)))
 
@@ -147,12 +147,11 @@ library(tidyverse)})
 
 # read processed data
 path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/")
-pattern = paste0(toupper(params$dataset), "_2023-09.*_PB_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
+pattern = paste0(toupper(params$dataset), "_2024-01.*_PB_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
 file = dir(path, pattern=pattern, full.names=TRUE)
 
 pb = readRDS( file )
 
-covariates_base = c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)", "TechPC1", "TechPC2", "TechPC3")
 if( params$SampleLevel == "Channel" ){
   covariates_base = c(covariates_base, "(1|SubID)")
 }
