@@ -198,7 +198,8 @@ if( params$SampleLevel == "Channel"){
 cobj = crumblr(cellCounts(pb))
 
 # filter samples for this variable
-idx = !is.na(colData(pb)[,ctr$variable])
+value = colData(pb)[,ctr$variable]
+idx = !(is.na(value) | (value == "NA"))
 ```
 
 
@@ -226,13 +227,13 @@ fig.vp = plotPercentBars( sortCols(vp.c) )
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4 ) + theme(aspect.ratio=1)
 
 if( ! is.null(ctr$contrasts) & !any(is.na(ctr$contrasts)) ){
-  L = makeContrastsDream(form, as.data.frame(colData(pb)), contrasts = ctr$contrasts )
+  L = makeContrastsDream(form, colData(pb)[idx,], contrasts = ctr$contrasts )
 }else{
   L = NULL
   ctr$contrasts = ctr$variable
 }
 
-fit = dream( cobj, form, colData(pb), L = L)
+fit = dream( cobj[,idx], form, colData(pb)[idx,], L = L)
 fit = eBayes(fit)
 
 # get coefs for ordinal test
