@@ -186,6 +186,22 @@ omp_set_num_threads(1)
 sce = readH5AD(params$DATASET, use_hdf5=TRUE, verbose=TRUE)
 assayNames(sce)[1] = "counts"
 
+# remove NA from factor levels
+# make Control baseline
+for(i in seq(ncol(colData(sce))) ){
+  if( is.factor(colData(sce)[,i]) ){
+    values = colData(sce)[,i]
+    values[values == 'NA'] = NA
+    values = factor(values)
+    if( "Control" %in% levels(values) ){
+      k = match("Control", levels(values) )
+      lvls = c("Control", levels(values)[-k])
+      values = factor(values, levels=lvls)
+    }
+    colData(sce)[,i] = values
+  }
+}
+
 # Create pseudo-bulk SingleCellExperiment
 cluster_id_options = c("bulk", "class", "subclass", "subtype")
 sample_id_options = c("SubID") #c("Channel", "SubID")
