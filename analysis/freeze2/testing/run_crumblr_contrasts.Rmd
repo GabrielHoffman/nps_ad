@@ -307,7 +307,9 @@ id = rownames(tab)[1]
 data = data.frame(respValue = cobj$E[id,], colData(pb)[,all.vars(form)])
 data$xvalue = data[[ctr$variable[1]]]
 
-fig1 = ggplot(data, aes(xvalue, respValue)) +
+fig1 = data %>%
+    dplyr::filter(!is.na(xvalue), xvalue !="NA") %>%
+    ggplot(aes(xvalue, respValue)) +
     theme_classic() +
     theme(aspect.ratio=1, legend.position="none", plot.title = element_text(hjust = 0.5)) + 
     xlab(ctr$variable[1]) + 
@@ -323,11 +325,19 @@ if( params$variable_type %in% c("ORD", "CAT") ){
     geom_point()
 }
 
+fig1
+```
+
+<!---
+```{r old, eval=FALSE}
 # Plot CLR residuals of top hit
 #------------------------------
 form2 = as.formula(paste('~ 0 + ', ctr$contrasts[1]))
 
-resids = fitVarPartModel(cobj, form, data, fxn = function(fit){
+data[[ctr$variable]][data[[ctr$variable]] == "NA"] = NA
+data = droplevels(data)
+
+resids = fitVarPartModel(cobj, update(form,  ~. +1), data, fxn = function(fit){
   residuals(fit) + get_prediction( fit, form2)
   })
 
@@ -350,7 +360,7 @@ if( params$variable_type %in% c("ORD", "CAT") ){
 
 plot_grid(fig1, fig2, nrow=1)
 ```
-
+--->
 
 
 
