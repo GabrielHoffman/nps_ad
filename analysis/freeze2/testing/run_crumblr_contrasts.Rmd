@@ -203,7 +203,7 @@ idx = !(is.na(value) | (value == "NA"))
 ```
 
 
-```{r conditional_block, eval=(sum(idx) <= 10)|(nrow(cobj)==1)}
+```{r conditional_block, eval=(sum(idx) < 10)|(nrow(cobj)==1)}
 # if no samples retained, exit
 knitr::knit_exit()
 ```
