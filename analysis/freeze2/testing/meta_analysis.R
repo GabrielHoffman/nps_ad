@@ -38,7 +38,8 @@ coefMatch = grep(pattern, coefUniq, value=TRUE)
 grp = c("ID", "assay", "AnnoLevel")
 
 df2 = df %>%
-	filter(coef %in% coefMatch) 
+	filter(coef %in% coefMatch) %>%
+	filter(ID %in% df$ID[1:100])
 
 methods = c("FE", "REML", "RE2C")
 
