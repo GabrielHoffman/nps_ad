@@ -11,17 +11,19 @@ spec = matrix(c(
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
-
+suppressPackageStartupMessages({
 library(openxlsx)
 library(tidyverse)
 library(arrow)
 library(dreamlet)
 library(parallel)
+})
 
 # library(synapser) synLogin() # synGet("syn53282026")$path 
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/contrast_pairs.xlsx"
 df_meta = read.xlsx( file )
 
+cat("Read parquet...\n")
 df = read_parquet( opt$topTable ) %>%
 		select(-AveExpr, -P.Value, -adj.P.Val, -B, -z.std) 
 
@@ -37,12 +39,15 @@ coefMatch = grep(pattern, coefUniq, value=TRUE)
 
 grp = c("ID", "assay", "AnnoLevel")
 
+
+cat("Filtering...\n")
 df2 = df %>%
 	filter(coef %in% coefMatch) %>%
 	filter(ID %in% df$ID[1:100])
 
 methods = c("FE", "REML", "RE2C")
 
+cat("Analysis...\n")
 res = lapply(methods, function(method){
 
 	message(paste(method, opt$code))
@@ -55,6 +60,7 @@ res = lapply(methods, function(method){
 names(res) = methods
 
 # write to file
+cat("Writing parquet...\n")
 tmp = lapply(names(res), function(method){
 	outfile = paste0(opt$outFolder, "/topTable_meta_", opt$code, "_", method,".parquet")
 	write_parquet(res[[method]], file=outfile )
