@@ -7,7 +7,7 @@ library(getopt)
 spec = matrix(c(
   'topTable', 't', 1, "character",
   'code', 'c', 1, "character",
-  'method', 'c', 1, "character",
+  'method', 'm', 1, "character",
   'outFolder'   , 'o', 1, "character"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
