@@ -7,10 +7,12 @@ library(getopt)
 spec = matrix(c(
   'topTable', 't', 1, "character",
   'code', 'c', 1, "character",
+  'method', 'c', 1, "character",
   'outFolder'   , 'o', 1, "character"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
+cat("Load libraries...\n")
 suppressPackageStartupMessages({
 library(openxlsx)
 library(tidyverse)
@@ -27,6 +29,8 @@ cat("Read parquet...\n")
 df = read_parquet( opt$topTable ) %>%
 		select(-AveExpr, -P.Value, -adj.P.Val, -B, -z.std) 
 
+# match code to coefs
+#------------------------
 coefUniq = unique(df$coef)	
 
 i = which(df_meta$meta == opt$code)
@@ -39,29 +43,17 @@ coefMatch = grep(pattern, coefUniq, value=TRUE)
 
 grp = c("ID", "assay", "AnnoLevel")
 
-
 cat("Filtering...\n")
 df2 = df %>%
-	filter(coef %in% coefMatch) %>%
-	filter(ID %in% df$ID[1:10])
-
-methods = c("FE", "REML", "RE2C")
+	filter(coef %in% coefMatch) 
 
 cat("Analysis...\n")
-res = lapply(methods, function(method){
-
-	message(paste(method, opt$code))
-	
-	# filtering
-	df2 %>%
-		meta_analysis(method = method, group=grp) %>%
-		mutate( coef = x, Trait = df_meta$Contrast.desc[i])
-})
-names(res) = methods
+res = df2 %>%
+		meta_analysis(method = opt$method, group=grp) %>%
+		mutate( coef = opt$code, Trait = df_meta$Contrast.desc[i])
 
 # write to file
 cat("Writing parquet...\n")
-tmp = lapply(names(res), function(method){
-	outfile = paste0(opt$outFolder, "/topTable_meta_", opt$code, "_", method,".parquet")
-	write_parquet(res[[method]], file=outfile )
-	})
+outfile = paste0(opt$outFolder, "/topTable_meta_", opt$code, "_", opt$method,".parquet")
+write_parquet(res, outfile )
+	
