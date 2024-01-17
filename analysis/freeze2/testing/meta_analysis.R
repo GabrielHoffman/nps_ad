@@ -43,7 +43,7 @@ grp = c("ID", "assay", "AnnoLevel")
 cat("Filtering...\n")
 df2 = df %>%
 	filter(coef %in% coefMatch) %>%
-	filter(ID %in% df$ID[1:100])
+	filter(ID %in% df$ID[1:10])
 
 methods = c("FE", "REML", "RE2C")
 
