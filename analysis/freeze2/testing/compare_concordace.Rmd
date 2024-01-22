@@ -1,0 +1,203 @@
+---
+title: "Evaluate concordance based on formula"
+subtitle: 'Automated analysis'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+    self_contained: false
+params:
+  dataset: NULL
+  variable_type: NULL
+  ctst_key: NULL
+  AnnoLevel: NULL
+  SampleLevel: NULL
+---
+
+
+
+<!--- 
+
+# https://hoffmg01.hpc.mssm.edu/PsychAD_analysis/
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
+ml python git pandoc
+git pull origin master
+
+# Create j
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+# Cross-Disease concordance
+
+# V1
+
+
+```{r main}
+library(dreamlet)
+library(parallel)
+library(tidyverse)
+library(RhpcBLASctl)
+omp_set_num_threads(2)
+
+# read PB
+files = c(MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/MSSM_2024-01-05_09_28_PB_SubID_class.RDS", 
+  HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/HBCC_2024-01-05_08_49_PB_SubID_class.RDS")
+pbList = mclapply( files, readRDS)
+names(pbList) = names(files)
+
+# processAssays
+form = ~ Sex + scale(Age) + scale(PMI) #+ Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
+res.procList = mclapply(pbList, function(pb){
+  processAssays(pb, form)
+  })
+names(res.procList) = names(pbList)
+```
+
+```{r dreamlet}
+# dreamlet
+formList = list(MSSM = update(form, ~ c02x + .),
+              HBCC = update(form, ~ c08x + .))
+
+resList = mclapply(names(res.procList), function(id){
+  dreamlet(res.procList[[id]], formList[[id]])
+  })
+names(resList) = names(res.procList)
+
+tab = mclapply(names(res.procList), function(id){
+  co = ifelse(id == "MSSM", "c02xAD", "c08xSCZ")
+  tab = topTable( resList[[id]], coef=co, number=Inf)
+  tab$Dataset = id
+  tab %>% as_tibble
+  })
+
+df = inner_join(tab[[1]], tab[[2]], by=c("assay", 'ID'))
+```
+
+```{r plots}
+df %>%
+  group_by(assay) %>%
+  summarize(r = cor(logFC.x, logFC.y, method="sp"),
+            r.mag = cor(loess(logFC.x ~ AveExpr.x)$residuals, 
+                            loess(logFC.y ~ AveExpr.y)$residuals, 
+                            method="sp"))
+
+genes = intersect(tab[[1]]$ID, tab[[2]]$ID)
+ct = assayNames(pbList[[1]])
+
+Y1 = tab[[1]] %>%
+      select(assay, logFC, ID) %>%
+      filter(ID %in% genes) %>%
+      pivot_wider(names_from = "assay", values_from="logFC") 
+
+Y2 = tab[[2]] %>%
+      select(assay, logFC, ID) %>% 
+      filter(ID %in% genes) %>%
+      pivot_wider(names_from = "assay", values_from="logFC")
+
+Y = inner_join(Y1, Y2, by="ID")  
+
+C = cor(Y[,-1], use="pair")
+
+
+i = grep("\\.x$", rownames(C))
+j = grep("\\.y$", colnames(C))
+Csub = C[i,j]
+Csub = Csub[order(rownames(Csub)), order(colnames(Csub))]
+
+breaksList = seq(-1, 1, by=.025)
+
+pheatmap::pheatmap(Csub, 
+  cluster_rows=FALSE, 
+  cluster_cols=FALSE, 
+  color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
+  breaks=breaksList)
+```
+
+
+# V2
+
+```{r proc2}
+# processAssays
+form = ~ Sex + scale(Age) + scale(PMI) + Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
+res.procList = mclapply(pbList, function(pb){
+  processAssays(pb, form)
+  })
+names(res.procList) = names(pbList)
+```
+
+```{r dreamlet2}
+# dreamlet
+formList = list(MSSM = update(form, ~ c02x + .),
+              HBCC = update(form, ~ c08x + .))
+
+resList = mclapply(names(res.procList), function(id){
+  dreamlet(res.procList[[id]], formList[[id]])
+  })
+names(resList) = names(res.procList)
+
+tab = mclapply(names(res.procList), function(id){
+  co = ifelse(id == "MSSM", "c02xAD", "c08xSCZ")
+  tab = topTable( resList[[id]], coef=co, number=Inf)
+  tab$Dataset = id
+  tab %>% as_tibble
+  })
+
+df = inner_join(tab[[1]], tab[[2]], by=c("assay", 'ID'))
+```
+
+```{r plots2}
+df %>%
+  group_by(assay) %>%
+  summarize(r = cor(logFC.x, logFC.y, method="sp"),
+            r.mag = cor(loess(logFC.x ~ AveExpr.x)$residuals, 
+                            loess(logFC.y ~ AveExpr.y)$residuals, 
+                            method="sp"))
+
+genes = intersect(tab[[1]]$ID, tab[[2]]$ID)
+ct = assayNames(pbList[[1]])
+
+Y1 = tab[[1]] %>%
+      select(assay, logFC, ID) %>%
+      filter(ID %in% genes) %>%
+      pivot_wider(names_from = "assay", values_from="logFC") 
+
+Y2 = tab[[2]] %>%
+      select(assay, logFC, ID) %>% 
+      filter(ID %in% genes) %>%
+      pivot_wider(names_from = "assay", values_from="logFC")
+
+Y = inner_join(Y1, Y2, by="ID")  
+
+C = cor(Y[,-1], use="pair")
+
+
+i = grep("\\.x$", rownames(C))
+j = grep("\\.y$", colnames(C))
+Csub = C[i,j]
+Csub = Csub[order(rownames(Csub)), order(colnames(Csub))]
+
+breaksList = seq(-1, 1, by=.025)
+
+pheatmap::pheatmap(Csub, 
+  cluster_rows=FALSE, 
+  cluster_cols=FALSE, 
+  color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
+  breaks=breaksList)
+```
