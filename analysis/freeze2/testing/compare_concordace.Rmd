@@ -66,7 +66,7 @@ names(pbList) = names(files)
 # processAssays
 form = ~ Sex + scale(Age) + scale(PMI) #+ Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
 res.procList = lapply(pbList, function(pb){
-  processAssays(pb, form, assays="EN")
+  processAssays(pb, form, assays=c("EN", "IN"))
   })
 names(res.procList) = names(pbList)
 ```
@@ -138,7 +138,7 @@ pheatmap::pheatmap(Csub,
 # processAssays
 form = ~ Sex + scale(Age) + scale(PMI) + Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
 res.procList = lapply(pbList, function(pb){
-  processAssays(pb, form, assays="EN")
+  processAssays(pb, form, assays=c("EN", "IN"))
   })
 names(res.procList) = names(pbList)
 ```
