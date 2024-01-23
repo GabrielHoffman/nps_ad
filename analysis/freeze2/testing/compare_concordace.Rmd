@@ -23,10 +23,12 @@ params:
 # https://hoffmg01.hpc.mssm.edu/PsychAD_analysis/
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
-ml python git pandoc
+ml python git pandoc gcc/11.2.0
 git pull origin master
 
-# Create j
+
+rmarkdown::render("compare_concordace.Rmd")
+
 
 --->
 
@@ -51,7 +53,6 @@ knitr::opts_chunk$set(
 
 ```{r main}
 library(dreamlet)
-library(parallel)
 library(tidyverse)
 library(RhpcBLASctl)
 omp_set_num_threads(2)
@@ -59,13 +60,13 @@ omp_set_num_threads(2)
 # read PB
 files = c(MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/MSSM_2024-01-05_09_28_PB_SubID_class.RDS", 
   HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/HBCC_2024-01-05_08_49_PB_SubID_class.RDS")
-pbList = mclapply( files, readRDS)
+pbList = lapply( files, readRDS)
 names(pbList) = names(files)
 
 # processAssays
 form = ~ Sex + scale(Age) + scale(PMI) #+ Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
-res.procList = mclapply(pbList, function(pb){
-  processAssays(pb, form)
+res.procList = lapply(pbList, function(pb){
+  processAssays(pb, form, assays="EN")
   })
 names(res.procList) = names(pbList)
 ```
@@ -75,12 +76,12 @@ names(res.procList) = names(pbList)
 formList = list(MSSM = update(form, ~ c02x + .),
               HBCC = update(form, ~ c08x + .))
 
-resList = mclapply(names(res.procList), function(id){
+resList = lapply(names(res.procList), function(id){
   dreamlet(res.procList[[id]], formList[[id]])
   })
 names(resList) = names(res.procList)
 
-tab = mclapply(names(res.procList), function(id){
+tab = lapply(names(res.procList), function(id){
   co = ifelse(id == "MSSM", "c02xAD", "c08xSCZ")
   tab = topTable( resList[[id]], coef=co, number=Inf)
   tab$Dataset = id
@@ -136,8 +137,8 @@ pheatmap::pheatmap(Csub,
 ```{r proc2}
 # processAssays
 form = ~ Sex + scale(Age) + scale(PMI) + Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
-res.procList = mclapply(pbList, function(pb){
-  processAssays(pb, form)
+res.procList = lapply(pbList, function(pb){
+  processAssays(pb, form, assays="EN")
   })
 names(res.procList) = names(pbList)
 ```
@@ -147,12 +148,12 @@ names(res.procList) = names(pbList)
 formList = list(MSSM = update(form, ~ c02x + .),
               HBCC = update(form, ~ c08x + .))
 
-resList = mclapply(names(res.procList), function(id){
+resList = lapply(names(res.procList), function(id){
   dreamlet(res.procList[[id]], formList[[id]])
   })
 names(resList) = names(res.procList)
 
-tab = mclapply(names(res.procList), function(id){
+tab = lapply(names(res.procList), function(id){
   co = ifelse(id == "MSSM", "c02xAD", "c08xSCZ")
   tab = topTable( resList[[id]], coef=co, number=Inf)
   tab$Dataset = id
