@@ -116,7 +116,6 @@ Y = inner_join(Y1, Y2, by="ID")
 
 C = cor(Y[,-1], use="pair")
 
-
 i = grep("\\.x$", rownames(C))
 j = grep("\\.y$", colnames(C))
 Csub = C[i,j]
@@ -170,7 +169,7 @@ df %>%
             r.mag = cor(loess(logFC.x ~ AveExpr.x)$residuals, 
                             loess(logFC.y ~ AveExpr.y)$residuals, 
                             method="sp"))
-
+ 
 genes = intersect(tab[[1]]$ID, tab[[2]]$ID)
 ct = assayNames(pbList[[1]])
 
