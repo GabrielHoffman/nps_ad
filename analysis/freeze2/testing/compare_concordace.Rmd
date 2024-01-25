@@ -126,6 +126,9 @@ breaksList = seq(-1, 1, by=.025)
 pheatmap::pheatmap(Csub, 
   cluster_rows=FALSE, 
   cluster_cols=FALSE, 
+  display_numbers = round(Csub,2),
+  cellheight = 3, 
+  cellwidth = 3,
   color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
   breaks=breaksList)
 ```
@@ -198,6 +201,9 @@ breaksList = seq(-1, 1, by=.025)
 pheatmap::pheatmap(Csub, 
   cluster_rows=FALSE, 
   cluster_cols=FALSE, 
+  display_numbers = round(Csub,2),
+  cellheight = 3, 
+  cellwidth = 3,
   color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
   breaks=breaksList)
 ```
