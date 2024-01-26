@@ -46,15 +46,15 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
-# Cross-Disease concordance
-
-# V1
-```{r main}
+```{r libs, cache=FALSE}
 library(dreamlet)
 library(tidyverse)
 library(RhpcBLASctl)
 omp_set_num_threads(2)
+```
 
+# V1
+```{r main}
 # read PB
 files = c(MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/MSSM_2024-01-05_09_28_PB_SubID_class.RDS", 
   HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/HBCC_2024-01-05_08_49_PB_SubID_class.RDS")
