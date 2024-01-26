@@ -133,8 +133,8 @@ pheatmap::pheatmap(Csub,
 ```
 
 ```{r pca, fig.width=9}
-plotPCA(res.procList[[1]], size=1)
-plotPCA(res.procList[[2]], size=1)
+plotPCA(res.procList[[1]], size=1.5, maxOutlierZ=15)
+plotPCA(res.procList[[2]], size=1.5, maxOutlierZ=15)
 ```
 
 ## MSSM
@@ -262,6 +262,12 @@ res.procList = lapply(names(pbList), function(id){
   processAssays(pb[,keep], form)
   })
 names(res.procList) = names(pbList)
+```
+
+
+```{r pca2, fig.width=9}
+plotPCA(res.procList[[1]], size=1.5, maxOutlierZ=15)
+plotPCA(res.procList[[2]], size=1.5, maxOutlierZ=15)
 ```
 
 ```{r dreamlet3}
