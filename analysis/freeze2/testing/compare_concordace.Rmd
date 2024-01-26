@@ -49,8 +49,6 @@ knitr::opts_chunk$set(
 # Cross-Disease concordance
 
 # V1
-
-
 ```{r main}
 library(dreamlet)
 library(tidyverse)
@@ -134,37 +132,36 @@ pheatmap::pheatmap(Csub,
   main = "MSSM AD/CTRL vs HBCC SCZ/CTRL (standard)")
 ```
 
-```{r pca}
-plotPCA(res.procList[[1]], size=4)
-plotPCA(res.procList[[2]], size=4)
+```{r pca, fig.width=9}
+plotPCA(res.procList[[1]], size=1)
+plotPCA(res.procList[[2]], size=1)
 ```
 
 ## MSSM
 ```{r outliers1}
-res1 = outlierByAssay( res.procList[[1]])
+df_out = lapply( res.procList, outlierByAssay)
+names(df_out) = names(res.procList)
 
-df_out = res1 %>%
+res = df_out[["MSSM"]] %>%
   group_by(ID) %>%
   summarize(meanZ = mean(z)) %>%
   arrange(desc(meanZ))
 
-head(df_out, 10)
+head(res, 10)
 
-hist(df_out$meanZ)
+hist(res$meanZ)
 ```
 
 ## HBCC
 ```{r outliers2}
-res2 = outlierByAssay( res.procList[[2]])
-
-df_out = res2 %>%
+res = df_out[["HBCC"]] %>%
   group_by(ID) %>%
   summarize(meanZ = mean(z)) %>%
   arrange(desc(meanZ))
 
-head(df_out, 10)
+head(res, 10)
 
-hist(df_out$meanZ)
+hist(res$meanZ)
 ```
 
 
@@ -202,6 +199,178 @@ df = inner_join(tab[[1]], tab[[2]], by=c("assay", 'ID'))
 ```
 
 ```{r plots2, cache=FALSE}
+df %>%
+  group_by(assay) %>%
+  summarize(r = cor(logFC.x, logFC.y, method="sp"),
+            r.mag = cor(loess(logFC.x ~ AveExpr.x)$residuals, 
+                            loess(logFC.y ~ AveExpr.y)$residuals, 
+                            method="sp"))
+ 
+genes = intersect(tab[[1]]$ID, tab[[2]]$ID)
+ct = assayNames(pbList[[1]])
+
+Y1 = tab[[1]] %>%
+      select(assay, logFC, ID) %>%
+      filter(ID %in% genes) %>%
+      pivot_wider(names_from = "assay", values_from="logFC") 
+
+Y2 = tab[[2]] %>%
+      select(assay, logFC, ID) %>% 
+      filter(ID %in% genes) %>%
+      pivot_wider(names_from = "assay", values_from="logFC")
+
+Y = inner_join(Y1, Y2, by="ID")  
+
+C = cor(Y[,-1], use="pair")
+
+
+i = grep("\\.x$", rownames(C))
+j = grep("\\.y$", colnames(C))
+Csub = C[i,j]
+Csub = Csub[order(rownames(Csub)), order(colnames(Csub))]
+
+breaksList = seq(-1, 1, by=.025)
+
+pheatmap::pheatmap(Csub, 
+  cluster_rows=FALSE, 
+  cluster_cols=FALSE, 
+  display_numbers = round(Csub,2),
+  cellheight = 30, 
+  cellwidth = 30,
+  color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
+  breaks=breaksList,
+  main = "MSSM AD/CTRL vs HBCC SCZ/CTRL (covs)")
+```
+
+
+# V3
+```{r proc3}
+# processAssays
+form = ~ Sex + scale(Age) + scale(PMI) #+ Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
+res.procList = lapply(names(pbList), function(id){
+
+  pb = pbList[[id]]
+
+  # remove outliers
+  keep = df_out[[id]] %>%
+    group_by(ID) %>%
+    summarize(meanZ = mean(z)) %>%
+    arrange(desc(meanZ)) %>%
+    filter(meanZ < 4) %>%
+    pull(ID)
+
+  processAssays(pb[,keep], form)
+  })
+names(res.procList) = names(pbList)
+```
+
+```{r dreamlet3}
+# dreamlet
+formList = list(MSSM = update(form, ~ c02x + .),
+              HBCC = update(form, ~ c08x + .))
+
+resList = lapply(names(res.procList), function(id){
+  dreamlet(res.procList[[id]], formList[[id]])
+  })
+names(resList) = names(res.procList)
+
+tab = lapply(names(res.procList), function(id){
+  co = ifelse(id == "MSSM", "c02xAD", "c08xSCZ")
+  tab = topTable( resList[[id]], coef=co, number=Inf)
+  tab$Dataset = id
+  tab %>% as_tibble
+  })
+
+df = inner_join(tab[[1]], tab[[2]], by=c("assay", 'ID'))
+```
+
+```{r plots3, cache=FALSE}
+df %>%
+  group_by(assay) %>%
+  summarize(r = cor(logFC.x, logFC.y, method="sp"),
+            r.mag = cor(loess(logFC.x ~ AveExpr.x)$residuals, 
+                            loess(logFC.y ~ AveExpr.y)$residuals, 
+                            method="sp"))
+ 
+genes = intersect(tab[[1]]$ID, tab[[2]]$ID)
+ct = assayNames(pbList[[1]])
+
+Y1 = tab[[1]] %>%
+      select(assay, logFC, ID) %>%
+      filter(ID %in% genes) %>%
+      pivot_wider(names_from = "assay", values_from="logFC") 
+
+Y2 = tab[[2]] %>%
+      select(assay, logFC, ID) %>% 
+      filter(ID %in% genes) %>%
+      pivot_wider(names_from = "assay", values_from="logFC")
+
+Y = inner_join(Y1, Y2, by="ID")  
+
+C = cor(Y[,-1], use="pair")
+
+
+i = grep("\\.x$", rownames(C))
+j = grep("\\.y$", colnames(C))
+Csub = C[i,j]
+Csub = Csub[order(rownames(Csub)), order(colnames(Csub))]
+
+breaksList = seq(-1, 1, by=.025)
+
+pheatmap::pheatmap(Csub, 
+  cluster_rows=FALSE, 
+  cluster_cols=FALSE, 
+  display_numbers = round(Csub,2),
+  cellheight = 30, 
+  cellwidth = 30,
+  color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
+  breaks=breaksList,
+  main = "MSSM AD/CTRL vs HBCC SCZ/CTRL (covs)")
+```
+
+
+# V4
+```{r proc4}
+# processAssays
+form = ~ Sex + scale(Age) + scale(PMI) + Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
+res.procList = lapply(names(pbList), function(id){
+
+  pb = pbList[[id]]
+
+  # remove outliers
+  keep = df_out[[id]] %>%
+    group_by(ID) %>%
+    summarize(meanZ = mean(z)) %>%
+    arrange(desc(meanZ)) %>%
+    filter(meanZ < 4) %>%
+    pull(ID)
+
+  processAssays(pb[,keep], form)
+  })
+names(res.procList) = names(pbList)
+```
+
+```{r dreamlet4}
+# dreamlet
+formList = list(MSSM = update(form, ~ c02x + .),
+              HBCC = update(form, ~ c08x + .))
+
+resList = lapply(names(res.procList), function(id){
+  dreamlet(res.procList[[id]], formList[[id]])
+  })
+names(resList) = names(res.procList)
+
+tab = lapply(names(res.procList), function(id){
+  co = ifelse(id == "MSSM", "c02xAD", "c08xSCZ")
+  tab = topTable( resList[[id]], coef=co, number=Inf)
+  tab$Dataset = id
+  tab %>% as_tibble
+  })
+
+df = inner_join(tab[[1]], tab[[2]], by=c("assay", 'ID'))
+```
+
+```{r plots4, cache=FALSE}
 df %>%
   group_by(assay) %>%
   summarize(r = cor(logFC.x, logFC.y, method="sp"),
