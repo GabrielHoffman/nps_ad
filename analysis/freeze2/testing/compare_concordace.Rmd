@@ -309,7 +309,6 @@ Y = inner_join(Y1, Y2, by="ID")
 
 C = cor(Y[,-1], use="pair")
 
-
 i = grep("\\.x$", rownames(C))
 j = grep("\\.y$", colnames(C))
 Csub = C[i,j]
@@ -394,7 +393,6 @@ Y2 = tab[[2]] %>%
 Y = inner_join(Y1, Y2, by="ID")  
 
 C = cor(Y[,-1], use="pair")
-
 
 i = grep("\\.x$", rownames(C))
 j = grep("\\.y$", colnames(C))
