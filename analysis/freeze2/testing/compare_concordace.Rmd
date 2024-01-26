@@ -134,7 +134,7 @@ pheatmap::pheatmap(Csub,
 
 ```{r pca, fig.width=9}
 plotPCA(res.procList[[1]], size=1.5, maxOutlierZ=15)
-plotPCA(res.procList[[2]], size=1.5, maxOutlierZ=15)
+plotPCA(res.procList[[2]], size=1.5, maxOutlierZ=15) 
 ```
 
 ## MSSM
@@ -164,6 +164,9 @@ head(res, 10)
 hist(res$meanZ)
 ```
 
+```{r exit1, cache=FALSE }
+knitr::knit_exit()
+```
 
 
 
@@ -417,3 +420,11 @@ pheatmap::pheatmap(Csub,
   breaks=breaksList,
   main = "MSSM AD/CTRL vs HBCC SCZ/CTRL (covs)")
 ```
+
+
+
+# 1) colData() should match Samples.max
+# 2) plotPCA after outliers removed
+
+
+
