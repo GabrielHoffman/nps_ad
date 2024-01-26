@@ -61,12 +61,20 @@ files = c(MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/MSSM_2
 pbList = lapply( files, readRDS)
 names(pbList) = names(files)
 
+# permute
+for( id in names(pbList) ){
+  v = ifelse(id == "MSSM", "c02x", "c08x")
+  values = colData(pbList[[id]])[[v]]
+  colData(pbList[[id]])[[v]] = sample(values)
+}
+
 # processAssays
 form = ~ Sex + scale(Age) + scale(PMI) #+ Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
 res.procList = lapply(pbList, function(pb){
   processAssays(pb, form)
   })
 names(res.procList) = names(pbList)
+
 ```
 
 ```{r dreamlet}
@@ -164,10 +172,6 @@ head(res, 10)
 hist(res$meanZ)
 ```
 
-```{r exit1, cache=FALSE }
-knitr::knit_exit()
-```
-
 
 
 # V2
@@ -246,6 +250,11 @@ pheatmap::pheatmap(Csub,
 ```
 
 
+
+```{r exit1, cache=FALSE }
+knitr::knit_exit()
+```
+
 # V3
 ```{r proc3}
 # processAssays
@@ -266,6 +275,74 @@ res.procList = lapply(names(pbList), function(id){
   })
 names(res.procList) = names(pbList)
 ```
+
+<!---
+df_out = lapply( res.procList, outlierByAssay, nPC=5)
+names(df_out) = names(res.procList)
+
+
+df_out[[id]] %>%
+  filter(z >5) %>%
+  count(ID)
+
+
+  summarize(table(ID))
+
+
+
+keep = df_out[[id]] %>%
+    group_by(assay) %>%
+    mutate(fdr = p.adjust(pValue, "fdr")) %>%
+    group_by(ID) %>%
+    filter(fdr < 0.05) 
+
+
+length(keep)
+
+
+
+    %>%
+    select(assay, ID)
+
+
+    %>%
+    pull(ID)
+
+length(keep)
+
+
+
+
+    summarize(meanZ = mean(z)) %>%
+    arrange(desc(meanZ)) %>%
+    filter(meanZ < 4) %>%
+    pull(ID)
+
+length(keep)
+form = ~1
+r1 = processAssays(pb, form, assays="EN")
+r2 = processAssays(pb[,keep], form, assays="EN")
+
+pdf("~/www/test.pdf")
+plotPCA(r1, size=1.5, maxOutlierZ=15)
+plotPCA(r2, size=1.5, maxOutlierZ=15) 
+dev.off()
+
+
+outlierByAssay(r1, nPC=5) %>%
+  arrange(desc(z)) 
+
+
+outlierByAssay(r2, nPC=2) %>%
+  arrange(desc(z)) 
+
+
+a = df_out[[id]] %>%
+    filter(assay == "EN") %>%
+    mutate(pValue = 2*pnorm(z, lower.tail=FALSE)) %>%
+    pull(pValue)
+
+--->
 
 
 ```{r pca2, fig.width=9}
@@ -425,6 +502,17 @@ pheatmap::pheatmap(Csub,
 
 # 1) colData() should match Samples.max
 # 2) plotPCA after outliers removed
+
+# CTRl comparson
+# permuate labels
+# remove TechPC's
+
+
+
+
+
+
+
 
 
 
