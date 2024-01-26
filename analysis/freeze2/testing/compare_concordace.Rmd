@@ -91,7 +91,7 @@ tab = lapply(names(res.procList), function(id){
 df = inner_join(tab[[1]], tab[[2]], by=c("assay", 'ID'))
 ```
 
-```{r plots}
+```{r plots, cache=FALSE}
 df %>%
   group_by(assay) %>%
   summarize(r = cor(logFC.x, logFC.y, method="sp"),
@@ -134,6 +134,18 @@ pheatmap::pheatmap(Csub,
   main = "MSSM AD/CTRL vs HBCC SCZ/CTRL (standard)")
 ```
 
+```{r pca}
+plotPCA(res.procList[[1]], c("EN", "IN"), size=4)
+plotPCA(res.procList[[2]], c("EN", "IN"), size=4)
+```
+
+```{r outliers}
+res1 = outlierByAssay( res.procList[[1]])
+res2 = outlierByAssay( res.procList[[2]])
+```
+
+
+
 
 # V2
 
@@ -166,7 +178,7 @@ tab = lapply(names(res.procList), function(id){
 df = inner_join(tab[[1]], tab[[2]], by=c("assay", 'ID'))
 ```
 
-```{r plots2}
+```{r plots2, cache=FALSE}
 df %>%
   group_by(assay) %>%
   summarize(r = cor(logFC.x, logFC.y, method="sp"),
