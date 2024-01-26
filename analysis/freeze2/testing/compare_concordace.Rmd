@@ -135,13 +135,36 @@ pheatmap::pheatmap(Csub,
 ```
 
 ```{r pca}
-plotPCA(res.procList[[1]], c("EN", "IN"), size=4)
-plotPCA(res.procList[[2]], c("EN", "IN"), size=4)
+plotPCA(res.procList[[1]], size=4)
+plotPCA(res.procList[[2]], size=4)
 ```
 
-```{r outliers}
+## MSSM
+```{r outliers1}
 res1 = outlierByAssay( res.procList[[1]])
+
+df_out = res1 %>%
+  group_by(ID) %>%
+  summarize(meanZ = mean(z)) %>%
+  arrange(desc(meanZ))
+
+head(df_out, 10)
+
+hist(df_out$meanZ)
+```
+
+## HBCC
+```{r outliers2}
 res2 = outlierByAssay( res.procList[[2]])
+
+df_out = res2 %>%
+  group_by(ID) %>%
+  summarize(meanZ = mean(z)) %>%
+  arrange(desc(meanZ))
+
+head(df_out, 10)
+
+hist(df_out$meanZ)
 ```
 
 
