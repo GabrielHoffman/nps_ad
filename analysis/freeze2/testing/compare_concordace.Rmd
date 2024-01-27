@@ -69,9 +69,10 @@ for( id in names(pbList) ){
 }
 
 # processAssays
-form = ~ Sex + scale(Age) + scale(PMI) #+ Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
+form = ~ Sex + scale(Age) + scale(PMI) 
+
 res.procList = lapply(pbList, function(pb){
-  res = processAssays(pb, ~1, assays=c("IN", "EN"))
+  res = processAssays(pb, ~1)
 
   keep = outlierByAssay(res, nPC=5) %>%
     group_by(ID) %>%
@@ -80,10 +81,9 @@ res.procList = lapply(pbList, function(pb){
     filter(z2 < 3) %>%
     pull(ID)
 
-  processAssays(pb[,keep], form, assays=c("IN", "EN"))
+  processAssays(pb[,keep], form)
   })
 names(res.procList) = names(pbList)
-
 ```
 
 ```{r dreamlet}
@@ -188,8 +188,18 @@ hist(res$meanZ)
 ```{r proc2}
 # processAssays
 form = ~ Sex + scale(Age) + scale(PMI) + Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
+
 res.procList = lapply(pbList, function(pb){
-  processAssays(pb, form)
+  res = processAssays(pb, ~1)
+
+  keep = outlierByAssay(res, nPC=5) %>%
+    group_by(ID) %>%
+    summarize(z2 = sort(z, decreasing=TRUE)[2]) %>%
+    arrange(desc(z2)) %>%
+    filter(z2 < 3) %>%
+    pull(ID)
+
+  processAssays(pb[,keep], form)
   })
 names(res.procList) = names(pbList)
 ```
