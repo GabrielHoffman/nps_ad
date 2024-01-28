@@ -26,6 +26,7 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/tes
 ml python git pandoc gcc/11.2.0
 git pull origin master
 
+rm -rf compare_concordace_cache/ compare_concordace_files
 
 rmarkdown::render("compare_concordace.Rmd")
 
@@ -189,19 +190,19 @@ hist(res$meanZ)
 # processAssays
 form = ~ Sex + scale(Age) + scale(PMI) + Source + log(n_genes) + TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + mito_ribo + ribo_genes
 
-res.procList = lapply(pbList, function(pb){
-  res = processAssays(pb, ~1)
+# res.procList = lapply(pbList, function(pb){
+#   res = processAssays(pb, ~1)
 
-  keep = outlierByAssay(res, nPC=5) %>%
-    group_by(ID) %>%
-    summarize(z2 = sort(z, decreasing=TRUE)[2]) %>%
-    arrange(desc(z2)) %>%
-    filter(z2 < 3) %>%
-    pull(ID)
+#   keep = outlierByAssay(res, nPC=5) %>%
+#     group_by(ID) %>%
+#     summarize(z2 = sort(z, decreasing=TRUE)[2]) %>%
+#     arrange(desc(z2)) %>%
+#     filter(z2 < 3) %>%
+#     pull(ID)
 
-  processAssays(pb[,keep], form)
-  })
-names(res.procList) = names(pbList)
+#   processAssays(pb[,keep], form)
+#   })
+# names(res.procList) = names(pbList)
 ```
 
 ```{r dreamlet2}
