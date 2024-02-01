@@ -233,15 +233,15 @@ python $SRC -i ", h5ad_list, " -o ", outfile)
 # system("rm -f stdcombind; bsub < /sc/arion/scratch/hoffmg01/tmp/job_RUSH_2023-02-07_11_20.lsf")
 
 # Frozen H5ADs
-# https://docs.google.com/presentation/d/1oTolAu-aARpXg4D0shEJWD6YZ9u5aG6RQw7CLmMnXGU/edit#slide=id.g1bc8801a9f4_0_348
+# https://docs.google.com/spreadsheets/d/1rE_I3Ez-NW8KNzDJQbiCjgRRc34TGzfPlLun-dzpxaE/edit#gid=1749951851
 h5ad_files = c(
-RUSH = "230329_NPS-AD_freeze2.5_R_clean.h5ad", 
-HBCC = "230329_NPS-AD_freeze2.5_H_clean.h5ad",
-MSSM = "230329_NPS-AD_freeze2.5_M_clean.h5ad",
-FULL = "230329_NPS-AD_freeze2.5_FULL_clean.h5ad",
-AGING = "230329_NPS-AD_freeze2.5_Aging_clean.h5ad")
+RUSH = "240124_PsychAD_freeze3_RUSH_clean.h5ad", 
+HBCC = "240124_PsychAD_freeze3_HBCC_clean.h5ad",
+MSSM = "240124_PsychAD_freeze3_MSSM_clean.h5ad",
+FULL = "240124_PsychAD_freeze3_FULL_clean.h5ad",
+AGING = "240124_PsychAD_freeze3_AGING_clean.h5ad")
 
-path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad/"
+path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/"
 h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
 outprefix = "/sc/arion/scratch/hoffmg01/tmp/"
@@ -315,7 +315,7 @@ cd /sc/arion/scratch/hoffmg01/tmp/
 
 for JOB in $(ls job*lsf);
 do
-  source $JOB
+  source <(cat $JOB | sed 's/^python//g')
 done
 
 
