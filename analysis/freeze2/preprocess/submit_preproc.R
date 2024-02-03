@@ -16,11 +16,11 @@ library(tidyverse)
 path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 
 h5ad_files = c(
-RUSH = "RUSH_2024-01-05_08_31.h5ad", 
-HBCC = "HBCC_2024-01-05_08_49.h5ad",
-MSSM = "MSSM_2024-01-05_09_28.h5ad",
-# FULL = "FULL_2023-09-12_18_32.h5ad",
-AGING = "AGING_2024-01-05_13_31.h5ad")
+RUSH = "RUSH_2024-02-01_14_53.h5ad", 
+HBCC = "HBCC_2024-02-01_15_18.h5ad",
+MSSM = "MSSM_2024-02-01_16_17.h5ad",
+FULL = "FULL_2024-02-01_18_49.h5ad",
+AGING = "AGING_2024-02-01_22_23.h5ad")
 
 h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
