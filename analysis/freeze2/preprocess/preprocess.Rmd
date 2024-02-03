@@ -55,11 +55,11 @@ library(tidyverse)
 path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 
 h5ad_files = c(
-RUSH = "RUSH_2024-01-05_08_31.h5ad", 
-HBCC = "HBCC_2024-01-05_08_49.h5ad",
-MSSM = "MSSM_2024-01-05_09_28.h5ad",
-# FULL = "FULL_2023-09-12_18_32.h5ad",
-AGING = "AGING_2024-01-05_13_31.h5ad")
+RUSH = "RUSH_2024-02-01_14_53.h5ad", 
+HBCC = "HBCC_2024-02-01_15_18.h5ad",
+MSSM = "MSSM_2024-02-01_16_17.h5ad",
+FULL = "FULL_2024-02-01_18_49.h5ad",
+AGING = "AGING_2024-02-01_22_23.h5ad")
 
 h5ad_files = sapply(h5ad_files, function(x) paste0(path, x))
 
@@ -200,6 +200,20 @@ for(i in seq(ncol(colData(sce))) ){
     }
     colData(sce)[,i] = values
   }
+}
+
+# retain order, since its not retained in h5ad
+load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/contrasts_for_dreamlet.Rdata")
+
+isOrd = sapply(colnames(metadata), function(x){
+  is.ordered(metadata[[x]])
+  })
+
+for( id in names(isOrd)[isOrd]){
+
+  x = colData(sce)[[id]]
+  x = ordered(x, levels = levels(metadata[[id]]))
+  colData(sce)[[id]] = x
 }
 
 # Create pseudo-bulk SingleCellExperiment
@@ -441,7 +455,13 @@ for(cluster_id in cluster_id_options ){
     pb = readRDS(paste0(filePrefix, ".RDS"))
 
     # formula
-    form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + (1|mod_cogdx) + log(n_genes) + TechPC1 + TechPC2 + TechPC3 
+    form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + (1|mod_cogdx) + log(n_genes) + percent_mito + mito_genes + mito_ribo + ribo_genes
+    if( params$DATASET == "AGING" ){
+      form = ~ Sex + scale(Age) + scale(PMI) + Source + log(n_genes) + percent_mito + mito_genes + mito_ribo + ribo_genes
+    }
+    if( params$DATASET == "FULL" ){    
+      form = update(form,  ~ . + (1|Source))
+    }
     if( sample_id == "Channel"){
       form = update(form,  ~ . + (1|SubID))
     }
