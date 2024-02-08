@@ -15,7 +15,7 @@ res = lapply(seq(nrow(df)), function(i){
 	cat("\r", i, '    ')
 	# Read pseudobulk
 	folder = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/"
-	pattern = paste0("", df$dataset[i], "2024-02-01_.*_PB_SubID_", df$cluster_id[i], ".RDS")
+	pattern = paste0("", df$dataset[i], "_2024-02-01_.*_PB_SubID_", df$cluster_id[i], ".RDS")
 	file = dir(folder, pattern=pattern, full.names=TRUE)
 
 	if( length(file) == 0) stop("No file found")
