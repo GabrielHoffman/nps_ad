@@ -395,7 +395,7 @@ augment_data = function(pb){
 
 
 # Compute pseudobulk at multiple levels
-```{r combineData, message=TRUE, eval=TRUE}
+```{r combineData, message=TRUE, eval=FALSE}
 for(cluster_id in cluster_id_options ){
   for(sample_id in c("SubID", "Channel") ){
 
@@ -418,22 +418,63 @@ for(cluster_id in cluster_id_options ){
 
     # Save as H5AD
     writeH5AD( pb, file = paste0(filePrefix, ".h5ad"), compression = "lzf" )
-
-    # precision weights
-    # W.list = pbWeights(sce,
-    #   cluster_id = cluster_id,
-    #   sample_id = sample_id, 
-    #   method = "delta",
-    #   maxRatio = 100)
-
-    # filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_pbWeights_", sample_id, "_", cluster_id)
-
-    # # Save as RDS
-    # saveRDS(W.list, file = paste0(filePrefix, ".RDS"))
   }
 }
 ```
 
+# PCA and outliers
+```{r pre.for.outliers}
+# Read pseudobulk RDS for class
+sample_id = "SubID"
+cluster_id = "class"
+filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
+pb = readRDS(paste0(filePrefix, ".RDS"))
+
+# process counts, fit regression and get residuals
+form = ~ Sex + scale(Age) + scale(PMI) + log(n_genes) +  percent_mito + mito_genes + mito_ribo + ribo_genes
+res.proc = processAssays(pb, form)
+fit = dreamlet(res.proc, form)
+
+res.proc2 = res.proc
+
+residList = residuals(fit)
+# put residuals in SCE
+for(id in names(res.proc2)){
+  res.proc2[[id]]$E = residList[[id]]
+}
+```
+
+```{r pca.plot}
+# PCA plot showing outliers
+plotPCA(res.proc, maxOutlierZ=6)
+
+# if n_slice = 1, for each sample report the smallest FDR
+# across cell types.
+# if n_slice = 2, for each sample report the 2nd smallest FDR
+# across cell types.  This is stricter and excludes only samples 
+# that are outliers in at least 2 celltypes
+n_slice = switch(names(params$DATASET), 
+            RUSH = 1,
+            MSSM = 2,
+            HBCC = 2,
+            AGING = 1,
+            FULL = 2 )
+
+# compute outlier scores
+df_outlier = outlierByAssay(res.proc) %>%
+                tibble(FDR = p.adjust(pValue, "fdr")) %>%
+                arrange(pValue) %>%
+                group_by(ID) %>%
+                slice(n_slice) %>%
+                arrange(pValue)
+
+# get outlier samples
+excludeIDs = df_outlier %>%
+  filter(FDR < 0.05) %>%
+  pull(ID) 
+```
+
+Outlier analysis drops `r length(excludeIDs)` samples.
 
 
 # Compute `processAssays()` at multiple levels
@@ -480,12 +521,11 @@ for(cluster_id in cluster_id_options ){
       form = update(form,  ~ . - (1|MajorDisease) - (1|DementiaType) - (1|mod_cogdx)) 
     }  
 
-    # Read weights
-    # filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_pbWeights_", sample_id, "_", cluster_id)
-    # W.list = readRDS(paste0(filePrefix, ".RDS"))
+    # filter pb to remove outlier samples
+    keep = ! colnames(pb) %in% excludeIDs
 
     # processAssays
-    res.proc = processAssays( pb, form, BPPARAM = bpparam, min.samples=20) #, weightsList = W.list
+    res.proc = processAssays( pb[,keep], form, BPPARAM = bpparam, min.samples=20) 
     flush(stderr())
 
     # Save processed object to RDS
