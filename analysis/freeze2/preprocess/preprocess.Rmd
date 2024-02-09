@@ -466,7 +466,7 @@ df_outlier = outlierByAssay(res.proc) %>%
                 tibble(FDR = p.adjust(pValue, "fdr")) %>%
                 arrange(pValue) %>%
                 group_by(ID) %>%
-                slice(n_slice) %>%
+                dplyr::slice(n_slice) %>%
                 arrange(pValue)
 
 # get outlier samples
