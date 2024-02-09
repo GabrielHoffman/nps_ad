@@ -142,10 +142,10 @@ if( length(file) == 2){
 
 stopifnot(length(file) ==1)
 
-res.proc = readRDS( file )
 
-covariates_base = c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)", "TechPC1", "TechPC2", "TechPC3") 
-covariates_base = c(covariates_base, "percent_mito", "mito_genes", "ribo_genes", "mito_ribo")
+res.proc = readRDS( file )
+ # , "TechPC1", "TechPC2", "TechPC3"
+covariates_base = c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)", "percent_mito", "mito_genes", "ribo_genes", "mito_ribo")
 if( params$SampleLevel == "Channel" ){
   covariates_base = c(covariates_base, "(1|SubID)")
 }

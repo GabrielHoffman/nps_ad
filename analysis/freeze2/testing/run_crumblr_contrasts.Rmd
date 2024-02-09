@@ -152,7 +152,7 @@ file = dir(path, pattern=pattern, full.names=TRUE)
 
 pb = readRDS( file )
 
-covariates_base = c("scale(Age)", "as.numeric(Sex)", "scale(PMI)", "TechPC1", "TechPC2", "TechPC3")  # "log(n_genes)"
+covariates_base = c("scale(Age)", "as.numeric(Sex)")#, "scale(PMI)", "TechPC1", "TechPC2", "TechPC3")  # "log(n_genes)"
 if( params$SampleLevel == "Channel" ){
   covariates_base = c(covariates_base, "(1|SubID)")
 }
