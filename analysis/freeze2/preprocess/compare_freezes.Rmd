@@ -80,7 +80,7 @@ df_cor = lapply(cls, function(cl){
 df_cor = bind_rows(df_cor)
 ```
 
-```{r plot}
+```{r plot, cache=FALSE}
 ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 	geom_violin() +
 	theme_classic() +
@@ -89,7 +89,7 @@ ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 		plot.title = element_text(hjust = 0.5)) +
 	ylab("Correlation") +
 	ggtitle("MSSM residualsPearson class") +
-	scale_y_contonuous(limits=c(0, 1), expand=c(0,0))
+	scale_y_continuous(limits=c(0, 1), expand=c(0,0))
 ```
 
 
