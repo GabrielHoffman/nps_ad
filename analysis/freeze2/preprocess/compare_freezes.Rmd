@@ -49,7 +49,7 @@ knitr::opts_chunk$set(
 ```
 
 
-```{r read}
+```{r read, message=TRUE}
 cls = c("EN", "IN", "Astro", "Oligo", "OPC", "Mural", "Endo", "Immune")
 cohorts = c("MSSM", "RUSH", "HBCC")
 
@@ -65,6 +65,7 @@ df_cor = lapply(seq(nrow(df_grid)), function(i){
 	dir2 = "/sc/arion/projects/CommonMind/zengb02/Current_single_cell_eQTL/data/phenotype/"	
 	pat = paste0(df_grid$cohort[i], ".*_residualsPearson_SubID_class_", df_grid$class[i], ".tsv.gz")
 	file2 = dir(dir2, pattern=pat, full.names=TRUE)
+	file2 = file2[length(file2)]
 
 	dir3 = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/"
 	pat = paste0(df_grid$cohort[i], "_2024-02-01.*_residualsPearson_SubID_class_", df_grid$class[i], ".tsv.gz")	
@@ -99,7 +100,8 @@ ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 		plot.title = element_text(hjust = 0.5)) +
 	ylab("Correlation") +
 	ggtitle("MSSM residualsPearson class") +
-	scale_y_continuous(limits=c(0, 1), expand=c(0,0))
+	scale_y_continuous(limits=c(0, 1), expand=c(0,0)) +
+	facet_wrap(~Cohort)
 ```
 
 
