@@ -51,16 +51,24 @@ knitr::opts_chunk$set(
 
 ```{r read}
 cls = c("EN", "IN", "Astro", "Oligo", "OPC", "Mural", "Endo", "Immune")
+cohorts = c("MSSM", "RUSH", "HBCC")
+
+df_grid = expand.grid(class = cls, cohort = cohorts)
 
 library(tidyverse)
 library(ggplot2) 
 
-df_cor = lapply(cls, function(cl){
+df_cor = lapply(seq(nrow(df_grid)), function(i){
 
-	message(cl)
-	file2 = paste0("/sc/arion/projects/CommonMind/zengb02/Current_single_cell_eQTL/data/phenotype/MSSM_2023-06-08_22_31_residualsPearson_SubID_class_", cl, ".tsv.gz")
+	message(i)
 
-	file3 = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/MSSM_2024-02-01_16_17_residualsPearson_SubID_class_", cl, ".tsv.gz")
+	dir2 = "/sc/arion/projects/CommonMind/zengb02/Current_single_cell_eQTL/data/phenotype/"	
+	pat = paste0(df_grid$cohort[i], ".*_residualsPearson_SubID_class_", df_grid$class[i], ".tsv.gz")
+	file2 = dir(dir2, pattern=pat, full.names=TRUE)
+
+	dir3 = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/"
+	pat = paste0(df_grid$cohort[i], "_2024-02-01.*_residualsPearson_SubID_class_", df_grid$class[i], ".tsv.gz")	
+	file3 = dir(dir3, pattern=pat, full.names=TRUE)
 
 	df2 = read.table(file2, header=TRUE, nrow=100) %>% t
 	df3 = read.table(file3, header=TRUE, nrow=100) %>% t
@@ -72,10 +80,12 @@ df_cor = lapply(cls, function(cl){
 	genes = intersect(colnames(df2), colnames(df3))
 
 	df_cor = lapply(genes, function(g){
-		data.frame(gene = g, CellType = cl, cor = cor(df2[,g], df3[,g]))
-		})
-	df_cor = bind_rows(df_cor)
-	df_cor
+		data.frame(Cohort = df_grid$cohort[i], 
+						CellType = df_grid$class[i], 
+						gene = g, 
+						cor = cor(df2[,g], df3[,g]))
+	})
+	bind_rows(df_cor)
 })
 df_cor = bind_rows(df_cor)
 ```
