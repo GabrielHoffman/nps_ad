@@ -84,7 +84,7 @@ ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 	theme_classic() +
 	theme(aspect.ratio = 1, 
 		legend.position="none", 
-		plot.title = element_text(hjust = 0.5) +
+		plot.title = element_text(hjust = 0.5)) +
 	ylab("Correlation") +
 	ggtitle("MSSM residualsPearson class") 
 ```
