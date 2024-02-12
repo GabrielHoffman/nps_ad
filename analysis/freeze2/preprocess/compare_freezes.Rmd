@@ -94,7 +94,7 @@ df_cor = bind_rows(df_cor)
 ```{r plot, cache=FALSE, fig.height=6, fig.width=11}
 ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 	geom_violin() +
-	geom_boxplot(width=0.1, color="grey") +
+	geom_boxplot(width=0.1, fill="grey") +
 	theme_classic() +
 	theme(aspect.ratio = 1, 
 		legend.position="none", 
