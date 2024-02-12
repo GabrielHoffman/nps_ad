@@ -1,0 +1,95 @@
+---
+title: "Compare freezes 2.5 and 3"
+subtitle: 'Evaluate correlation between expression residuals'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+params:
+  DATASET: NULL
+---
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
+
+git pull
+
+rmarkdown::render("compare_freezes.Rmd")
+
+
+# compare freezes
+
+# 2.5
+ls /sc/arion/projects/CommonMind/zengb02/Current_single_cell_eQTL/data/phenotype/*.tsv.gz
+
+# 3
+ls /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/*2024-02-01*
+
+--->
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+
+```{r read}
+cls = c("EN", "IN", "Astro", "Oligo", "OPC", "Mural", "Endo", "Immune")
+
+library(tidyverse)
+library(ggplot2) 
+
+df_cor = lapply(cls, function(cl){
+
+	message(cl)
+	file2 = paste0("/sc/arion/projects/CommonMind/zengb02/Current_single_cell_eQTL/data/phenotype/MSSM_2023-06-08_22_31_residualsPearson_SubID_class_", cl, ".tsv.gz")
+
+	file3 = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/MSSM_2024-02-01_16_17_residualsPearson_SubID_class_", cl, ".tsv.gz")
+
+	df2 = read.table(file2, header=TRUE, nrow=100) %>% t
+	df3 = read.table(file3, header=TRUE, nrow=100) %>% t
+
+	ids = intersect(rownames(df2), rownames(df3))
+	df2 = df2[ids,]
+	df3 = df3[ids,]
+
+	genes = intersect(colnames(df2), colnames(df3))
+
+	df_cor = lapply(genes, function(g){
+		data.frame(gene = g, CellType = cl, cor = cor(df2[,g], df3[,g]))
+		})
+	df_cor = bind_rows(df_cor)
+	df_cor
+})
+df_cor = bind_rows(df_cor)
+```
+
+```{r plot}
+ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
+	geom_violin() +
+	theme_classic() +
+	theme(aspect.ratio = 1, 
+		legend.position="none", 
+		plot.title = element_text(hjust = 0.5) +
+	ylab("Correlation") +
+	ggtitle("MSSM residualsPearson class") +
+```
+
+
+
+
