@@ -91,9 +91,10 @@ df_cor = lapply(seq(nrow(df_grid)), function(i){
 df_cor = bind_rows(df_cor)
 ```
 
-```{r plot, cache=FALSE}
+```{r plot, cache=FALSE, fig.height=6, fig.width=9}
 ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 	geom_violin() +
+	geom_boxplot(width=0.1)
 	theme_classic() +
 	theme(aspect.ratio = 1, 
 		legend.position="none", 
