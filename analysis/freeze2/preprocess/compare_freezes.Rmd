@@ -71,8 +71,8 @@ df_cor = lapply(seq(nrow(df_grid)), function(i){
 	pat = paste0(df_grid$cohort[i], "_2024-02-01.*_residualsPearson_SubID_class_", df_grid$class[i], ".tsv.gz")	
 	file3 = dir(dir3, pattern=pat, full.names=TRUE)
 
-	df2 = read.table(file2, header=TRUE, nrow=100) %>% t
-	df3 = read.table(file3, header=TRUE, nrow=100) %>% t
+	df2 = read.table(file2, header=TRUE) %>% t
+	df3 = read.table(file3, header=TRUE) %>% t
 
 	ids = intersect(rownames(df2), rownames(df3))
 	df2 = df2[ids,]
