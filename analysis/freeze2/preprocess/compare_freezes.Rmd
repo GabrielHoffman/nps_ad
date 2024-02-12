@@ -97,9 +97,10 @@ ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 	theme_classic() +
 	theme(aspect.ratio = 1, 
 		legend.position="none", 
+		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
 		plot.title = element_text(hjust = 0.5)) +
 	ylab("Correlation") +
-	ggtitle("MSSM residualsPearson class") +
+	ggtitle("residualsPearson class") +
 	scale_y_continuous(limits=c(0, 1), expand=c(0,0)) +
 	facet_wrap(~Cohort)
 ```
