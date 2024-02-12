@@ -20,8 +20,10 @@ git pull
 system("git pull"); rmarkdown::render("compare_freezes.Rmd")
 
 
-# compare freezes
+https://hoffmg01.hpc.mssm.edu/PsychAD_analysis/link/freeze2/preprocess/compare_freezes.html
 
+
+# compare freezes
 # 2.5
 ls /sc/arion/projects/CommonMind/zengb02/Current_single_cell_eQTL/data/phenotype/*.tsv.gz
 
@@ -86,7 +88,8 @@ ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 		legend.position="none", 
 		plot.title = element_text(hjust = 0.5)) +
 	ylab("Correlation") +
-	ggtitle("MSSM residualsPearson class") 
+	ggtitle("MSSM residualsPearson class") +
+	scale_y_contonuous(limits=c(0, 1), expand=c(0,0))
 ```
 
 
