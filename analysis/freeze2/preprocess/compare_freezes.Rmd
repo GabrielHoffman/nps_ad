@@ -15,10 +15,9 @@ params:
 <!--- 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/preprocess/
-
 git pull
 
-rmarkdown::render("compare_freezes.Rmd")
+system("git pull"); rmarkdown::render("compare_freezes.Rmd")
 
 
 # compare freezes
@@ -87,7 +86,7 @@ ggplot(df_cor, aes(CellType, cor, fill=CellType)) +
 		legend.position="none", 
 		plot.title = element_text(hjust = 0.5) +
 	ylab("Correlation") +
-	ggtitle("MSSM residualsPearson class") +
+	ggtitle("MSSM residualsPearson class") 
 ```
 
 
