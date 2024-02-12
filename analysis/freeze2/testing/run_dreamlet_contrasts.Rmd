@@ -133,7 +133,7 @@ library(cowplot)
 
 # read processed data
 path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/final/")
-pattern = paste0(toupper(params$dataset), "_2024-01.*_processAssays_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
+pattern = paste0(toupper(params$dataset), "_2024-02.*_processAssays_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
 file = dir(path, pattern=pattern, full.names=TRUE)
 if( length(file) == 2){                 
   a = file.info(file)$ctime
