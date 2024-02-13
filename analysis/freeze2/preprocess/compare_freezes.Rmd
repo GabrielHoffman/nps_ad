@@ -48,6 +48,8 @@ knitr::opts_chunk$set(
   cache.lazy = FALSE)
 ```
 
+ls /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/*_2024-02-01*_residualsPearson_SubID*.tsv.gz
+
 
 ```{r read, message=TRUE}
 cls = c("EN", "IN", "Astro", "Oligo", "OPC", "Mural", "Endo", "Immune")

@@ -433,21 +433,26 @@ pb = readRDS(paste0(filePrefix, ".RDS"))
 
 # process counts, fit regression and get residuals
 form = ~ Sex + scale(Age) + scale(PMI) + log(n_genes) +  percent_mito + mito_genes + mito_ribo + ribo_genes
+
+if( names(params$DATASET) == "AGING"){
+  form = update(form, . ~ . - scale(Age) + scale(log(Age+1)))
+}
+
 res.proc = processAssays(pb, form)
 fit = dreamlet(res.proc, form)
 
-res.proc2 = res.proc
+resResids = res.proc
 
 residList = residuals(fit)
 # put residuals in SCE
-for(id in names(res.proc2)){
-  res.proc2[[id]]$E = residList[[id]]
+for(id in names(resResids)){
+  resResids[[id]]$E = residList[[id]]
 }
 ```
 
 ```{r pca.plot}
 # PCA plot showing outliers
-plotPCA(res.proc, maxOutlierZ=6)
+plotPCA(resResids, maxOutlierZ=6, nPC=5)
 
 # if n_slice = 1, for each sample report the smallest FDR
 # across cell types.
@@ -458,11 +463,11 @@ n_slice = switch(names(params$DATASET),
             RUSH = 1,
             MSSM = 2,
             HBCC = 2,
-            AGING = 1,
+            AGING = 2,
             FULL = 2 )
 
 # compute outlier scores
-df_outlier = outlierByAssay(res.proc) %>%
+df_outlier = outlierByAssay(resResids, nPC=5) %>%
                 tibble(FDR = p.adjust(pValue, "fdr")) %>%
                 arrange(pValue) %>%
                 group_by(ID) %>%
@@ -473,6 +478,8 @@ df_outlier = outlierByAssay(res.proc) %>%
 excludeIDs = df_outlier %>%
   filter(FDR < 0.05) %>%
   pull(ID) 
+length(excludeIDs)
+
 ```
 
 Outlier analysis drops `r length(excludeIDs)` samples.
@@ -499,7 +506,7 @@ for(cluster_id in cluster_id_options ){
     # formula
     form = ~ Sex + scale(Age) + scale(PMI) + (1|mod_BRAAK_AD) + mod_Plq_Mn + (1|mod_CERAD) + (1|mod_CDRScore) + mod_Cognitive_Resilience + (1|MajorDisease) + (1|DementiaType) + (1|mod_cogdx) + log(n_genes) + percent_mito + mito_genes + mito_ribo + ribo_genes
     if( params$DATASET == "AGING" ){
-      form = ~ Sex + scale(Age) + scale(PMI) + Source + log(n_genes) + percent_mito + mito_genes + mito_ribo + ribo_genes
+      form = ~ Sex + scale(log(Age+1)) + scale(PMI) + Source + log(n_genes) + percent_mito + mito_genes + mito_ribo + ribo_genes
     }
     if( params$DATASET == "FULL" ){    
       form = update(form,  ~ . + (1|Source))
