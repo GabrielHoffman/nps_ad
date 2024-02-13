@@ -427,7 +427,7 @@ for(cluster_id in cluster_id_options ){
 ```{r pre.for.outliers}
 # Read pseudobulk RDS for class
 sample_id = "SubID"
-cluster_id = "class"
+cluster_id = "subclass"
 filePrefix = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", gsub(".h5ad$", "", basename(params$DATASET)), "_PB_", sample_id, "_", cluster_id)
 pb = readRDS(paste0(filePrefix, ".RDS"))
 
@@ -441,42 +441,25 @@ if( names(params$DATASET) == "AGING"){
 res.proc = processAssays(pb, form)
 fit = dreamlet(res.proc, form)
 
-resResids = res.proc
-
 residList = residuals(fit)
-# put residuals in SCE
-for(id in names(resResids)){
-  resResids[[id]]$E = residList[[id]]
-}
 ```
 
-```{r pca.plot}
-# PCA plot showing outliers
-plotPCA(resResids, maxOutlierZ=6, nPC=5)
 
-# if n_slice = 1, for each sample report the smallest FDR
-# across cell types.
-# if n_slice = 2, for each sample report the 2nd smallest FDR
-# across cell types.  This is stricter and excludes only samples 
-# that are outliers in at least 2 celltypes
-n_slice = switch(names(params$DATASET), 
-            RUSH = 1,
-            MSSM = 2,
-            HBCC = 2,
-            AGING = 2,
-            FULL = 2 )
+```{r pca.plot}
+fdr.cutoff = 1e-05
+
+# PCA plot showing outliers
+fig = plotPCA(residList, maxOutlierZ=6, nPC=5, nrow=8, fdr.cutoff=fdr.cutoff)
 
 # compute outlier scores
 df_outlier = outlierByAssay(resResids, nPC=5) %>%
                 tibble(FDR = p.adjust(pValue, "fdr")) %>%
                 arrange(pValue) %>%
-                group_by(ID) %>%
-                dplyr::slice(n_slice) %>%
                 arrange(pValue)
 
 # get outlier samples
 excludeIDs = df_outlier %>%
-  filter(FDR < 0.05) %>%
+  filter(FDR < fdr.cutoff) %>%
   pull(ID) 
 ```
 
@@ -485,6 +468,9 @@ Outlier analysis drops `r length(excludeIDs)` samples:
 `r excludeIDs`
 
 ```{r knit3234}
+df = data.frame(Cohort = names(params$DATASET), Donor = excludeIDs)
+file = paste0("exclude_", names(params$DATASET), ".tsv")
+write.table(df, file=file, quote=FALSE, sep="\t", row.names=FALSE)
 knitr::knit_exit()
 ```
 
