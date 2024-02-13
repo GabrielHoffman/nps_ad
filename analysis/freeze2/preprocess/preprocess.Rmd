@@ -452,7 +452,7 @@ fdr.cutoff = 1e-05
 fig = plotPCA(residList, maxOutlierZ=6, nPC=5, nrow=8, fdr.cutoff=fdr.cutoff)
 
 # compute outlier scores
-df_outlier = outlierByAssay(resResids, nPC=5) %>%
+df_outlier = outlierByAssay(residList, nPC=5) %>%
                 tibble(FDR = p.adjust(pValue, "fdr")) %>%
                 arrange(pValue) %>%
                 arrange(pValue)
