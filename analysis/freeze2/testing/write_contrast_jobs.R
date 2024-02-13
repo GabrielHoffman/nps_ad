@@ -44,7 +44,8 @@ ctst_key = '", ctst_key, "'))")
 cd ",
 outpath, 
 "
-ml hdf5/1.12.1 libpng/16 R/4.3.0 pandoc/2.6
+module purge
+module --ignore-cache load hdf5/1.12.1 libpng/16 R/4.3.0 pandoc/2.6
 
 R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_430
 R_LIBS=${R_LIBS_USER}:/hpc/packages/minerva-centos7/rpackages/4.3.0/site-library:/hpc/packages/minerva-centos7/rpackages/bioconductor/3.17
