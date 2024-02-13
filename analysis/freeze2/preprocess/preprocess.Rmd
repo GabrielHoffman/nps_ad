@@ -478,11 +478,15 @@ df_outlier = outlierByAssay(resResids, nPC=5) %>%
 excludeIDs = df_outlier %>%
   filter(FDR < 0.05) %>%
   pull(ID) 
-length(excludeIDs)
-
 ```
 
-Outlier analysis drops `r length(excludeIDs)` samples.
+Outlier analysis drops `r length(excludeIDs)` samples:
+
+`r excludeIDs`
+
+```{r knit3234}
+knitr::knit_exit()
+```
 
 
 # Compute `processAssays()` at multiple levels
