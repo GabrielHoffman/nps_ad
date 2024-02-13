@@ -435,7 +435,7 @@ pb = readRDS(paste0(filePrefix, ".RDS"))
 form = ~ Sex + scale(Age) + scale(PMI) + log(n_genes) +  percent_mito + mito_genes + mito_ribo + ribo_genes
 
 if( names(params$DATASET) == "AGING"){
-  form = update(form, . ~ . - scale(Age) + scale(log(Age+1)))
+  form = update(form,  ~ . - scale(Age) + scale(log(Age+1)))
 }
 
 res.proc = processAssays(pb, form)
