@@ -476,7 +476,7 @@ excludeIDs = df %>%
   pull(ID) 
 ```
 
-```{r pca.excluded}
+```{r pca.excluded, fig.height=15, fig.width=9}
 df_outlier$exclude = df_outlier$ID %in% excludeIDs
 
 df_outlier %>%
