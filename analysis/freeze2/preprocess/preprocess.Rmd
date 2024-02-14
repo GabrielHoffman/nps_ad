@@ -447,21 +447,33 @@ residList = residuals(fit)
 
 ```{r pca.plot, fig.height=15, fig.width=9}
 fdr.cutoff = 1e-4
-nPC = 2
+nPC = 5
 
 # PCA plot showing outliers
 plotPCA(residList, maxOutlierZ=6, nPC=nPC, nrow=8, fdr.cutoff=fdr.cutoff)
 
-# compute outlier scores
-df_outlier = outlierByAssay(residList, nPC=nPC) %>%
+# rank normal transform
+library(RNOmni)
+residList2 = lapply(residList, function(Y){
+  t(apply(Y, 1, RankNorm))
+  })
+
+# compute outlier scores, 
+# then sum across cell types
+# sum(chisq) ~ nCellTypes * nPC
+df_outlier = outlierByAssay(residList2, nPC=nPC) %>%
+                group_by(ID)  %>%
+                summarize(n = length(chisq), x = sum(chisq)) %>%
+                mutate(pValue = pchisq(x, n*nPC, lower.tail=FALSE)) %>%
                 tibble(FDR = p.adjust(pValue, "fdr")) %>%
-                arrange(pValue) 
+                arrange(pValue)
 
 # get outlier samples
 excludeIDs = df_outlier %>%
   filter(FDR < fdr.cutoff) %>%
   pull(ID) 
 ```
+
 
 Outlier analysis drops `r length(excludeIDs)` samples:
 
