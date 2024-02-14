@@ -424,7 +424,7 @@ for(cluster_id in cluster_id_options ){
 ```
 
 # PCA and outliers
-```{r pre.for.outliers}
+```{r pre.for.outliers, cache=TRUE}
 # Read pseudobulk RDS for class
 sample_id = "SubID"
 cluster_id = "subclass"
