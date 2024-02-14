@@ -501,7 +501,6 @@ Outlier analysis drops `r length(excludeIDs)` samples:
 df = data.frame(Cohort = names(params$DATASET), Donor = excludeIDs)
 file = paste0("exclude_", names(params$DATASET), ".tsv")
 write.table(df, file=file, quote=FALSE, sep="\t", row.names=FALSE)
-knitr::knit_exit()
 ```
 
 
