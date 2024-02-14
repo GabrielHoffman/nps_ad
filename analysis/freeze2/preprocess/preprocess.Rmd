@@ -446,16 +446,16 @@ residList = residuals(fit)
 
 
 ```{r pca.plot, fig.height=15, fig.width=9}
-fdr.cutoff = 1e-05
+fdr.cutoff = 1e-5
+nPC = 2
 
 # PCA plot showing outliers
-plotPCA(residList, maxOutlierZ=6, nPC=2, nrow=8, fdr.cutoff=fdr.cutoff)
+plotPCA(residList, maxOutlierZ=6, nPC=nPC, nrow=8, fdr.cutoff=fdr.cutoff)
 
 # compute outlier scores
-df_outlier = outlierByAssay(residList, nPC=2) %>%
+df_outlier = outlierByAssay(residList, nPC=nPC) %>%
                 tibble(FDR = p.adjust(pValue, "fdr")) %>%
-                arrange(pValue) %>%
-                arrange(pValue)
+                arrange(pValue) 
 
 # get outlier samples
 excludeIDs = df_outlier %>%
