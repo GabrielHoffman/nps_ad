@@ -461,18 +461,36 @@ residList2 = lapply(residList, function(Y){
 # compute outlier scores, 
 # then sum across cell types
 # sum(chisq) ~ nCellTypes * nPC
-df_outlier = outlierByAssay(residList2, nPC=nPC) %>%
-                group_by(ID)  %>%
-                summarize(n = length(chisq), x = sum(chisq)) %>%
-                mutate(pValue = pchisq(x, n*nPC, lower.tail=FALSE)) %>%
-                tibble(FDR = p.adjust(pValue, "fdr")) %>%
-                arrange(pValue)
+df_outlier = outlierByAssay(residList2, nPC=nPC) 
+
+df = df_outlier %>%
+        group_by(ID)  %>%
+        summarize(n = length(chisq), x = sum(chisq)) %>%
+        mutate(pValue = pchisq(x, n*nPC, lower.tail=FALSE)) %>%
+        tibble(FDR = p.adjust(pValue, "fdr")) %>%
+        arrange(pValue)
 
 # get outlier samples
-excludeIDs = df_outlier %>%
+excludeIDs = df %>%
   filter(FDR < fdr.cutoff) %>%
   pull(ID) 
 ```
+
+```{r pca.excluded}
+df_outlier$exclude = df_outlier$ID %in% excludeIDs
+
+df_outlier %>%
+      ggplot(aes(PC1, PC2, 
+        color = pmin(z, 6),
+        shape = exclude)) +
+        geom_point(size=2) +
+        theme_classic() +
+        theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+        scale_color_gradient("Outlier z", limits=c(0, 6), low="grey60", high="red") +
+        scale_shape_discrete("Excluded") +
+        facet_wrap( ~ assay, ncol=3, scales="free")
+```
+
 
 
 Outlier analysis drops `r length(excludeIDs)` samples:
