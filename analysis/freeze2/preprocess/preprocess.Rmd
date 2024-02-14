@@ -446,7 +446,7 @@ residList = residuals(fit)
 
 
 ```{r pca.plot, fig.height=15, fig.width=9}
-fdr.cutoff = 1e-4
+fdr.cutoff = 1e-5
 nPC = 5
 
 # PCA plot showing outliers
