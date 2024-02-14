@@ -183,7 +183,7 @@ omp_set_num_threads(1)
 ```
 
 ## H5AD
-```{r load.data, eval=FALSE}
+```{r load.data}
 sce = readH5AD(params$DATASET, use_hdf5=TRUE, verbose=TRUE)
 assayNames(sce)[1] = "counts"
 
