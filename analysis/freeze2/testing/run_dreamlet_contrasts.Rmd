@@ -191,11 +191,24 @@ if( any(is.na(ctr$contrasts)) ){
   ctr$contrasts = NULL
 }
 
+# if less than 15 samples have values for the give trait
+# remove 
+s = sum(!is.na(colData(res.proc)[[ctr$variable]]))
+if( s < 15 ){
+  exclude = attr(terms(form), "term.labels")[-c(1:5)]
+  exclude = paste("~ . -", paste(exclude, collapse=' - '))
+  exclude = as.formula(exclude)
+
+  form = update(form, exclude)
+}
+
 # run dreamlet
 fit = dreamlet( res.proc, form, 
             contrasts = ctr$contrasts,
             BPPARAM = bpparam)
 ```
+
+
 
 
 ```{r mashr}
