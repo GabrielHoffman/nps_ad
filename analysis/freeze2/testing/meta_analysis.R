@@ -49,7 +49,6 @@ df2 = df %>%
 
 cat("Analysis...\n")
 res.meta = df2 %>%
-		arrange(ID) %>% slice_head(n = 20046) %>%
 		meta_analysis(method = opt$method, group=grp) %>%
 		mutate( coef = opt$code, Trait = df_meta$Contrast.desc[i])
 
