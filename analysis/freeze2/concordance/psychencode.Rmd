@@ -1,0 +1,121 @@
+---
+title: "Concordance analysis of PsychENCODE"
+subtitle: 'Signatures from multi-disease analysis'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+params:
+  DATASET: NULL
+---
+
+
+<!--- 
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = TRUE)
+```
+
+
+# Loading
+## Libraries
+```{r load.packages, cache=FALSE}
+suppressPackageStartupMessages({
+library(SingleCellExperiment)
+library(zellkonverter)
+library(tidyverse)
+library(ggplot2)
+library(heivr)
+library(ggcorrplot)
+})
+```
+
+## CMC signature
+```{r cmc}
+file = "/sc/arion/projects/CommonMind/hoffman/cmc_signature/df_DE_results.RDS"
+res.cmc = readRDS(file)
+
+df.cmc = lapply(names(res.cmc), function(x){
+  res.cmc[[x]]$DxSCZ %>%
+    as_tibble %>%
+    mutate(estimate = logFC, 
+        std.error = logFC / t, 
+        ID = Symbol, 
+        statistic = t,
+        p.value = P.Value,
+        FDR.within =  adj.P.Val,
+        assay = x) %>%
+    select(ID, assay, estimate, std.error, statistic, p.value, FDR.within)
+  })
+df.cmc = bind_rows(df.cmc)
+
+tab = table(df.cmc$ID)
+exclude = names(tab[tab !=2])
+
+df_filter = df.cmc %>%
+  select(ID, estimate, assay) %>%
+  filter(! ID %in% exclude) %>%
+  pivot_wider(names_from = assay, values_from = estimate) 
+
+cor(df_filter[,-1] %>% as.matrix)
+```
+
+# PsychENCPDE
+```{r pec}
+files = dir("/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/", pattern="*.csv", full.names=TRUE)
+
+res = lapply(files, function(file){
+
+  df = read.table(file, sep=',', row.names=1) %>%
+      as_tibble
+
+  df_est = df %>%
+        select(-std.error, -statistic, -p.value, -FDR.within) %>%
+        pivot_wider(names_from = assay, 
+          values_from = estimate)
+
+  df_se = df %>%
+        select(-estimate, -statistic, -p.value, -FDR.within) %>%
+        pivot_wider(names_from = assay, 
+          values_from = std.error)
+
+  C.std = cor(df_est[,-1] %>% as.matrix, use="pairwise.complete.obs")
+
+  hres = heivrPairs(df_est[,-1] %>% as.matrix, 
+          df_se[,-1]^2 %>% as.matrix)
+
+  C.het = pairsToMatrix(hres, "rho")
+
+  list(C.std, C.het)
+}
+names(res) = gsub("\\.csv", "", basename(files))
+```
+
+```{r plots}
+
+
+# plotCorrMatrix(C, sort=FALSE)
+
+
+# plotCorrMatrix(Ch, sort=FALSE)
+```
+
+
+
+
+
+
