@@ -14,13 +14,14 @@ params:
 
 <!--- 
 
-
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/concordance/
 
 git pull 
 R
+
 system("git pull"); rmarkdown::render("psychencode.Rmd")
 
+#https://hoffmg01.hpc.mssm.edu/nps_ad//analysis/freeze2/concordance/
 
 
 --->
@@ -45,12 +46,12 @@ knitr::opts_chunk$set(
 ```{r load.packages, cache=FALSE}
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
-library(zellkonverter)
 library(tidyverse)
 library(ggplot2)
 library(parallel)
 library(heivr)
 library(ggcorrplot)
+library(cowplot)
 })
 ```
 
@@ -82,6 +83,7 @@ df_filter = df.cmc %>%
   pivot_wider(names_from = assay, values_from = estimate) 
 
 cor(df_filter[,-1] %>% as.matrix)
+
 ```
 
 # PsychENCPDE
@@ -110,18 +112,19 @@ res = mclapply(files, function(file){
 
   C.het = pairsToMatrix(hres, "rho")
 
-  list(C.std, C.het)
+  list(C.std = C.std, C.het = C.het)
 }, mc.cores=6)
 names(res) = gsub("\\.csv", "", basename(files))
 ```
 
 ```{r plots}
+lapply(names(res), function(id){
+  cat(id)
 
-
-# plotCorrMatrix(C, sort=FALSE)
-
-
-# plotCorrMatrix(Ch, sort=FALSE)
+  fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std"))
+  fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr"))
+  plot_grid(fig1, fig2)
+}
 ```
 
 
