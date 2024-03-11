@@ -14,6 +14,15 @@ params:
 
 <!--- 
 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/concordance/
+
+git pull 
+R
+rmarkdown::render("psychencode.Rmd")
+
+
+
 --->
 
 
@@ -39,6 +48,7 @@ library(SingleCellExperiment)
 library(zellkonverter)
 library(tidyverse)
 library(ggplot2)
+library(parallel)
 library(heivr)
 library(ggcorrplot)
 })
@@ -78,7 +88,7 @@ cor(df_filter[,-1] %>% as.matrix)
 ```{r pec}
 files = dir("/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/", pattern="*.csv", full.names=TRUE)
 
-res = lapply(files, function(file){
+res = mclapply(files, function(file){
 
   df = read.table(file, sep=',', row.names=1) %>%
       as_tibble
@@ -101,7 +111,7 @@ res = lapply(files, function(file){
   C.het = pairsToMatrix(hres, "rho")
 
   list(C.std, C.het)
-}
+}, mc.cores=6}
 names(res) = gsub("\\.csv", "", basename(files))
 ```
 
