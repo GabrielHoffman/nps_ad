@@ -19,7 +19,7 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/con
 
 git pull 
 R
-rmarkdown::render("psychencode.Rmd")
+system("git pull"); rmarkdown::render("psychencode.Rmd")
 
 
 
@@ -111,7 +111,7 @@ res = mclapply(files, function(file){
   C.het = pairsToMatrix(hres, "rho")
 
   list(C.std, C.het)
-}, mc.cores=6}
+}, mc.cores=6)
 names(res) = gsub("\\.csv", "", basename(files))
 ```
 
