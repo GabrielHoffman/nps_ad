@@ -200,7 +200,7 @@ lapply(names(res), function(id){
 ```
 
 ## pairs
-```{r pec}
+```{r pec.pair}
 pairValues = tolower(c("SCZ/BP", "SCZ/ASD", "SCZ/MDD", "SCZ/PTSD"))
 
 res = mclapply(pairValues, function(id){
@@ -252,7 +252,7 @@ res = mclapply(pairValues, function(id){
 names(res) = gsub("\\.csv", "", basename(files))
 ```
 
-```{r plots, fig.width=13}
+```{r plots.pair, fig.width=13}
 lapply(names(res), function(id){
   message(id)
 
