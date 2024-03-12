@@ -128,7 +128,7 @@ compute_pi1 = function(df){
       mutate(assay2 = factor(assay2, colnames(Y))) 
 
   df_pi1
-# }
+}
 
 
 plot_pi1 = function(df_pi1){
