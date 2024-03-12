@@ -54,7 +54,7 @@ library(decorrelate)
 library(ggcorrplot)
 library(parallel)
 library(RhpcBLASctl)
-omp_set_num_threads(4)
+omp_set_num_threads(2)
 ```
 
 # Read data + perform CCA
@@ -90,7 +90,7 @@ res = mclapply( seq(nrow(df_grid)), function(i){
     Dataset2 = gsub("^(.*)_2.*$", "\\1", basename(df_grid$Var2[i])),
     CellType2 = gsub(".*_(.*).tsv.gz", "\\1", df_grid$Var2[i]),
     cramer.V = fit$cramer.V)
-  }, mc.cores=12)
+  }, mc.cores=24)
 res = bind_rows(res)
 ```
 
