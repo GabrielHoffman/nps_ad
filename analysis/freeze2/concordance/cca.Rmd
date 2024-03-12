@@ -20,16 +20,16 @@ params:
 
 <!--- 
 
-# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/testing/compare_concordace.html
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/concordance/
 
-cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
-ml python git pandoc gcc/11.2.0
-git pull origin master
+git pull 
+R
 
-rm -rf compare_concordace_cache/ compare_concordace_files
+system("git pull"); rmarkdown::render("cca.Rmd")
 
-rmarkdown::render("compare_concordace.Rmd")
 
+
+# https://hoffmg01.hpc.mssm.edu/nps_ad//analysis/freeze2/concordance/cca.html
 
 --->
 
@@ -48,10 +48,13 @@ knitr::opts_chunk$set(
 ```
 
 ```{r libs, cache=FALSE}
-
 library(dreamlet)
 library(tidyverse)
 library(decorrelate)
+library(ggcorrplot)
+library(parallel)
+library(RhpcBLASctl)
+omp_set_num_threads(4)
 ```
 
 ```{r run}
@@ -63,19 +66,19 @@ files3 = dir(parent, pattern="MSSM_2024-02-01_16_17_residuals_SubID_class_.*.tsv
 
 files = c(files1)
 
+geneExprList = mclapply(files, function(file){
+                read.table(file, 
+                  sep="\t",  row.names=1,  header=TRUE)
+          }, mc.cores=12)
+names(geneExprList) = files
+
 df_grid = expand.grid(files, files, stringsAsFactors=FALSE)
 
-res = lapply( seq(nrow(df_grid)), function(i){
+res = mclapply( seq(nrow(df_grid)), function(i){
 
   cat(i, "\r.   ")
-  geneExpr1 = read.table(df_grid$Var1[i], 
-    sep="\t", 
-    row.names=1, 
-    header=TRUE)
-  geneExpr2 = read.table(df_grid$Var2[i], 
-    sep="\t", 
-    row.names=1, 
-    header=TRUE)
+  geneExpr1 = geneExprList[[df_grid$Var1[i]]]
+  geneExpr2 = geneExprList[[df_grid$Var2[i]]]
 
   keep = intersect(rownames(geneExpr1), rownames(geneExpr2))
   geneExpr1 = geneExpr1[keep,]
@@ -87,8 +90,25 @@ res = lapply( seq(nrow(df_grid)), function(i){
     Dataset2 = gsub("^(.*)_2.*$", "\\1", basename(df_grid$Var2[i])),
     CellType2 = gsub(".*_(.*).tsv.gz", "\\1", df_grid$Var2[i]),
     cramer.V = fit$cramer.V)
-  })
+  }, mc.cores=12)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
