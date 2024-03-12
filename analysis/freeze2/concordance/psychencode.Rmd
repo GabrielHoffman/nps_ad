@@ -86,6 +86,60 @@ cor(df_filter[,-1] %>% as.matrix)
 
 ```
 
+## Define pi1 code
+```{r pi1}
+compute_pi1 = function(df){
+
+  Y = df %>%
+        select(assay, p.value, ID) %>%
+        pivot_wider(names_from = "assay", values_from="p.value") %>% 
+        select(-ID) 
+
+  df_grid = expand.grid(assay1 = unique(colnames(Y)), 
+                        assay2 = unique(colnames(Y))) 
+
+  library(qvalue)
+  get_pi1 = function(p){
+    res <- tryCatch( pi0est(c(p, 1)), error = function(e) NULL)
+
+    ifelse(is.null(res), NA, 1 - res$pi0)
+  }
+
+  df_pi1 = mclapply( 1:nrow(df_grid), function(i){
+    k1 = df_grid$assay1[i] %>% as.character
+    k2 = df_grid$assay2[i]%>% as.character
+
+    df = Y[,c(k1, k2)]
+    df = df[apply(df,1, function(x) all(!is.na(x))),]
+
+    j = p.adjust(df[,1] %>% pull, "fdr") < 0.05
+
+    pvals = df[j,2] %>% pull
+
+    pi1 = get_pi1(pvals)
+
+    data.frame(assay1 = k1, assay2 = k2, pi1 =pi1, nDE = sum(j) )
+    }, mc.cores=4)
+  df_pi1 = bind_rows(df_pi1)
+  df_pi1
+}
+
+plot_pi1 = function(df_pi1){
+  df_pi1 %>%
+      mutate(assay1 = factor(assay1, colnames(Y))) %>%
+      mutate(assay2 = factor(assay2, colnames(Y))) %>%
+       ggplot(aes(assay1, assay2, fill=pi1)) +
+            geom_tile() +
+            theme_classic() +
+            theme(aspect.ratio=1, 
+              legend.position = "none", 
+              axis.text.x = element_text(angle = 90),
+              plot.title = element_text(hjust = 0.5)) +
+            scale_fill_gradient(low="white", high="red", limits=c(0,1)) 
+}
+```
+
+
 # PsychENCODE
 ```{r pec}
 files = dir("/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/", pattern="*.csv", full.names=TRUE)
@@ -113,13 +167,15 @@ res = mclapply(files, function(file){
 
   C.std = cor(df_est[,-1] %>% as.matrix, use="pairwise.complete.obs")
 
+  df_pi1 = compute_pi1(df)
+
   # hres = heivrPairs(df_est[,-1] %>% as.matrix, 
   #         df_se[,-1]^2 %>% as.matrix)
 
   # C.het = pairsToMatrix(hres, "rho")
   C.het = NULL
 
-  list(C.std = C.std, C.het = C.het)
+  list(C.std = C.std, C.het = C.het, df_pi1 = df_pi1)
 }, mc.cores=6)
 names(res) = gsub("\\.csv", "", basename(files))
 ```
@@ -130,14 +186,13 @@ lapply(names(res), function(id){
 
   fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std")) +
     theme(plot.title = element_text(hjust = 0.5))
+
+  plot_pi1(res[[id]]$df_pi1) + ggtitle(id)
   # fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
     # theme(plot.title = element_text(hjust = 0.5))
   # plot_grid(fig1, fig2)
 })
 ```
-
-
-
 
 
 
