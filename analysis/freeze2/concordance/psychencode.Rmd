@@ -128,7 +128,8 @@ compute_pi1 = function(df){
       mutate(assay2 = factor(assay2, colnames(Y))) 
 
   df_pi1
-}
+# }
+
 
 plot_pi1 = function(df_pi1){
  
@@ -251,7 +252,8 @@ res = mclapply(pairValues, function(id){
   # hres = heivrPairs(df_est[,-1] %>% as.matrix, 
   #         df_se[,-1]^2 %>% as.matrix)
 
-  C.het = pairsToMatrix(hres, "rho")
+  # C.het = pairsToMatrix(hres, "rho")
+  C.het = NULL
 
   list(C.std = C.std, C.het = C.het)
 }, mc.cores=6)
