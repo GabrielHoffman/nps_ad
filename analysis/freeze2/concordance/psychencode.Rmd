@@ -86,7 +86,7 @@ cor(df_filter[,-1] %>% as.matrix)
 
 ```
 
-# PsychENOPDE
+# PsychENCODE
 ```{r pec}
 files = dir("/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/", pattern="*.csv", full.names=TRUE)
 
@@ -128,8 +128,10 @@ names(res) = gsub("\\.csv", "", basename(files))
 lapply(names(res), function(id){
   cat(id)
 
-  fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std"))
-  # fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr"))
+  fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std")) +
+    theme(plot.title = element_text(hjust = 0.5))
+  # fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
+    theme(plot.title = element_text(hjust = 0.5))
   # plot_grid(fig1, fig2)
 })
 ```
