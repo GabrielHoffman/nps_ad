@@ -120,14 +120,16 @@ compute_pi1 = function(df){
 
     data.frame(assay1 = k1, assay2 = k2, pi1 =pi1, nDE = sum(j) )
     }, mc.cores=4)
-  df_pi1 = bind_rows(df_pi1)
+  df_pi1 = bind_rows(df_pi1) %>%
+      mutate(assay1 = factor(assay1, colnames(Y))) %>%
+      mutate(assay2 = factor(assay2, colnames(Y))) 
+
   df_pi1
 }
 
 plot_pi1 = function(df_pi1){
+ 
   df_pi1 %>%
-      mutate(assay1 = factor(assay1, colnames(Y))) %>%
-      mutate(assay2 = factor(assay2, colnames(Y))) %>%
        ggplot(aes(assay1, assay2, fill=pi1)) +
             geom_tile() +
             theme_classic() +
