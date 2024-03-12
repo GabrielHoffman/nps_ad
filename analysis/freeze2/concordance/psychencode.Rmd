@@ -242,12 +242,13 @@ res = mclapply(pairValues, function(id){
   C.std = cor(df_est[,-1] %>% as.matrix,
               use="pairwise.complete.obs")
 
-  hres = heivrPairs(df_est[,-1] %>% as.matrix, 
-          df_se[,-1]^2 %>% as.matrix)
+  # hres = heivrPairs(df_est[,-1] %>% as.matrix, 
+  #         df_se[,-1]^2 %>% as.matrix)
 
-  C.het = pairsToMatrix(hres, "rho")
+  # C.het = pairsToMatrix(hres, "rho")
+  C.het = NULL
 
-  list(C.std = C.std, C.het = C.het, df_pi1 = df_pi1)
+  list(C.std = C.std, C.het = C.het)
 }, mc.cores=6)
 names(res) = gsub("\\.csv", "", basename(files))
 ```
@@ -259,11 +260,10 @@ lapply(names(res), function(id){
   fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std")) +
     theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), aspect.ratio=1, 
               legend.position = "none")
-  fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
-    theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 90),legend.position = "none")
+  # fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
+    # theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 90),legend.position = "none")
 
-  fig3 = plot_pi1(res[[id]]$df_pi1) + ggtitle(id)
-  plot_grid(fig1, fig2, fig3, align="hv", nrow=1)
+  plot_grid(fig1, align="hv", nrow=1)
 })
 ```
 
