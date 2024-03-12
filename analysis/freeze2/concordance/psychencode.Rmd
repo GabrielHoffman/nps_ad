@@ -174,11 +174,10 @@ res = mclapply(files, function(file){
 
   df_pi1 = compute_pi1(df)
 
-  # hres = heivrPairs(df_est[,-1] %>% as.matrix, 
-  #         df_se[,-1]^2 %>% as.matrix)
+  hres = heivrPairs(df_est[,-1] %>% as.matrix, 
+          df_se[,-1]^2 %>% as.matrix)
 
-  # C.het = pairsToMatrix(hres, "rho")
-  C.het = NULL
+  C.het = pairsToMatrix(hres, "rho")
 
   list(C.std = C.std, C.het = C.het, df_pi1 = df_pi1)
 }, mc.cores=6)
@@ -192,8 +191,8 @@ lapply(names(res), function(id){
   fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std")) +
     theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), aspect.ratio=1, 
               legend.position = "none",)
-  # fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
-    # theme(plot.title = element_text(hjust = 0.5)axis.text.x = element_text(angle = 90))
+  fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
+    theme(plot.title = element_text(hjust = 0.5)axis.text.x = element_text(angle = 90))
 
   fig3 = plot_pi1(res[[id]]$df_pi1) + ggtitle(id)
   plot_grid(fig1, fig3, align="hv")
