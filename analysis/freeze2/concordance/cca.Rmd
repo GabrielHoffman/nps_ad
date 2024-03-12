@@ -91,10 +91,22 @@ res = mclapply( seq(nrow(df_grid)), function(i){
     CellType2 = gsub(".*_(.*).tsv.gz", "\\1", df_grid$Var2[i]),
     cramer.V = fit$cramer.V)
   }, mc.cores=12)
+res = bind_rows(res)
 ```
 
 
+```{r plot}
+C = res %>%
+  mutate(ID1 = paste(Dataset1, CellType1, sep=' / ')) %>%
+  mutate(ID2 = paste(Dataset2, CellType2, sep=' / ')) %>%
+  select(-Dataset1, -CellType1, -Dataset2, -CellType2) %>%
+  pivot_wider(names_from = ID2, values_from = cramer.V) %>%
+  column_to_rownames('ID1') %>%
+  as.matrix %>%
+  cov2cor
 
+ggcorrplot(C)
+```
 
 
 
