@@ -1,0 +1,97 @@
+---
+title: "Compare correlation structres using CCA"
+subtitle: 'Co-expression between genes'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+    self_contained: false
+params:
+  dataset: NULL
+  variable_type: NULL
+  ctst_key: NULL
+  AnnoLevel: NULL
+  SampleLevel: NULL
+---
+
+
+
+<!--- 
+
+# https://hoffmg01.hpc.mssm.edu/nps_ad/analysis/freeze2/testing/compare_concordace.html
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
+ml python git pandoc gcc/11.2.0
+git pull origin master
+
+rm -rf compare_concordace_cache/ compare_concordace_files
+
+rmarkdown::render("compare_concordace.Rmd")
+
+
+--->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r libs, cache=FALSE}
+
+library(dreamlet)
+library(tidyverse)
+library(decorrelate)
+```
+
+```{r run}
+parent = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/"
+
+files1 = dir(parent, pattern="RUSH_2024-02-01_14_53_residuals_SubID_class_.*.tsv.gz", full.names=TRUE)
+files2 = dir(parent, pattern="HBCC_2024-02-01_15_18_residuals_SubID_class_.*.tsv.gz", full.names=TRUE)
+files3 = dir(parent, pattern="MSSM_2024-02-01_16_17_residuals_SubID_class_.*.tsv.gz", full.names=TRUE)
+
+files = c(files1)
+
+df_grid = expand.grid(files, files, stringsAsFactors=FALSE)
+
+res = lapply( seq(nrow(df_grid)), function(i){
+
+  cat(i, "\r.   ")
+  geneExpr1 = read.table(df_grid$Var1[i], 
+    sep="\t", 
+    row.names=1, 
+    header=TRUE)
+  geneExpr2 = read.table(df_grid$Var2[i], 
+    sep="\t", 
+    row.names=1, 
+    header=TRUE)
+
+  keep = intersect(rownames(geneExpr1), rownames(geneExpr2))
+  geneExpr1 = geneExpr1[keep,]
+  geneExpr2 = geneExpr2[keep,]
+
+  fit = fastcca(geneExpr1, geneExpr2)
+
+  data.frame(Dataset1 = gsub("^(.*)_2.*$", "\\1", basename(df_grid$Var1[i])), CellType1 = gsub(".*_(.*).tsv.gz", "\\1", df_grid$Var1[i]),
+    Dataset2 = gsub("^(.*)_2.*$", "\\1", basename(df_grid$Var2[i])),
+    CellType2 = gsub(".*_(.*).tsv.gz", "\\1", df_grid$Var2[i]),
+    cramer.V = fit$cramer.V)
+  })
+```
+
+
+
+
+
+
