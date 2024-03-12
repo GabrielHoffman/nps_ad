@@ -57,6 +57,7 @@ library(RhpcBLASctl)
 omp_set_num_threads(4)
 ```
 
+# Read data + perform CCA
 ```{r run}
 parent = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/residuals/final/"
 
@@ -64,7 +65,7 @@ files1 = dir(parent, pattern="RUSH_2024-02-01_14_53_residuals_SubID_class_.*.tsv
 files2 = dir(parent, pattern="HBCC_2024-02-01_15_18_residuals_SubID_class_.*.tsv.gz", full.names=TRUE)
 files3 = dir(parent, pattern="MSSM_2024-02-01_16_17_residuals_SubID_class_.*.tsv.gz", full.names=TRUE)
 
-files = c(files3)
+files = c(files1, files2, files3)
 
 geneExprList = mclapply(files, function(file){
                 read.table(file, 
@@ -81,12 +82,11 @@ res = mclapply( seq(nrow(df_grid)), function(i){
   geneExpr2 = geneExprList[[df_grid$Var2[i]]]
 
   keep = intersect(rownames(geneExpr1), rownames(geneExpr2))
-  geneExpr1 = geneExpr1[keep,]
-  geneExpr2 = geneExpr2[keep,]
 
-  fit = fastcca(geneExpr1, geneExpr2)
+  fit = fastcca(geneExpr1[keep,], geneExpr2[keep,])
 
-  data.frame(Dataset1 = gsub("^(.*)_2.*$", "\\1", basename(df_grid$Var1[i])), CellType1 = gsub(".*_(.*).tsv.gz", "\\1", df_grid$Var1[i]),
+  data.frame(Dataset1 = gsub("^(.*)_2.*$", "\\1", basename(df_grid$Var1[i])), 
+    CellType1 = gsub(".*_(.*).tsv.gz", "\\1", df_grid$Var1[i]),
     Dataset2 = gsub("^(.*)_2.*$", "\\1", basename(df_grid$Var2[i])),
     CellType2 = gsub(".*_(.*).tsv.gz", "\\1", df_grid$Var2[i]),
     cramer.V = fit$cramer.V)
@@ -94,8 +94,8 @@ res = mclapply( seq(nrow(df_grid)), function(i){
 res = bind_rows(res)
 ```
 
-
-```{r plot}
+# Plots
+```{r plot, cache=FALSE}
 C = res %>%
   mutate(ID1 = paste(Dataset1, CellType1, sep=' / ')) %>%
   mutate(ID2 = paste(Dataset2, CellType2, sep=' / ')) %>%
