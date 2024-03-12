@@ -23,7 +23,7 @@ system("git pull"); rmarkdown::render("psychencode.Rmd")
 
 
 
-#https://hoffmg01.hpc.mssm.edu/nps_ad//analysis/freeze2/concordance/
+# https://hoffmg01.hpc.mssm.edu/nps_ad//analysis/freeze2/concordance/
 
 
 --->
@@ -192,7 +192,7 @@ lapply(names(res), function(id){
     theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), aspect.ratio=1, 
               legend.position = "none",)
   fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
-    theme(plot.title = element_text(hjust = 0.5)axis.text.x = element_text(angle = 90))
+    theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 90))
 
   fig3 = plot_pi1(res[[id]]$df_pi1) + ggtitle(id)
   plot_grid(fig1, fig3, align="hv")
