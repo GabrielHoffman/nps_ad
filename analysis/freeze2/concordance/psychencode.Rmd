@@ -21,6 +21,8 @@ R
 
 system("git pull"); rmarkdown::render("psychencode.Rmd")
 
+
+
 #https://hoffmg01.hpc.mssm.edu/nps_ad//analysis/freeze2/concordance/
 
 
@@ -153,8 +155,9 @@ res = mclapply(files, function(file){
 
   if( "logFC" %in% colnames(df)){
       df = df %>%
-        rename(estimate = logFC) %>%
-        mutate(std.error = estimate/t)
+        rename(estimate = logFC,
+                p.value = P.Value) %>%
+        mutate(std.error = estimate/t)     
   }
 
   df_est = df %>%
@@ -184,7 +187,7 @@ names(res) = gsub("\\.csv", "", basename(files))
 
 ```{r plots}
 lapply(names(res), function(id){
-  cat(id)
+  message(id)
 
   fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std")) +
     theme(plot.title = element_text(hjust = 0.5))
