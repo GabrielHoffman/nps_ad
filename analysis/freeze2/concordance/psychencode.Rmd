@@ -195,7 +195,7 @@ lapply(names(res), function(id){
     # theme(plot.title = element_text(hjust = 0.5)axis.text.x = element_text(angle = 90))
 
   fig3 = plot_pi1(res[[id]]$df_pi1) + ggtitle(id)
-  plot_grid(fig1, fig3)
+  plot_grid(fig1, fig3m align="hv")
 })
 ```
 
