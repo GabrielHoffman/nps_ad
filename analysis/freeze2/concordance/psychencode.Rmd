@@ -93,24 +93,31 @@ files = dir("/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/", pattern
 res = mclapply(files, function(file){
 
   df = read.table(file, sep=',', row.names=1) %>%
-      as_tibble
+      as_tibble 
+
+  if( "logFC" %in% colnames(df)){
+      df = df %>%
+        rename(estimate = logFC) %>%
+        mutate(std.error = estimate/t)
+  }
 
   df_est = df %>%
-        select(-std.error, -statistic, -p.value, -FDR.within) %>%
+        select(assay, ID, estimate) %>%
         pivot_wider(names_from = assay, 
           values_from = estimate)
 
   df_se = df %>%
-        select(-estimate, -statistic, -p.value, -FDR.within) %>%
+        select(assay, ID, std.error) %>%
         pivot_wider(names_from = assay, 
           values_from = std.error)
 
   C.std = cor(df_est[,-1] %>% as.matrix, use="pairwise.complete.obs")
 
-  hres = heivrPairs(df_est[,-1] %>% as.matrix, 
-          df_se[,-1]^2 %>% as.matrix)
+  # hres = heivrPairs(df_est[,-1] %>% as.matrix, 
+  #         df_se[,-1]^2 %>% as.matrix)
 
-  C.het = pairsToMatrix(hres, "rho")
+  # C.het = pairsToMatrix(hres, "rho")
+  C.het = NULL
 
   list(C.std = C.std, C.het = C.het)
 }, mc.cores=6)
@@ -122,8 +129,8 @@ lapply(names(res), function(id){
   cat(id)
 
   fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std"))
-  fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr"))
-  plot_grid(fig1, fig2)
+  # fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr"))
+  # plot_grid(fig1, fig2)
 })
 ```
 
