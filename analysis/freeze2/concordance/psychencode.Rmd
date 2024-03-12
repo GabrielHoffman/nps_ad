@@ -250,7 +250,7 @@ res = mclapply(pairValues, function(id){
 
   list(C.std = C.std, C.het = C.het)
 }, mc.cores=6)
-names(res) = gsub("\\.csv", "", basename(files))
+names(res) = pairValues
 ```
 
 ```{r plots.pair, fig.width=13}
