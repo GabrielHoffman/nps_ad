@@ -52,6 +52,7 @@ library(tidyverse)
 library(ggplot2)
 library(parallel)
 library(heivr)
+library(gtools)
 library(ggcorrplot)
 library(cowplot)
 })
@@ -221,23 +222,28 @@ res = mclapply(pairValues, function(id){
     }
 
     df_est = df %>%
-          mutate(assay = paste0(id1, ' / ', assay)) %>%
-          select(assay, ID, estimate) %>%
-          pivot_wider(names_from = assay, 
-            values_from = estimate)
+          mutate(id = id1) %>%
+          select(id, assay, ID, estimate) 
 
     df_se = df %>%
-          mutate(assay = paste0(id1, ' / ', assay)) %>%
-          select(assay, ID, std.error) %>%
-          pivot_wider(names_from = assay, 
-            values_from = std.error)
+          mutate(id = id1) %>%
+          select(id, assay, ID, std.error) 
 
     list(df_est = df_est, df_se = df_se)     
     })
   names(res) = ids
 
-  df_est = lapply(res, function(x) x$df_est) %>% bind_rows
-  df_se =  lapply(res, function(x) x$df_se) %>% bind_rows
+  df_est = bind_rows(res[[1]]$df_est, res[[2]]$df_est) %>%
+              mutate(assay = paste0(id, ' / ', assay)) %>%
+              select(-id) %>%
+              pivot_wider(names_from = assay, 
+                values_from = estimate)
+
+  df_se = bind_rows(res[[1]]$df_se, res[[2]]$df_se)%>%
+              mutate(assay = paste0(id, ' / ', assay)) %>%
+              select(-id) %>%
+              pivot_wider(names_from = assay, 
+                values_from = std.error)
 
   C.std = cor(df_est[,-1] %>% as.matrix,
               use="pairwise.complete.obs")
@@ -245,8 +251,7 @@ res = mclapply(pairValues, function(id){
   # hres = heivrPairs(df_est[,-1] %>% as.matrix, 
   #         df_se[,-1]^2 %>% as.matrix)
 
-  # C.het = pairsToMatrix(hres, "rho")
-  C.het = NULL
+  C.het = pairsToMatrix(hres, "rho")
 
   list(C.std = C.std, C.het = C.het)
 }, mc.cores=6)
