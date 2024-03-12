@@ -253,7 +253,7 @@ res = mclapply(pairValues, function(id){
 names(res) = pairValues
 ```
 
-```{r plots.pair, fig.width=13}
+```{r plots.pair, fig.width=13, cache=FALSE}
 lapply(names(res), function(id){
   message(id)
 
