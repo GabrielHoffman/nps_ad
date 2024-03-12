@@ -64,7 +64,7 @@ files1 = dir(parent, pattern="RUSH_2024-02-01_14_53_residuals_SubID_class_.*.tsv
 files2 = dir(parent, pattern="HBCC_2024-02-01_15_18_residuals_SubID_class_.*.tsv.gz", full.names=TRUE)
 files3 = dir(parent, pattern="MSSM_2024-02-01_16_17_residuals_SubID_class_.*.tsv.gz", full.names=TRUE)
 
-files = c(files1)
+files = c(files3)
 
 geneExprList = mclapply(files, function(file){
                 read.table(file, 
