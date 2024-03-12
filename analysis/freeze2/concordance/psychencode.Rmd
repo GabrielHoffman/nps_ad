@@ -199,5 +199,73 @@ lapply(names(res), function(id){
 })
 ```
 
+## pairs
+```{r pec}
+pairValues = tolower(c("SCZ/BP", "SCZ/ASD", "SCZ/MDD", "SCZ/PTSD"))
+
+res = mclapply(pairValues, function(id){
+
+  ids = unlist(strsplit(id, "/"))
+
+  res = lapply(ids, function(id){
+    file = paste0("/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/", id, ".csv")
+
+    df = read.table(file, sep=',', row.names=1) %>%
+        as_tibble 
+
+    if( "logFC" %in% colnames(df)){
+        df = df %>%
+          rename(estimate = logFC,
+                  p.value = P.Value) %>%
+          mutate(std.error = estimate/t)     
+    }
+
+    df_est = df %>%
+          mutate(assay = paste0(id, ' / ', assay)) %>%
+          select(assay, ID, estimate) %>%
+          pivot_wider(names_from = assay, 
+            values_from = estimate)
+
+    df_se = df %>%
+          mutate(assay = paste0(id, ' / ', assay)) %>%
+          select(assay, ID, std.error) %>%
+          pivot_wider(names_from = assay, 
+            values_from = std.error)
+
+    list(df_est = df_est, df_se = df_se)     
+    })
+  names(res) = ids
+
+  df_est = lapply(res, function(x) x$df_est) %>% bind_rows
+  df_se =  lapply(res, function(x) x$df_se) %>% bind_rows
+
+  C.std = cor(df_est[,-1] %>% as.matrix,
+              use="pairwise.complete.obs")
+
+  hres = heivrPairs(df_est[,-1] %>% as.matrix, 
+          df_se[,-1]^2 %>% as.matrix)
+
+  C.het = pairsToMatrix(hres, "rho")
+
+  list(C.std = C.std, C.het = C.het, df_pi1 = df_pi1)
+}, mc.cores=6)
+names(res) = gsub("\\.csv", "", basename(files))
+```
+
+```{r plots, fig.width=13}
+lapply(names(res), function(id){
+  message(id)
+
+  fig1 = ggcorrplot(res[[id]]$C.std, title=paste(id, "std")) +
+    theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), aspect.ratio=1, 
+              legend.position = "none")
+  fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
+    theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 90),legend.position = "none")
+
+  fig3 = plot_pi1(res[[id]]$df_pi1) + ggtitle(id)
+  plot_grid(fig1, fig2, fig3, align="hv", nrow=1)
+})
+```
+
 
 
