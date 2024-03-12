@@ -249,11 +249,10 @@ res = mclapply(pairValues, function(id){
   C.std = cor(df_est[,-1] %>% as.matrix,
               use="pairwise.complete.obs")
 
-  # hres = heivrPairs(df_est[,-1] %>% as.matrix, 
-  #         df_se[,-1]^2 %>% as.matrix)
+  hres = heivrPairs(df_est[,-1] %>% as.matrix, 
+          df_se[,-1]^2 %>% as.matrix)
 
-  # C.het = pairsToMatrix(hres, "rho")
-  C.het = NULL
+  C.het = pairsToMatrix(hres, "rho")
 
   list(C.std = C.std, C.het = C.het)
 }, mc.cores=6)
