@@ -207,8 +207,8 @@ res = mclapply(pairValues, function(id){
 
   ids = unlist(strsplit(id, "/"))
 
-  res = lapply(ids, function(id){
-    file = paste0("/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/", id, ".csv")
+  res = lapply(ids, function(id1){
+    file = paste0("/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/", id1, ".csv")
 
     df = read.table(file, sep=',', row.names=1) %>%
         as_tibble 
@@ -221,13 +221,13 @@ res = mclapply(pairValues, function(id){
     }
 
     df_est = df %>%
-          mutate(assay = paste0(id, ' / ', assay)) %>%
+          mutate(assay = paste0(id1, ' / ', assay)) %>%
           select(assay, ID, estimate) %>%
           pivot_wider(names_from = assay, 
             values_from = estimate)
 
     df_se = df %>%
-          mutate(assay = paste0(id, ' / ', assay)) %>%
+          mutate(assay = paste0(id1, ' / ', assay)) %>%
           select(assay, ID, std.error) %>%
           pivot_wider(names_from = assay, 
             values_from = std.error)
