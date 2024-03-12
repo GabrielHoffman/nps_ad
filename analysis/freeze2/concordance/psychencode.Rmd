@@ -184,7 +184,7 @@ res = mclapply(files, function(file){
 names(res) = gsub("\\.csv", "", basename(files))
 ```
 
-```{r plots}
+```{r plots, fig.width=10}
 lapply(names(res), function(id){
   message(id)
 
