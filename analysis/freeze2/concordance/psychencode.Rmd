@@ -277,7 +277,7 @@ lapply(names(res), function(id){
 
 
 # Sorted
-```{r plots.pair, fig.width=13, fig.height=8, cache=FALSE}
+```{r plots.pair.sorted, fig.width=13, fig.height=8, cache=FALSE}
 lapply(names(res), function(id){
   message(id)
 
