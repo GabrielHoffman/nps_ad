@@ -259,6 +259,8 @@ res = mclapply(pairValues, function(id){
 names(res) = pairValues
 ```
 
+
+# Sorted
 ```{r plots.pair, fig.width=13, fig.height=8, cache=FALSE}
 lapply(names(res), function(id){
   message(id)
@@ -267,6 +269,25 @@ lapply(names(res), function(id){
     theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), aspect.ratio=1, 
               legend.position = "none")
   fig2 = ggcorrplot(res[[id]]$C.het, title=paste(id, "heivr")) +
+    theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 90),legend.position = "none")
+
+  plot_grid(fig1, fig2, align="hv", nrow=1)
+})
+```
+
+
+# Sorted
+```{r plots.pair, fig.width=13, fig.height=8, cache=FALSE}
+lapply(names(res), function(id){
+  message(id)
+
+  hcl = hclust(as.dist(1-res[[id]]$C.std^2))
+  i = hcl$labels[hcl$order]
+
+  fig1 = ggcorrplot(res[[id]]$C.std[i,i], title=paste(id, "std")) +
+    theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90), aspect.ratio=1, 
+              legend.position = "none")
+  fig2 = ggcorrplot(res[[id]]$C.het[i,i], title=paste(id, "heivr")) +
     theme(plot.title = element_text(hjust = 0.5),axis.text.x = element_text(angle = 90),legend.position = "none")
 
   plot_grid(fig1, fig2, align="hv", nrow=1)
