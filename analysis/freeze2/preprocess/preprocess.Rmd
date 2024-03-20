@@ -527,7 +527,7 @@ for(cluster_id in cluster_id_options ){
     if( params$DATASET == "AGING" ){
       form = ~ Sex + scale(log(Age+1)) + scale(PMI) + Source + log(n_genes) + percent_mito + mito_genes + mito_ribo + ribo_genes
     }
-    if( params$DATASET == "FULL" ){    
+    if( names(params$DATASET) == "FULL" ){    
       form = update(form,  ~ . + (1|Source) - (1|mod_cogdx))
     }
     if( sample_id == "Channel"){
