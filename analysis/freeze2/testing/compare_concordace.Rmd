@@ -272,6 +272,142 @@ pheatmap::pheatmap(Csub,
 
 
 
+# MORE PAIRS
+```{r pairs}
+
+library(arrow)
+library(tidyverse)
+library(parallel)
+
+get_pi1 = function(p){
+  res <- tryCatch( pi0est(c(p, 1)), error = function(e) NULL)
+
+  ifelse(is.null(res), NA, 1 - res$pi0)
+}
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined.parquet"
+df_all = read_parquet(file) %>%
+          filter(AnnoLevel == "class") %>%
+          rename(estimate = logFC)
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/res_meta.parquet"
+df_meta = read_parquet(file) %>%
+          filter(AnnoLevel=="class", 
+            method == "FE") %>%
+          rename(P.Value = p.value)
+
+df_stack = bind_rows(df_all, df_meta)
+
+df_coef = df_all %>%
+  select(coef, Dataset) %>%
+  unique
+
+
+df_coef[grep("SC", df_coef$coef),]
+
+getCohort = function(x){
+  res = df_coef[grep(x, df_coef$coef),]$Dataset[1]
+  ifelse(is.na(res), "meta-analysis", res)
+}
+
+
+make_plot = function(coef1, coef2){
+  df1 = df_stack %>%
+          filter(coef == coef1)%>%
+          arrange(assay)
+
+  df2 = df_stack %>%
+          filter(coef == coef2) %>%
+          arrange(assay)
+
+  df_join = inner_join(df1, df2, by=c("assay", "ID"))
+
+
+  # corr along diagonals
+  df_join %>%
+    group_by(assay) %>%
+    summarize(r = cor(estimate.x, estimate.y, method="sp"), 
+              n = length(estimate.x),
+              se = sqrt((1-r^2)/ (n-2)))
+
+
+  Y1 = df1 %>%
+        select(assay, estimate, ID) %>%
+        pivot_wider(names_from = "assay", values_from="estimate") 
+
+  Y2 = df2 %>%
+        select(assay, estimate, ID) %>%
+        pivot_wider(names_from = "assay", values_from="estimate")
+
+  Y = inner_join(Y1, Y2, by="ID") %>%
+        select(-ID) 
+
+  C = cor(Y, use="pair")
+
+  main = paste0("x: ", coef1, " (", getCohort(coef1), ") | y: ", coef2, " (", getCohort(coef2), ")")
+
+  # png("~/www/test.png", height=600, width=600)
+  breaksList = seq(-1, 1, by=.025)
+
+  pheatmap::pheatmap(C, 
+    cluster_rows=FALSE, 
+    cluster_cols=FALSE, 
+    color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
+    breaks=breaksList, 
+    main=main)
+  # dev.off()
+}
+
+
+# meta-analysis of AD/control and SCZ control
+coef1 = "m01x"
+coef2 = "m05x"
+make_plot(coef1, coef2)
+
+coef1 = "c07xSCZ - c07xControl" # MSSM
+coef2 = "c03xAD - c03xControl" # RUSH
+make_plot(coef1, coef2)
+
+coef1 = "c02xAD - c02xControl" # MSSM
+coef2 = "c08xSCZ - c08xControl" # HBCC
+make_plot(coef1, coef2)
+
+coef1 = "c38xSCZ - c38xBD" # HBCC
+coef2 = "c06xAD - c06xSCZ" # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c07xSCZ - c07xControl" # MSSM
+coef2 = "c02xAD - c02xControl"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c03xAD - c03xControl" # RUSH
+coef2 = "c08xSCZ - c08xControl" # HBCC
+make_plot(coef1, coef2)
+
+
+coef1 = "r10x.L" # AGING
+coef2 = "c02xAD - c02xControl"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "r10x.L" # AGING
+coef2 = "m01x"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c08xSCZ - c08xControl" # HBCC
+coef2 = "c07xSCZ - c07xControl" # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "m05x" # SCZ
+coef2 = "m20x" # APOE
+make_plot(coef1, coef2)
+
+coef1 = "m01x" # AD
+coef2 = "m20x" # APOE
+make_plot(coef1, coef2)
+```
+
+
+
 ```{r exit1, cache=FALSE }
 knitr::knit_exit()
 ```
@@ -527,141 +663,6 @@ pheatmap::pheatmap(Csub,
 # CTRl comparson
 # permuate labels
 # remove TechPC's
-
-# MORE PAIRS
-```{r pairs}
-
-library(arrow)
-library(tidyverse)
-library(parallel)
-
-get_pi1 = function(p){
-  res <- tryCatch( pi0est(c(p, 1)), error = function(e) NULL)
-
-  ifelse(is.null(res), NA, 1 - res$pi0)
-}
-
-file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined.parquet"
-df_all = read_parquet(file) %>%
-          filter(AnnoLevel == "class") %>%
-          rename(estimate = logFC)
-
-file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/res_meta.parquet"
-df_meta = read_parquet(file) %>%
-          filter(AnnoLevel=="class", 
-            method == "FE") %>%
-          rename(P.Value = p.value)
-
-df_stack = bind_rows(df_all, df_meta)
-
-df_coef = df_all %>%
-  select(coef, Dataset) %>%
-  unique
-
-
-df_coef[grep("SC", df_coef$coef),]
-
-getCohort = function(x){
-  res = df_coef[grep(x, df_coef$coef),]$Dataset[1]
-  ifelse(is.na(res), "meta-analysis", res)
-}
-
-
-make_plot = function(coef1, coef2){
-  df1 = df_stack %>%
-          filter(coef == coef1)%>%
-          arrange(assay)
-
-  df2 = df_stack %>%
-          filter(coef == coef2) %>%
-          arrange(assay)
-
-  df_join = inner_join(df1, df2, by=c("assay", "ID"))
-
-
-  # corr along diagonals
-  df_join %>%
-    group_by(assay) %>%
-    summarize(r = cor(estimate.x, estimate.y, method="sp"), 
-              n = length(estimate.x),
-              se = sqrt((1-r^2)/ (n-2)))
-
-
-  Y1 = df1 %>%
-        select(assay, estimate, ID) %>%
-        pivot_wider(names_from = "assay", values_from="estimate") 
-
-  Y2 = df2 %>%
-        select(assay, estimate, ID) %>%
-        pivot_wider(names_from = "assay", values_from="estimate")
-
-  Y = inner_join(Y1, Y2, by="ID") %>%
-        select(-ID) 
-
-  C = cor(Y, use="pair")
-
-  main = paste0("x: ", coef1, " (", getCohort(coef1), ") | y: ", coef2, " (", getCohort(coef2), ")")
-
-  # png("~/www/test.png", height=600, width=600)
-  breaksList = seq(-1, 1, by=.025)
-
-  pheatmap::pheatmap(C, 
-    cluster_rows=FALSE, 
-    cluster_cols=FALSE, 
-    color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
-    breaks=breaksList, 
-    main=main)
-  # dev.off()
-}
-
-
-# meta-analysis of AD/control and SCZ control
-coef1 = "m01x"
-coef2 = "m05x"
-make_plot(coef1, coef2)
-
-coef1 = "c07xSCZ - c07xControl" # MSSM
-coef2 = "c03xAD - c03xControl" # RUSH
-make_plot(coef1, coef2)
-
-coef1 = "c02xAD - c02xControl" # MSSM
-coef2 = "c08xSCZ - c08xControl" # HBCC
-make_plot(coef1, coef2)
-
-coef1 = "c38xSCZ - c38xBD" # HBCC
-coef2 = "c06xAD - c06xSCZ" # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "c07xSCZ - c07xControl" # MSSM
-coef2 = "c02xAD - c02xControl"  # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "c03xAD - c03xControl" # RUSH
-coef2 = "c08xSCZ - c08xControl" # HBCC
-make_plot(coef1, coef2)
-
-
-coef1 = "r10x.L" # AGING
-coef2 = "c02xAD - c02xControl"  # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "r10x.L" # AGING
-coef2 = "m01x"  # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "c08xSCZ - c08xControl" # HBCC
-coef2 = "c07xSCZ - c07xControl" # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "m05x" # SCZ
-coef2 = "m20x" # APOE
-make_plot(coef1, coef2)
-
-coef1 = "m01x" # AD
-coef2 = "m20x" # APOE
-make_plot(coef1, coef2)
-```
-
 
 
 
