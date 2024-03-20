@@ -184,7 +184,7 @@ omp_set_num_threads(1)
 
 ## H5AD
 ```{r load.data}
-sce = readH5AD(params$DATASET, use_hdf5=TRUE, verbose=TRUE)
+sce = readH5AD(params$DATASET, use_hdf5=TRUE, verbose=TRUE, version="0.8.0")
 assayNames(sce)[1] = "counts"
 
 # remove NA from factor levels
