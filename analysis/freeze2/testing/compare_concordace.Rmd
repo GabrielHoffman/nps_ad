@@ -97,6 +97,7 @@ library(tidyverse)
 library(parallel)
 
 get_pi1 = function(p){
+  library(qvalue)
   res <- tryCatch( pi0est(c(p, 1)), error = function(e) NULL)
 
   ifelse(is.null(res), NA, 1 - res$pi0)
@@ -117,8 +118,7 @@ df_stack = bind_rows(df_all, df_meta)
 
 df_coef = df_all %>%
   select(coef, Dataset) %>%
-  unique
-
+  distinct
 
 df_coef[grep("SC", df_coef$coef),]
 
@@ -246,7 +246,149 @@ coef2 = "m20x" # APOE
 make_plot(coef1, coef2)
 ```
 
+```{r plot.pi1}
 
+make_plot = function(coef1, coef2){
+  df1 = df_stack %>%
+          filter(coef == coef1)%>%
+          arrange(assay)
+
+  df2 = df_stack %>%
+          filter(coef == coef2) %>%
+          arrange(assay)
+
+  # df_join = inner_join(df1, df2, by=c("assay", "ID"))
+
+  # corr along diagonals
+  # df_join %>%
+  #   group_by(assay) %>%
+  #   summarize(r = cor(estimate.x, estimate.y, method="sp"), 
+  #             n = length(estimate.x),
+  #             se = sqrt((1-r^2)/ (n-2)))
+
+  Y1 = df1 %>%
+        select(assay, P.Value, ID) %>%
+        pivot_wider(names_from = "assay", values_from="P.Value") 
+
+  Y2 = df2 %>%
+        select(assay, P.Value, ID) %>%
+        pivot_wider(names_from = "assay", values_from="P.Value")
+
+  Y = inner_join(Y1, Y2, by="ID") 
+
+  # add CMC  
+  df1 = df.cmc %>%
+    select(ID, assay, p.value) %>%
+    filter(assay == "MPP") %>%
+    rename(p.MPP = p.value) %>%
+    select(-assay) 
+
+  tab = table(df1$ID) == 1
+  genes = names(tab)[tab]
+
+  df2 = df.cmc %>%
+    select(ID, assay, p.value) %>%
+    filter(assay == "HBCC") %>%
+    rename(p.HBCC = p.value) %>%
+    select(-assay)  %>%
+    filter(ID %in% genes) %>%
+    inner_join(df1 %>% filter(ID %in% genes), by="ID")
+
+  Y = Y %>%
+    full_join(df2, by="ID") %>%
+    select(-ID) 
+
+  df_grid = expand.grid(assay1 = colnames(Y), assay2 = colnames(Y)) 
+
+  df_pi1 = mclapply( 1:nrow(df_grid), function(i){
+    k1 = df_grid$assay1[i] %>% as.character
+    k2 = df_grid$assay2[i]%>% as.character
+
+    df = Y[,c(k1, k2)]
+    df = df[apply(df,1, function(x) all(!is.na(x))),]
+
+    if( k1 == k2){      
+      pi1 = get_pi1(df[,1] %>% pull)
+    }else{
+      j = p.adjust(df[,1] %>% pull, "fdr") < 0.05
+
+      pvals = df[j,2] %>% pull
+
+      pi1 = get_pi1(pvals)
+    }
+
+    data.frame(assay1 = k1, assay2 = k2, pi1 =pi1, nDE = sum(j) )
+    }, mc.cores=12)
+  df_pi1 = bind_rows(df_pi1)
+
+  main = paste0("x: ", coef1, " (", getCohort(coef1), ") | y: ", coef2, " (", getCohort(coef2), ")")
+
+  df_pi1 %>%
+      mutate(assay1 = factor(assay1, colnames(Y))) %>%
+      mutate(assay2 = factor(assay2, colnames(Y))) %>%
+       ggplot(aes(assay1, assay2, fill=pi1, label=round(pi1,2))) +
+            geom_tile() +
+            geom_text(size=3) +
+            theme_classic() +
+            theme(aspect.ratio=1, 
+              legend.position = "right", 
+              axis.text.x = element_text(angle = 90),
+              plot.title = element_text(hjust = 0.5)) +
+            scale_fill_gradient(low="white", high="red", limits=c(0,1)) +
+            ggtitle(main) + 
+            xlab("Replication") +
+            ylab("Discovery") 
+}
+```
+
+
+```{r plot.pairs.pi1, fig.height=7, fig.width=7, cache=FALSE}
+# meta-analysis of AD/control and SCZ control
+coef1 = "m01x"
+coef2 = "m05x"
+make_plot(coef1, coef2)
+
+coef1 = "c07xSCZ - c07xControl" # MSSM
+coef2 = "c03xAD - c03xControl" # RUSH
+make_plot(coef1, coef2)
+
+coef1 = "c02xAD - c02xControl" # MSSM
+coef2 = "c08xSCZ - c08xControl" # HBCC
+make_plot(coef1, coef2)
+
+coef1 = "c38xSCZ - c38xBD" # HBCC
+coef2 = "c06xAD - c06xSCZ" # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c07xSCZ - c07xControl" # MSSM
+coef2 = "c02xAD - c02xControl"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c03xAD - c03xControl" # RUSH
+coef2 = "c08xSCZ - c08xControl" # HBCC
+make_plot(coef1, coef2)
+
+
+coef1 = "r10x.L" # AGING
+coef2 = "c02xAD - c02xControl"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "r10x.L" # AGING
+coef2 = "m01x"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c08xSCZ - c08xControl" # HBCC
+coef2 = "c07xSCZ - c07xControl" # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "m05x" # SCZ
+coef2 = "m20x" # APOE
+make_plot(coef1, coef2)
+
+coef1 = "m01x" # AD
+coef2 = "m20x" # APOE
+make_plot(coef1, coef2)
+```
 ```{r exit2, cache=FALSE }
 knitr::knit_exit()
 ```
