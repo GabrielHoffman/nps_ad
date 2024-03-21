@@ -62,15 +62,24 @@ files = c(MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/MSSM_2
 pbList = lapply( files, readRDS)
 names(pbList) = names(files)
 
+# read PB bulk
+files = c(MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/MSSM_2024-02-01_16_17_PB_SubID_bulk.RDS", 
+  HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/HBCC_2024-02-01_15_18_PB_SubID_bulk.RDS")
+pbList2 = lapply( files, readRDS)
+names(pbList2) = names(files)
+
+assay(pbList[["MSSM"]], "bulk") = assay(pbList2[["MSSM"]], "bulk")
+assay(pbList[["HBCC"]], "bulk") = assay(pbList2[["HBCC"]], "bulk")
+
 # permute
-for( id in names(pbList) ){
-  v = ifelse(id == "MSSM", "c02x", "c08x")
-  values = colData(pbList[[id]])[[v]]
-  colData(pbList[[id]])[[v]] = sample(values)
-}
+# for( id in names(pbList) ){
+#   v = ifelse(id == "MSSM", "c02x", "c08x")
+#   values = colData(pbList[[id]])[[v]]
+#   colData(pbList[[id]])[[v]] = sample(values)
+# }
 
 # processAssays
-form = ~ Sex + scale(Age) + scale(PMI) 
+form = ~ Sex + scale(Age) + scale(PMI) + log(n_genes) + percent_mito + mito_genes + ribo_genes + mito_ribo + pH
 
 res.procList = lapply(pbList, function(pb){
   res = processAssays(pb, ~1)
