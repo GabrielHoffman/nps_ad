@@ -195,6 +195,10 @@ make_plot = function(coef1, coef2){
     main=main)
   # dev.off()
 }
+```
+
+
+```{r plot.pairs, fig.height=7, fig.width=7}
 
 # meta-analysis of AD/control and SCZ control
 coef1 = "m01x"
