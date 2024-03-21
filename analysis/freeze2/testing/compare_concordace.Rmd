@@ -237,7 +237,7 @@ resList = lapply(names(res.procList), function(id){
 names(resList) = names(res.procList)
 
 tab = lapply(names(res.procList), function(id){
-  co = ifelse(id == "MSSM", "c02xAD", "c08xSCZ")
+  co = ifelse(id == "MSSM", "c02x.L", "c08x.L")
   tab = topTable( resList[[id]], coef=co, number=Inf)
   tab$Dataset = id
   tab %>% as_tibble
@@ -307,12 +307,12 @@ get_pi1 = function(p){
 
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined.parquet"
 df_all = read_parquet(file) %>%
-          filter(AnnoLevel == "class") %>%
+          filter(AnnoLevel == "class" || AnnoLevel == "bulk") %>%
           rename(estimate = logFC)
 
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/res_meta.parquet"
 df_meta = read_parquet(file) %>%
-          filter(AnnoLevel=="class", 
+          filter(AnnoLevel == "class" || AnnoLevel == "bulk", 
             method == "FE") %>%
           rename(P.Value = p.value)
 
