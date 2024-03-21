@@ -56,6 +56,201 @@ library(RhpcBLASctl)
 omp_set_num_threads(2)
 ```
 
+
+# CMC Signatures
+```{r cmc}
+file = "/sc/arion/projects/CommonMind/hoffman/cmc_signature/df_DE_results.RDS"
+res.cmc = readRDS(file)
+
+df.cmc = lapply(names(res.cmc), function(x){
+  res.cmc[[x]]$DxSCZ %>%
+    as_tibble %>%
+    mutate(estimate = logFC, 
+        std.error = logFC / t, 
+        ID = Symbol, 
+        statistic = t,
+        p.value = P.Value,
+        FDR.within =  adj.P.Val,
+        assay = x) %>%
+    select(ID, assay, estimate, std.error, statistic, p.value, FDR.within)
+  })
+df.cmc = bind_rows(df.cmc)
+
+df.cmc$assay[df.cmc$assay == 'MSSM-Penn-Pitt'] = "MPP"
+df.cmc$assay[df.cmc$assay == 'NIMH-HBCC'] = "HBCC"
+
+tab = table(df.cmc$ID)
+exclude = names(tab[tab !=2])
+
+df_filter = df.cmc %>%
+  select(ID, estimate, assay) %>%
+  filter(! ID %in% exclude) %>%
+  pivot_wider(names_from = assay, values_from = estimate) 
+
+cor(df_filter[,-1] %>% as.matrix)
+```
+
+# MORE PAIRS
+```{r pairs}
+library(arrow)
+library(tidyverse)
+library(parallel)
+
+get_pi1 = function(p){
+  res <- tryCatch( pi0est(c(p, 1)), error = function(e) NULL)
+
+  ifelse(is.null(res), NA, 1 - res$pi0)
+}
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined.parquet"
+df_all = read_parquet(file) %>%
+          filter(AnnoLevel == "class" | AnnoLevel == "bulk") %>%
+          rename(estimate = logFC)
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/res_meta.parquet"
+df_meta = read_parquet(file) %>%
+          filter(AnnoLevel == "class" | AnnoLevel == "bulk", 
+            method == "FE") %>%
+          rename(P.Value = p.value)
+
+df_stack = bind_rows(df_all, df_meta)
+
+df_coef = df_all %>%
+  select(coef, Dataset) %>%
+  unique
+
+
+df_coef[grep("SC", df_coef$coef),]
+
+getCohort = function(x){
+  res = df_coef[grep(x, df_coef$coef),]$Dataset[1]
+  ifelse(is.na(res), "meta-analysis", res)
+}
+
+
+make_plot = function(coef1, coef2){
+  df1 = df_stack %>%
+          filter(coef == coef1)%>%
+          arrange(assay)
+
+  df2 = df_stack %>%
+          filter(coef == coef2) %>%
+          arrange(assay)
+
+  df_join = inner_join(df1, df2, by=c("assay", "ID"))
+
+  # corr along diagonals
+  df_join %>%
+    group_by(assay) %>%
+    summarize(r = cor(estimate.x, estimate.y, method="sp"), 
+              n = length(estimate.x),
+              se = sqrt((1-r^2)/ (n-2)))
+
+  Y1 = df1 %>%
+        select(assay, estimate, ID) %>%
+        pivot_wider(names_from = "assay", values_from="estimate") 
+
+  Y2 = df2 %>%
+        select(assay, estimate, ID) %>%
+        pivot_wider(names_from = "assay", values_from="estimate")
+
+  Y = inner_join(Y1, Y2, by="ID") 
+
+  # add CMC  
+  df1 = df.cmc %>%
+    select(ID, assay, estimate) %>%
+    filter(assay == "MPP") %>%
+    rename(estimate.MPP = estimate) %>%
+    select(-assay) 
+
+  tab = table(df1$ID) == 1
+  genes = names(tab)[tab]
+
+  df2 = df.cmc %>%
+    select(ID, assay, estimate) %>%
+    filter(assay == "HBCC") %>%
+    rename(estimate.HBCC = estimate) %>%
+    select(-assay)  %>%
+    filter(ID %in% genes) %>%
+    inner_join(df1 %>% filter(ID %in% genes), by="ID")
+
+  cor(df2$estimate.MPP, df2$estimate.HBCC)
+
+  Y = Y %>%
+    full_join(df2, by="ID") %>%
+    select(-ID) 
+
+  C = cor(Y, use="pair")
+
+  main = paste0("x: ", coef1, " (", getCohort(coef1), ") | y: ", coef2, " (", getCohort(coef2), ")")
+
+  # png("~/www/test.png", height=600, width=600)
+  breaksList = seq(-1, 1, by=.025)
+
+  pheatmap::pheatmap(C, 
+    cluster_rows=FALSE, 
+    cluster_cols=FALSE, 
+    color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
+    breaks=breaksList, 
+    main=main)
+  # dev.off()
+}
+
+# meta-analysis of AD/control and SCZ control
+coef1 = "m01x"
+coef2 = "m05x"
+make_plot(coef1, coef2)
+
+coef1 = "c07xSCZ - c07xControl" # MSSM
+coef2 = "c03xAD - c03xControl" # RUSH
+make_plot(coef1, coef2)
+
+coef1 = "c02xAD - c02xControl" # MSSM
+coef2 = "c08xSCZ - c08xControl" # HBCC
+make_plot(coef1, coef2)
+
+coef1 = "c38xSCZ - c38xBD" # HBCC
+coef2 = "c06xAD - c06xSCZ" # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c07xSCZ - c07xControl" # MSSM
+coef2 = "c02xAD - c02xControl"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c03xAD - c03xControl" # RUSH
+coef2 = "c08xSCZ - c08xControl" # HBCC
+make_plot(coef1, coef2)
+
+
+coef1 = "r10x.L" # AGING
+coef2 = "c02xAD - c02xControl"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "r10x.L" # AGING
+coef2 = "m01x"  # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "c08xSCZ - c08xControl" # HBCC
+coef2 = "c07xSCZ - c07xControl" # MSSM
+make_plot(coef1, coef2)
+
+coef1 = "m05x" # SCZ
+coef2 = "m20x" # APOE
+make_plot(coef1, coef2)
+
+coef1 = "m01x" # AD
+coef2 = "m20x" # APOE
+make_plot(coef1, coef2)
+```
+
+
+```{r exit2, cache=FALSE }
+knitr::knit_exit()
+```
+
+
+
+
 # V1
 ```{r main}
 # read PB
@@ -65,21 +260,19 @@ pbList = lapply( files, readRDS)
 names(pbList) = names(files)
 
 # read PB bulk
-files = c(MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/MSSM_2024-02-01_16_17_PB_SubID_bulk.RDS", 
-  HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/HBCC_2024-02-01_15_18_PB_SubID_bulk.RDS")
-pbList2 = lapply( files, readRDS)
-names(pbList2) = names(files)
+# files = c(MSSM = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/MSSM_2024-02-01_16_17_PB_SubID_bulk.RDS", 
+#   HBCC = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/HBCC_2024-02-01_15_18_PB_SubID_bulk.RDS")
+# pbList2 = lapply( files, readRDS)
+# names(pbList2) = names(files)
 
-assay(pbList[["MSSM"]], "bulk") = assay(pbList2[["MSSM"]], "bulk")
-assay(pbList[["HBCC"]], "bulk") = assay(pbList2[["HBCC"]], "bulk")
+# assay(pbList[["MSSM"]], "bulk") = assay(pbList2[["MSSM"]], "bulk")
+# assay(pbList[["HBCC"]], "bulk") = assay(pbList2[["HBCC"]], "bulk")
 
-for( dataset in names(pbList)){
-  for( id in names(int_colData(pbList[[dataset]])$n_cells)){
-    int_colData(pbList[[dataset]])$n_cells[[id]] = append(int_colData(pbList[[dataset]])$n_cells[[id]], c(bulk=100))
-  }
-}
-
-
+# for( dataset in names(pbList)){
+#   for( id in names(int_colData(pbList[[dataset]])$n_cells)){
+#     int_colData(pbList[[dataset]])$n_cells[[id]] = append(int_colData(pbList[[dataset]])$n_cells[[id]], c(bulk=100))
+#   }
+# }
 
 # permute
 # for( id in names(pbList) ){
@@ -89,7 +282,7 @@ for( dataset in names(pbList)){
 # }
 
 # processAssays
-form = ~ Sex + scale(Age) + scale(PMI) + log(n_genes) + percent_mito + mito_genes + ribo_genes + mito_ribo + pH
+form = ~ Sex + scale(Age) + scale(PMI) + pH + log(n_genes) + percent_mito + mito_genes + ribo_genes + mito_ribo 
 
 res.procList = mclapply(pbList, function(pb){
   # res = processAssays(pb, ~1)
@@ -105,6 +298,8 @@ res.procList = mclapply(pbList, function(pb){
   processAssays(pb, form)
   })
 names(res.procList) = names(pbList)
+
+rm(pbList, pbList2)
 ```
 
 
@@ -289,144 +484,6 @@ pheatmap::pheatmap(Csub,
   breaks=breaksList,
   main = "MSSM AD/CTRL vs HBCC SCZ/CTRL (covs)")
 ```
-
-
-
-# MORE PAIRS
-```{r pairs}
-
-library(arrow)
-library(tidyverse)
-library(parallel)
-
-get_pi1 = function(p){
-  res <- tryCatch( pi0est(c(p, 1)), error = function(e) NULL)
-
-  ifelse(is.null(res), NA, 1 - res$pi0)
-}
-
-file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined.parquet"
-df_all = read_parquet(file) %>%
-          filter(AnnoLevel == "class" || AnnoLevel == "bulk") %>%
-          rename(estimate = logFC)
-
-file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/res_meta.parquet"
-df_meta = read_parquet(file) %>%
-          filter(AnnoLevel == "class" || AnnoLevel == "bulk", 
-            method == "FE") %>%
-          rename(P.Value = p.value)
-
-df_stack = bind_rows(df_all, df_meta)
-
-df_coef = df_all %>%
-  select(coef, Dataset) %>%
-  unique
-
-
-df_coef[grep("SC", df_coef$coef),]
-
-getCohort = function(x){
-  res = df_coef[grep(x, df_coef$coef),]$Dataset[1]
-  ifelse(is.na(res), "meta-analysis", res)
-}
-
-
-make_plot = function(coef1, coef2){
-  df1 = df_stack %>%
-          filter(coef == coef1)%>%
-          arrange(assay)
-
-  df2 = df_stack %>%
-          filter(coef == coef2) %>%
-          arrange(assay)
-
-  df_join = inner_join(df1, df2, by=c("assay", "ID"))
-
-
-  # corr along diagonals
-  df_join %>%
-    group_by(assay) %>%
-    summarize(r = cor(estimate.x, estimate.y, method="sp"), 
-              n = length(estimate.x),
-              se = sqrt((1-r^2)/ (n-2)))
-
-
-  Y1 = df1 %>%
-        select(assay, estimate, ID) %>%
-        pivot_wider(names_from = "assay", values_from="estimate") 
-
-  Y2 = df2 %>%
-        select(assay, estimate, ID) %>%
-        pivot_wider(names_from = "assay", values_from="estimate")
-
-  Y = inner_join(Y1, Y2, by="ID") %>%
-        select(-ID) 
-
-  C = cor(Y, use="pair")
-
-  main = paste0("x: ", coef1, " (", getCohort(coef1), ") | y: ", coef2, " (", getCohort(coef2), ")")
-
-  # png("~/www/test.png", height=600, width=600)
-  breaksList = seq(-1, 1, by=.025)
-
-  pheatmap::pheatmap(C, 
-    cluster_rows=FALSE, 
-    cluster_cols=FALSE, 
-    color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
-    breaks=breaksList, 
-    main=main)
-  # dev.off()
-}
-
-
-# meta-analysis of AD/control and SCZ control
-coef1 = "m01x"
-coef2 = "m05x"
-make_plot(coef1, coef2)
-
-coef1 = "c07xSCZ - c07xControl" # MSSM
-coef2 = "c03xAD - c03xControl" # RUSH
-make_plot(coef1, coef2)
-
-coef1 = "c02xAD - c02xControl" # MSSM
-coef2 = "c08xSCZ - c08xControl" # HBCC
-make_plot(coef1, coef2)
-
-coef1 = "c38xSCZ - c38xBD" # HBCC
-coef2 = "c06xAD - c06xSCZ" # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "c07xSCZ - c07xControl" # MSSM
-coef2 = "c02xAD - c02xControl"  # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "c03xAD - c03xControl" # RUSH
-coef2 = "c08xSCZ - c08xControl" # HBCC
-make_plot(coef1, coef2)
-
-
-coef1 = "r10x.L" # AGING
-coef2 = "c02xAD - c02xControl"  # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "r10x.L" # AGING
-coef2 = "m01x"  # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "c08xSCZ - c08xControl" # HBCC
-coef2 = "c07xSCZ - c07xControl" # MSSM
-make_plot(coef1, coef2)
-
-coef1 = "m05x" # SCZ
-coef2 = "m20x" # APOE
-make_plot(coef1, coef2)
-
-coef1 = "m01x" # AD
-coef2 = "m20x" # APOE
-make_plot(coef1, coef2)
-```
-
-
 
 ```{r exit1, cache=FALSE }
 knitr::knit_exit()
