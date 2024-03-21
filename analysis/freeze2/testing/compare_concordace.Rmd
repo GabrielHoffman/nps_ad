@@ -82,16 +82,17 @@ assay(pbList[["HBCC"]], "bulk") = assay(pbList2[["HBCC"]], "bulk")
 form = ~ Sex + scale(Age) + scale(PMI) + log(n_genes) + percent_mito + mito_genes + ribo_genes + mito_ribo + pH
 
 res.procList = lapply(pbList, function(pb){
-  res = processAssays(pb, ~1)
+  # res = processAssays(pb, ~1)
 
-  keep = outlierByAssay(res, nPC=5) %>%
-    group_by(ID) %>%
-    summarize(z2 = sort(z, decreasing=TRUE)[2]) %>%
-    arrange(desc(z2)) %>%
-    filter(z2 < 3) %>%
-    pull(ID)
+  # keep = outlierByAssay(res, nPC=5) %>%
+  #   group_by(ID) %>%
+  #   summarize(z2 = sort(z, decreasing=TRUE)[2]) %>%
+  #   arrange(desc(z2)) %>%
+  #   filter(z2 < 3) %>%
+  #   pull(ID)
 
-  processAssays(pb[,keep], form)
+  # processAssays(pb[,keep], form)
+  processAssays(pb, form)
   })
 names(res.procList) = names(pbList)
 ```
