@@ -28,6 +28,7 @@ git pull origin master
 
 rm -rf compare_concordace_cache/ compare_concordace_files
 
+system("git pull origin master")
 rmarkdown::render("compare_concordace.Rmd")
 
 
@@ -50,6 +51,7 @@ knitr::opts_chunk$set(
 ```{r libs, cache=FALSE}
 library(dreamlet)
 library(tidyverse)
+library(parallel)
 library(RhpcBLASctl)
 omp_set_num_threads(2)
 ```
@@ -71,6 +73,14 @@ names(pbList2) = names(files)
 assay(pbList[["MSSM"]], "bulk") = assay(pbList2[["MSSM"]], "bulk")
 assay(pbList[["HBCC"]], "bulk") = assay(pbList2[["HBCC"]], "bulk")
 
+for( dataset in names(pbList)){
+  for( id in names(int_colData(pbList[[dataset]])$n_cells)){
+    int_colData(pbList[[dataset]])$n_cells[[id]] = append(int_colData(pbList[[dataset]])$n_cells[[id]], c(bulk=100))
+  }
+}
+
+
+
 # permute
 # for( id in names(pbList) ){
 #   v = ifelse(id == "MSSM", "c02x", "c08x")
@@ -81,7 +91,7 @@ assay(pbList[["HBCC"]], "bulk") = assay(pbList2[["HBCC"]], "bulk")
 # processAssays
 form = ~ Sex + scale(Age) + scale(PMI) + log(n_genes) + percent_mito + mito_genes + ribo_genes + mito_ribo + pH
 
-res.procList = lapply(pbList, function(pb){
+res.procList = mclapply(pbList, function(pb){
   # res = processAssays(pb, ~1)
 
   # keep = outlierByAssay(res, nPC=5) %>%
@@ -103,7 +113,7 @@ names(res.procList) = names(pbList)
 formList = list(MSSM = update(form, ~ c02x + .),
               HBCC = update(form, ~ c08x + .))
 
-resList = lapply(names(res.procList), function(id){
+resList = mclapply(names(res.procList), function(id){
   dreamlet(res.procList[[id]], formList[[id]])
   })
 names(resList) = names(res.procList)
