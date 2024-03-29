@@ -92,6 +92,11 @@ df_filter_p = df.cmc %>%
   filter(! ID %in% exclude) %>%
   pivot_wider(names_from = assay, values_from = p.value)
 
+df_filter_se = df.cmc %>%
+  select(ID, std.error, assay) %>%
+  filter(! ID %in% exclude) %>%
+  pivot_wider(names_from = assay, values_from = std.error)
+
 cor(df_filter[,-1] %>% as.matrix)
 ```
 
@@ -111,11 +116,19 @@ df_p = df_pec %>%
         mutate(assay = paste("pec/scz", assay)) %>%
         pivot_wider(names_from = "assay", values_from="p.value")
 
+df_se = df_pec %>%
+        select(assay, std.error, ID) %>%
+        mutate(assay = paste("pec/scz", assay)) %>%
+        pivot_wider(names_from = "assay", values_from="std.error")
+
 df_filter = df_filter %>%
             inner_join(df, by='ID')
 
 df_filter_p = df_filter_p %>%
             inner_join(df_p, by='ID')
+
+df_filter_se = df_filter_se %>%
+            inner_join(df_se, by='ID')
 ```
 
 # MORE PAIRS
@@ -211,6 +224,10 @@ coef2 = "m05x"
 make_plot(coef1, coef2)
 
 coef1 = "c07xSCZ - c07xControl" # MSSM
+coef2 = "c03xAD - c03xControl" # RUSH
+make_plot(coef1, coef2)
+
+coef1 = "c02xAD - c02xControl" # MSSM
 coef2 = "c03xAD - c03xControl" # RUSH
 make_plot(coef1, coef2)
 
@@ -332,6 +349,10 @@ coef2 = "c03xAD - c03xControl" # RUSH
 make_plot(coef1, coef2)
 
 coef1 = "c02xAD - c02xControl" # MSSM
+coef2 = "c03xAD - c03xControl" # RUSH
+make_plot(coef1, coef2)
+
+coef1 = "c02xAD - c02xControl" # MSSM
 coef2 = "c08xSCZ - c08xControl" # HBCC
 make_plot(coef1, coef2)
 
@@ -371,6 +392,81 @@ make_plot(coef1, coef2)
 ```{r exit2, cache=FALSE }
 knitr::knit_exit()
 ```
+
+
+
+
+coef1 = "c08xSCZ - c08xControl" # HBCC
+coef2 = "c07xSCZ - c07xControl" # MSSM
+
+# beta
+df1 = df_stack %>%
+          filter(coef == coef1)%>%
+          arrange(assay)
+
+df2 = df_stack %>%
+        filter(coef == coef2) %>%
+        arrange(assay)
+
+Y1 = df1 %>%
+      select(assay, estimate, ID) %>%
+      pivot_wider(names_from = "assay", values_from="estimate") 
+
+Y2 = df2 %>%
+      select(assay, estimate, ID) %>%
+      pivot_wider(names_from = "assay", values_from="estimate")
+
+Beta = inner_join(Y1, Y2, by="ID") %>%
+      left_join(df_filter, by="ID") 
+
+
+df1 = df_stack %>%
+          filter(coef == coef1)%>%
+          arrange(assay)
+
+df2 = df_stack %>%
+        filter(coef == coef2) %>%
+        arrange(assay)
+
+Y1 = df1 %>%
+      mutate(se = estimate / t)  %>%
+      select(assay, se, ID) %>%
+      pivot_wider(names_from = "assay", values_from="se") 
+
+Y2 = df2 %>%
+      mutate(se = estimate / t)  %>%
+      select(assay, se, ID) %>%
+      pivot_wider(names_from = "assay", values_from="se")
+
+SE = inner_join(Y1, Y2, by="ID") %>%
+      left_join(df_filter, by="ID")
+
+
+identical(rownames(Beta), rownames(SE))
+identical(colnames(Beta), colnames(SE))
+
+library(heivr)
+
+hres = heivrPairs(as.matrix(Beta[,-1]), 
+                  as.matrix(SE[,-1])^2)
+
+
+main = paste0("x: ", coef1, " (", getCohort(coef1), ") | y: ", coef2, " (", getCohort(coef2), ")")
+
+png("~/www/test.png", height=600, width=600)
+breaksList = seq(-1, 1, by=.025)
+
+pheatmap::pheatmap(hres, 
+  cluster_rows=FALSE, 
+  cluster_cols=FALSE, 
+  color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),
+  breaks=breaksList, 
+  main=main)
+dev.off()
+
+
+
+
 
 
 # Meta data
