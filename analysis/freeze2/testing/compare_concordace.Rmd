@@ -306,7 +306,7 @@ make_plot = function(coef1, coef2){
       mutate(assay2 = factor(assay2, colnames(Y))) %>%
        ggplot(aes(assay1, assay2, fill=pi1, label=round(pi1,2))) +
             geom_tile() +
-            geom_text(size=.1) +
+            geom_text(size=1) +
             theme_classic() +
             theme(aspect.ratio=1, 
               legend.position = "right", 
@@ -314,8 +314,8 @@ make_plot = function(coef1, coef2){
               plot.title = element_text(hjust = 0.5)) +
             scale_fill_gradient(low="white", high="red", limits=c(0,1)) +
             ggtitle(main) + 
-            xlab("Replication") +
-            ylab("Discovery") 
+            xlab("Discovery") +
+            ylab("Replication") 
 }
 ```
 
@@ -378,7 +378,10 @@ library(dreamlet)
 library(tidyverse)
 
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/final/FULL_2024-02-01_18_49_processAssays_SubID_class.RDS"
-res.proc = readRDS(file)
+# res.proc = readRDS(file)
+
+file = "/sc/arion/projects/CommonMind/hoffman/cmc_signature/vobj.lst.RDS"
+vobj.lst = readRDS(file)
 
 info1 = colData(res.proc) %>%
           tibble(SubID = rownames(colData(res.proc)), .) %>%
@@ -395,7 +398,7 @@ with(info1, table(Dx, Institution))
 
 boxplot(Age ~ Institution*Dx, info1)     
 
-file = "/sc/arion/scratch/hoffmg01/CMC_Human_clinical_metadata.csv"
+file = "/sc/arion/projects/CommonMind/hoffman/cmc_signature/CMC_Human_clinical_metadata.csv"
 info2 = read_csv(file) %>%          
           mutate(Institution = fct_recode(Institution, "HBCC" = "NIMH-HBCC")) %>%
           filter(Dx %in% c("SCZ", "Control"), 
@@ -432,6 +435,11 @@ with(df2, table(Dx.x, Dx.y))
 
 
 with(df2, xtabs(~ Dx.x + Dx.y + Institution))
+
+Y_MSSM = vobj.lst[[1]]$E[,df2$SubID.y]
+Y_HBCC = vobj.lst[[2]]$E[,df2$SubID.y]
+
+
 
 ```
 
