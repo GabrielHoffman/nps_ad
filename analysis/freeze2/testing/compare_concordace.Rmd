@@ -314,6 +314,7 @@ make_plot = function(coef1, coef2){
   df_grid = expand.grid(assay1 = colnames(Y), assay2 = colnames(Y)) 
 
   df_pi1 = mclapply( 1:nrow(df_grid), function(i){
+
     k1 = df_grid$assay1[i] %>% as.character
     k2 = df_grid$assay2[i]%>% as.character
 
@@ -322,6 +323,7 @@ make_plot = function(coef1, coef2){
 
     if( k1 == k2){      
       pi1 = get_pi1(df[,1] %>% pull)
+      j = p.adjust(df[,1] %>% pull, "fdr") < 0.05
     }else{
       j = p.adjust(df[,1] %>% pull, "fdr") < 0.05
 
