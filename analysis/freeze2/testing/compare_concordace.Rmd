@@ -227,6 +227,10 @@ coef1 = "c47xSCZ_crossDis - c47xControls_crossDis" # MSSM
 coef2 = "c48xSCZ_crossDis - c48xControls_crossDis" # RUSH
 make_plot(coef1, coef2)
 
+coef1 = "m10x" # AD
+coef2 = "m11x" # SCZ
+make_plot(coef1, coef2)
+
 coef1 = "c07xSCZ - c07xControl" # MSSM
 coef2 = "c03xAD - c03xControl" # RUSH
 make_plot(coef1, coef2)
@@ -350,6 +354,10 @@ make_plot(coef1, coef2)
 
 coef1 = "c47xSCZ_crossDis - c47xControls_crossDis" # MSSM
 coef2 = "c48xSCZ_crossDis - c48xControls_crossDis" # RUSH
+make_plot(coef1, coef2)
+
+coef1 = "m10x" # AD
+coef2 = "m11x" # SCZ
 make_plot(coef1, coef2)
 
 coef1 = "c07xSCZ - c07xControl" # MSSM
