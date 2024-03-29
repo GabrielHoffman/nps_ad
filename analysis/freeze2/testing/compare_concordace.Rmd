@@ -87,6 +87,11 @@ df_filter = df.cmc %>%
   filter(! ID %in% exclude) %>%
   pivot_wider(names_from = assay, values_from = estimate) 
 
+df_filter_p = df.cmc %>%
+  select(ID, p.value, assay) %>%
+  filter(! ID %in% exclude) %>%
+  pivot_wider(names_from = assay, values_from = p.value)
+
 cor(df_filter[,-1] %>% as.matrix)
 ```
 
@@ -94,13 +99,23 @@ cor(df_filter[,-1] %>% as.matrix)
 ```{r pec}
 file = "/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/scz.csv"
 df_pec = read.table(file, sep=',', row.names=1) %>%
-      as_tibble %>%
+      as_tibble 
+
+df = df_pec %>%
         select(assay, estimate, ID) %>%
         mutate(assay = paste("PEC SCZ", assay)) %>%
         pivot_wider(names_from = "assay", values_from="estimate")
 
+df_p = df_pec %>%
+        select(assay, p.value, ID) %>%
+        mutate(assay = paste("PEC SCZ", assay)) %>%
+        pivot_wider(names_from = "assay", values_from="p.value")
+
 df_filter = df_filter %>%
-  inner_join(df_pec, by='ID')
+            inner_join(df, by='ID')
+
+df_filter_p = df_filter_p %>%
+            inner_join(df_p, by='ID')
 ```
 
 # MORE PAIRS
@@ -167,31 +182,9 @@ make_plot = function(coef1, coef2){
         select(assay, estimate, ID) %>%
         pivot_wider(names_from = "assay", values_from="estimate")
 
-  Y = inner_join(Y1, Y2, by="ID") 
-
-  # add CMC  
-  df1 = df.cmc %>%
-    select(ID, assay, estimate) %>%
-    filter(assay == "MPP") %>%
-    rename(estimate.MPP = estimate) %>%
-    select(-assay) 
-
-  tab = table(df1$ID) == 1
-  genes = names(tab)[tab]
-
-  df2 = df.cmc %>%
-    select(ID, assay, estimate) %>%
-    filter(assay == "HBCC") %>%
-    rename(estimate.HBCC = estimate) %>%
-    select(-assay)  %>%
-    filter(ID %in% genes) %>%
-    inner_join(df1 %>% filter(ID %in% genes), by="ID")
-
-  cor(df2$estimate.MPP, df2$estimate.HBCC)
-
-  Y = Y %>%
-    full_join(df2, by="ID") %>%
-    select(-ID) 
+  Y = inner_join(Y1, Y2, by="ID") %>%
+        left_join(df_filter, by="ID") %>%
+        select(-ID) 
 
   C = cor(Y, use="pair")
 
@@ -260,7 +253,6 @@ make_plot(coef1, coef2)
 ```
 
 ```{r plot.pi1}
-
 make_plot = function(coef1, coef2){
   df1 = df_stack %>%
           filter(coef == coef1)%>%
@@ -270,15 +262,6 @@ make_plot = function(coef1, coef2){
           filter(coef == coef2) %>%
           arrange(assay)
 
-  # df_join = inner_join(df1, df2, by=c("assay", "ID"))
-
-  # corr along diagonals
-  # df_join %>%
-  #   group_by(assay) %>%
-  #   summarize(r = cor(estimate.x, estimate.y, method="sp"), 
-  #             n = length(estimate.x),
-  #             se = sqrt((1-r^2)/ (n-2)))
-
   Y1 = df1 %>%
         select(assay, P.Value, ID) %>%
         pivot_wider(names_from = "assay", values_from="P.Value") 
@@ -287,29 +270,9 @@ make_plot = function(coef1, coef2){
         select(assay, P.Value, ID) %>%
         pivot_wider(names_from = "assay", values_from="P.Value")
 
-  Y = inner_join(Y1, Y2, by="ID") 
-
-  # add CMC  
-  df1 = df.cmc %>%
-    select(ID, assay, p.value) %>%
-    filter(assay == "MPP") %>%
-    rename(p.MPP = p.value) %>%
-    select(-assay) 
-
-  tab = table(df1$ID) == 1
-  genes = names(tab)[tab]
-
-  df2 = df.cmc %>%
-    select(ID, assay, p.value) %>%
-    filter(assay == "HBCC") %>%
-    rename(p.HBCC = p.value) %>%
-    select(-assay)  %>%
-    filter(ID %in% genes) %>%
-    inner_join(df1 %>% filter(ID %in% genes), by="ID")
-
-  Y = Y %>%
-    full_join(df2, by="ID") %>%
-    select(-ID) 
+  Y = inner_join(Y1, Y2, by="ID") %>%
+        left_join(df_filter_p, by="ID") %>%
+        select(-ID) 
 
   df_grid = expand.grid(assay1 = colnames(Y), assay2 = colnames(Y)) 
 
