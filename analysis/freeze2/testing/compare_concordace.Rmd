@@ -90,6 +90,19 @@ df_filter = df.cmc %>%
 cor(df_filter[,-1] %>% as.matrix)
 ```
 
+# PsychENCODE
+```{r pec}
+file = "/sc/arion/projects/CommonMind/mpjanic/PEC/final_dl/final/scz.csv"
+df_pec = read.table(file, sep=',', row.names=1) %>%
+      as_tibble %>%
+        select(assay, estimate, ID) %>%
+        mutate(assay = paste("PEC SCZ", assay)) %>%
+        pivot_wider(names_from = "assay", values_from="estimate")
+
+df_filter = df_filter %>%
+  inner_join(df_pec, by='ID')
+```
+
 # MORE PAIRS
 ```{r pairs}
 library(arrow)
@@ -392,6 +405,82 @@ make_plot(coef1, coef2)
 ```{r exit2, cache=FALSE }
 knitr::knit_exit()
 ```
+
+
+# Meta data
+```{r metadata}
+library(dreamlet)
+library(tidyverse)
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/processAssays/final/FULL_2024-02-01_18_49_processAssays_SubID_class.RDS"
+res.proc = readRDS(file)
+
+info1 = colData(res.proc) %>%
+          tibble(SubID = rownames(colData(res.proc)), .) %>%
+          mutate(Institution = fct_recode(Source, "MSSM" = "M", "HBCC" = "H")) %>%
+          filter( Institution %in% c("MSSM", "HBCC")) %>%
+          mutate(Institution = droplevels(Institution)) %>%
+           mutate(Dx = c(apply(cbind(as.character(c07x), as.character(c08x)), 1, function(x){
+            res = x[!is.na(x)]
+            ifelse(length(res)==0, "NA", res)
+            }))) %>%
+          select(SubID, Institution, Age, Sex, PMI, pH, Dx)
+
+with(info1, table(Dx, Institution))     
+
+boxplot(Age ~ Institution*Dx, info1)     
+
+file = "/sc/arion/scratch/hoffmg01/CMC_Human_clinical_metadata.csv"
+info2 = read_csv(file) %>%          
+          mutate(Institution = fct_recode(Institution, "HBCC" = "NIMH-HBCC")) %>%
+          filter(Dx %in% c("SCZ", "Control"), 
+            Institution %in% c("MSSM", "HBCC")) %>%
+          mutate(Institution = droplevels(Institution)) %>%
+          mutate(Age = as.numeric(`Age of Death`),
+          PMI = `PMI (in hours)`,
+          Sex = fct_recode(Sex, 'Male' = 'XY', "Female" = "XX"),
+          SubID = `Individual ID` ) %>%
+          select(SubID, Institution, Age, Sex, PMI, pH, Dx)
+
+
+df = inner_join(info1, info2, by = c("Sex", 'Age', "PMI", "Institution")) %>% 
+  filter(Age > 17)
+
+
+tab1 = table(df$SubID.x)
+u1 = names(tab1)[tab1==1]
+
+tab2 = table(df$SubID.y)
+u2 = names(tab2)[tab2==1]
+
+df2 = df %>% 
+  filter(SubID.x %in% u1, SubID.y %in% u2) %>%
+  mutate(Dx.x = as.character(Dx.x),
+        Dx.y = as.character(Dx.y))
+
+df2$Dx.x[is.na(df2$Dx.x)] = "NA"
+df2$Dx.y[is.na(df2$Dx.y)] = "NA"
+
+# Dx.x = PsychAD
+# Dx.y = CommonMind 
+with(df2, table(Dx.x, Dx.y))
+
+
+with(df2, xtabs(~ Dx.x + Dx.y + Institution))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
