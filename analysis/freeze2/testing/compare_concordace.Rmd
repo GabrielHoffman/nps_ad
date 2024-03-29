@@ -306,7 +306,7 @@ make_plot = function(coef1, coef2){
       mutate(assay2 = factor(assay2, colnames(Y))) %>%
        ggplot(aes(assay1, assay2, fill=pi1, label=round(pi1,2))) +
             geom_tile() +
-            geom_text(size=1) +
+            geom_text(size=.1) +
             theme_classic() +
             theme(aspect.ratio=1, 
               legend.position = "right", 
