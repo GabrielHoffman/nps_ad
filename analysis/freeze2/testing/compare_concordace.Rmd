@@ -103,12 +103,12 @@ df_pec = read.table(file, sep=',', row.names=1) %>%
 
 df = df_pec %>%
         select(assay, estimate, ID) %>%
-        mutate(assay = paste("PEC SCZ", assay)) %>%
+        mutate(assay = paste("pec/scz", assay)) %>%
         pivot_wider(names_from = "assay", values_from="estimate")
 
 df_p = df_pec %>%
         select(assay, p.value, ID) %>%
-        mutate(assay = paste("PEC SCZ", assay)) %>%
+        mutate(assay = paste("pec/scz", assay)) %>%
         pivot_wider(names_from = "assay", values_from="p.value")
 
 df_filter = df_filter %>%
@@ -310,7 +310,7 @@ make_plot = function(coef1, coef2){
             theme_classic() +
             theme(aspect.ratio=1, 
               legend.position = "right", 
-              axis.text.x = element_text(angle = 90),
+              axis.text.x = element_text(angle = 90, hjust=1,vjust=.5),
               plot.title = element_text(hjust = 0.5)) +
             scale_fill_gradient(low="white", high="red", limits=c(0,1)) +
             ggtitle(main) + 
@@ -318,6 +318,7 @@ make_plot = function(coef1, coef2){
             ylab("Replication") 
 }
 ```
+
 
 
 ```{r plot.pairs.pi1, fig.height=7, fig.width=7, cache=FALSE}
