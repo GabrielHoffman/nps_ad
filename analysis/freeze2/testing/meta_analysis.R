@@ -50,7 +50,7 @@ df2 = df %>%
 cat("Analysis...\n")
 res.meta = df2 %>%
 		meta_analysis(method = opt$method, group=grp) %>%
-		mutate( coef = opt$code, Trait = df_meta$Contrast.desc[i])
+		mutate( coefOrig = opt$code, Trait = df_meta$Contrast.desc[i])
 
 # write to file
 cat("Writing parquet...\n")
