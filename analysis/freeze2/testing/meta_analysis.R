@@ -41,7 +41,7 @@ id = c(df_meta$MSSM[i], df_meta$HBCC[i], df_meta$RUSH[i])
 pattern = paste0("^(", paste0(id[!is.na(id)], collapse="|"), ')' )
 coefMatch = grep(pattern, coefUniq, value=TRUE)
 
-grp = c("ID", "assay", "AnnoLevel")
+grp = c("ID", "assay", "AnnoLevel", "coef")
 
 cat("Filtering...\n")
 df2 = df %>%
@@ -56,6 +56,8 @@ res.meta = df2 %>%
 cat("Writing parquet...\n")
 outfile = paste0(opt$outFolder, "/topTable_meta_", opt$code, "_", opt$method,".parquet")
 write_parquet(res.meta, outfile )
+
+q()
 
 # mashr 
 #######

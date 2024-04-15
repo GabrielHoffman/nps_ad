@@ -411,7 +411,7 @@ knitr::knit_exit()
 
 
 
-
+```{r heivr, eval=FALSE}
 coef1 = "c08xSCZ - c08xControl" # HBCC
 coef2 = "c07xSCZ - c07xControl" # MSSM
 
@@ -479,7 +479,7 @@ pheatmap::pheatmap(hres,
   breaks=breaksList, 
   main=main)
 dev.off()
-
+```
 
 
 
