@@ -112,7 +112,7 @@ df_prs = read.table(file)$V1
 # append to CONTRASTS[["NUM"]]
 # example: CONTRASTS[["NUM"]][['MSSM_Cognitive_and_Tau_Resilience']]
 prs.lst = lapply(df_prs, function(x){
-  list(name = x, contrasts = NA, variable = x, covariates_incl='Brain_bank', covariates_excl = NULL)
+  list(name = x, contrasts = NA, variable = paste0('scale(', x, ')'), covariates_incl='Brain_bank', covariates_excl = NULL)
   })
 names(prs.lst) = df_prs
 
