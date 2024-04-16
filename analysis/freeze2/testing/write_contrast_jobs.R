@@ -16,6 +16,14 @@ prs.lst = lapply(df_prs, function(x){
 	})
 names(prs.lst) = df_prs
 
+prs.lst = lapply( c("HBCC", "MSSM", "RUSH", "FULL"), function(cohort){
+
+	tmp = prs.lst
+	names(tmp) = paste0(cohort, '_', names(tmp))
+	tmp
+	})
+prs.lst = unlist(prs.lst, recursive=FALSE)
+
 CONTRASTS[["NUM"]] = append(CONTRASTS[["NUM"]], prs.lst)
 
 write_job = function( variable_type, ctst_key, dataset, method, SampleLevel, AnnoLevel){
