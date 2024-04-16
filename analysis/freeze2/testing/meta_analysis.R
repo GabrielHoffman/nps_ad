@@ -31,7 +31,10 @@ df = read_parquet( opt$topTable ) %>%
 
 # match code to coefs
 #------------------------
-coefUniq = unique(df$coef)	
+coefUniq = df %>%
+					select(coef) %>% 
+					distinct %>%
+					pull
 
 i = which(df_meta$meta == opt$code)
 
@@ -41,16 +44,38 @@ id = c(df_meta$MSSM[i], df_meta$HBCC[i], df_meta$RUSH[i])
 pattern = paste0("^(", paste0(id[!is.na(id)], collapse="|"), ')' )
 coefMatch = grep(pattern, coefUniq, value=TRUE)
 
-grp = c("ID", "assay", "AnnoLevel", "coef")
+grp = c("ID", "assay", "AnnoLevel")
 
 cat("Filtering...\n")
 df2 = df %>%
 	filter(coef %in% coefMatch) 
 
 cat("Analysis...\n")
-res.meta = df2 %>%
-		meta_analysis(method = opt$method, group=grp) %>%
-		mutate( coefOrig = opt$code, Trait = df_meta$Contrast.desc[i])
+# Standard meta-analysis
+if( length(coefMatch) <=3){
+	res.meta = df2 %>%
+			meta_analysis(method = opt$method, group=grp) %>%
+			mutate( coef = opt$code, Trait = df_meta$Contrast.desc[i])
+}else{
+	# Multiple contrasts
+	pattern2 = paste0("(", paste0(id[!is.na(id)], collapse="|"), ')' )
+	coefCategory = unique(gsub(pattern2, '.*', coefMatch))
+
+	# get name of contrast
+	txt = unique(gsub(pattern2, '', coefMatch))
+	txt = gsub(' - ', ' / ', txt)
+
+	# for each coefCategory
+	res.meta = lapply( seq(length(txt)), function(i){
+		df2 %>%
+			filter(grepl(coefCategory[i], coef)) %>%
+			arrange(ID) %>%
+			meta_analysis(method = opt$method, group=grp) %>%
+			mutate( coef = opt$code, Trait = txt[i])
+		})
+	res.meta = bind_rows(res.meta)
+}
+
 
 # write to file
 cat("Writing parquet...\n")
