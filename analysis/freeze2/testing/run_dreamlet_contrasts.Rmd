@@ -102,7 +102,29 @@ cat(res)
 
 ```{r get.contrast}
 # Load CONTRASTS and metadata
+# synapse: syn51114763
 load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/contrasts_for_dreamlet.Rdata")
+
+# PRS values
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/prs.labels"
+df_prs = read.table(file)$V1
+
+# append to CONTRASTS[["NUM"]]
+# example: CONTRASTS[["NUM"]][['MSSM_Cognitive_and_Tau_Resilience']]
+prs.lst = lapply(df_prs, function(x){
+  list(name = x, contrasts = NA, variable = x, covariates_incl='Brain_bank', covariates_excl = NULL)
+  })
+names(prs.lst) = df_prs
+
+prs.lst = lapply( c("HBCC", "MSSM", "RUSH", "FULL"), function(cohort){
+
+  tmp = prs.lst
+  names(tmp) = paste0(cohort, '_', names(tmp))
+  tmp
+  })
+prs.lst = unlist(prs.lst, recursive=FALSE)
+
+CONTRASTS[["NUM"]] = append(CONTRASTS[["NUM"]], prs.lst)
 
 suffix2 = with(params, gsub(paste0(dataset, "/", dataset, "/"), paste0(dataset, "/"), paste0(toupper(dataset), "/", ctst_key, "/", SampleLevel, "/", AnnoLevel)))
 
