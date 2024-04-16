@@ -248,7 +248,7 @@ fig.vp = plotPercentBars( sortCols(vp.c) )
 
 plotVarPart(sortCols(vp.c), label.angle=60, ncol=4 ) + theme(aspect.ratio=1)
 
-if( ! is.null(ctr$contrasts) & !any(is.na(ctr$contrasts)) ){
+if( ! is.null(ctr$contrasts) & !any(is.na(ctr$contrasts)) & (ctr$name != ctr$contrasts) ){
   L = makeContrastsDream(form, colData(pb)[idx,], contrasts = ctr$contrasts )
 }else{
   L = NULL
