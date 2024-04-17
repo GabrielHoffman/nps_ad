@@ -164,7 +164,6 @@ if( length(file) == 2){
 
 stopifnot(length(file) ==1)
 
-
 res.proc = readRDS( file )
  # , "TechPC1", "TechPC2", "TechPC3"
 covariates_base = c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)", "percent_mito", "mito_genes", "ribo_genes", "mito_ribo")
@@ -215,7 +214,9 @@ if( any(is.na(ctr$contrasts)) ){
 
 # if less than 15 samples have values for the give trait
 # remove 
-s = sum(!is.na(colData(res.proc)[[ctr$variable]]))
+s1 = sum(!is.na(colData(res.proc)[[ctr$variable]]))
+s2 = sum(!is.na(colData(res.proc)[[ctr$name]]))
+s = max(s1, s2)
 if( s < 15 ){
   exclude = attr(terms(form), "term.labels")[-c(1:5)]
   exclude = paste("~ . -", paste(exclude, collapse=' - '))
