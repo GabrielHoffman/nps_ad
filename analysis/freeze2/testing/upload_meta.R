@@ -14,13 +14,17 @@ library(dreamlet)
 # read data
 parent = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/"
 
+prefix = "_prs_"
 files = dir(parent, pattern="topTable.tsv.gz", recursive=TRUE, full.names=TRUE)
+files = grep(prefix, files, value=TRUE)
+
+# files = grep("_prs_", files, value=TRUE, invert=TRUE)
 
 df = mclapply(files, read_tsv, show_col_types=FALSE, mc.cores=12) %>%
 		bind_rows
 
 # write results
-outfile = paste0(parent, "topTable_combined.tsv.gz")
+outfile = paste0(parent, "topTable_combined", prefix, ".tsv.gz")
 df %>%
 	mutate( logFC = signif(logFC, digits=4),
 			AveExpr = signif(AveExpr, digits=4),
@@ -34,7 +38,7 @@ df %>%
 cmd = paste("ml python; synapse add --parentid syn53144970", outfile)
 system(cmd)
 
-outfile2 = paste0(parent, "topTable_combined.parquet")
+outfile2 = paste0(parent, "topTable_combined", prefix, ".parquet")
 df %>% 
 	write_parquet(outfile2, compression="gzip")	
 cmd = paste("ml python; synapse add --parentid syn53144970", outfile2)
@@ -186,7 +190,7 @@ head(sort(res, decreasing=TRUE))
 
 
 
-
+ls /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/HBCC/HBCC_prs_raw_FFM_Agreeableness_GPC.1/SubID/subclass/
 
 
 
@@ -228,6 +232,43 @@ echo "#BSUB -J meta_${CODE}_${METHOD}
 	Rscript $SRC --topTable results/topTable_combined.parquet --code $CODE --method $METHOD --outFolder $OUT" >> results/meta/jobs/meta_${CODE}_${METHOD}.lsf
 	done
 done
+
+
+# for PRS
+PRS=/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/prs.labels
+
+for CODE in $(cat $PRS)
+do
+	for METHOD in $(echo "FE REML RE2C")
+	do
+echo '#!/bin/bash' > results/meta/jobs/meta_${CODE}_${METHOD}.lsf
+echo "#BSUB -J meta_${CODE}_${METHOD}
+	#BSUB -P acc_CommonMind
+	#BSUB -q premium
+	#BSUB -n 1
+	#BSUB -R \"span[hosts=1]\"
+	#BSUB -R \"rusage[mem=30000]\"
+	#BSUB -W 36:00 
+	#BSUB -o $LOG/meta_${CODE}_${METHOD}_%J.stdout
+	#BSUB -eo $LOG/meta_${CODE}_${METHOD}_%J.stderr
+	#BSUB -L /bin/bash
+	#BSUB -cwd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/
+
+	module purge
+	module --ignore-cache load hdf5/1.12.1 libpng/12 R/4.3.3-intel-mkl pandoc/2.6 gsl openssl
+
+	R_LIBS_USER=/hpc/users/hoffmg01/.Rlib/R_433
+	R_LIBS=${R_LIBS_USER}:/hpc/packages/minerva-centos7/rpackages/4.3.3-intel-mkl/site-library:/hpc/packages/minerva-centos7/rpackages/bioconductor/3.18
+
+	Rscript $SRC --topTable results/topTable_combined.parquet --code $CODE --method $METHOD --outFolder $OUT" >> results/meta/jobs/meta_${CODE}_${METHOD}.lsf
+	done
+done
+
+ # results/meta/jobs/*prs*
+
+prs_raw_pd_without_23andMe
+
+
 
 
 ls results/meta/jobs/meta*.lsf | parallel -P1 "bsub < {}"

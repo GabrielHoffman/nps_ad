@@ -2,8 +2,6 @@
 
 # get latest version
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/
-ml python git pandoc 
-ml gcc/11.2.0
 git pull 
 
 1) Merge raw H5AD with metadata to create H5AD files in h5ad_final
@@ -12,13 +10,22 @@ git pull
 2) Compute pseudobulk, precision weights, etc for each dataset
 `preprocess/preprocess.Rmd`
 
+sed 's/$1/RUSH/g' ./submit_preproc.sh | bsub
+sed 's/$1/HBCC/g' ./submit_preproc.sh | bsub
+sed 's/$1/AGING/g' ./submit_preproc.sh | bsub
+sed 's/$1/MSSM/g' ./submit_preproc.sh | bsub
+sed 's/$1/FULL/g' ./submit_preproc.sh | bsub
+
  2a) Write cell type composition to *.tsv files
 	`preprocess/write_compositions.R`
 
-sed 's/$1/RUSH/g' ./submit_preproc.sh | bsub
-sed 's/$1/HBCC/g' ./submit_preproc.sh | bsub
-sed 's/$1/MSSM/g' ./submit_preproc.sh | bsub
-sed 's/$1/AGING/g' ./submit_preproc.sh | bsub
+
+# save excludes
+head -n 1 exclude_AGING.tsv > exclude.tsv
+ls exclude_AGING.tsv exclude_HBCC.tsv exclude_MSSM.tsv exclude_RUSH.tsv | parallel -P1 tail -n +2 >> exclude.tsv
+
+synapse add --parentid syn53144970 exclude.tsv
+
 
 3) Hypothesis testing for each variable
 `analysis/freeze2/testing/write_contrast_jobs.R`
@@ -34,18 +41,25 @@ source("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze
 
 5) Run jobs
 cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/
+<!-- rm -f jobs/*Channel* -->
 
 # crumblr
 ######### 
-# \ls jobs/RUSH_*crumblr* | parallel -P1 "bsub < {}; sleep 1"
-# \ls jobs/HBCC_*crumblr* | parallel -P1 "bsub < {}; sleep 1"
-# \ls jobs/MSSM_*crumblr* | parallel -P1 "bsub < {}; sleep 1"
+# \ls jobs/RUSH_*crumblr* | parallel -P1 "bsub < {}; sleep .1"
+# \ls jobs/HBCC_*crumblr* | parallel -P1 "bsub < {}; sleep .1"
+# \ls jobs/MSSM_*crumblr* | parallel -P1 "bsub < {}; sleep .1"
+
+ls jobs/*crumblr* | grep _class | grep SubID | parallel -P1 "bsub < {}; sleep .5"
+ls jobs/*crumblr* | grep _subclass | grep SubID | parallel -P1 "bsub < {}; sleep .5"
+
+
 
 # Need more work on ordinal variables:
 RUSH_BRAAK_SubID_subtype_crumblr
 
 should this be continuous as well?
 treeTest for multiple coef
+
 
 # dreamlet
 ##########
@@ -55,6 +69,14 @@ treeTest for multiple coef
 # \ls jobs/RUSH_*dreamlet* | grep SubID | parallel -P1 "bsub < {}; sleep 1"
 # \ls jobs/HBCC_*dreamlet* | grep SubID | parallel -P1 "bsub < {}; sleep 1"
 # \ls jobs/MSSM_*dreamlet* | grep SubID | parallel -P1 "bsub < {}; sleep 1"
+
+
+ls jobs/*dreamlet* | grep _bulk | grep SubID | parallel -P1 "bsub < {}; sleep .5"
+ls jobs/*dreamlet* | grep _class | grep SubID | parallel -P1 "bsub < {}; sleep .5"
+ls jobs/*dreamlet* | grep _subclass | grep SubID | parallel -P1 "bsub < {}; sleep .5"
+ls jobs/*dreamlet* | grep _subtype | grep SubID | parallel -P1 "bsub < {}; sleep .5"
+
+
 
 # Note that these are duplicates, only one is evaluated
 # the other ends up empty and fails
@@ -76,7 +98,7 @@ comm -13 <(ls results/*/*/SubID/*/topTable.tsv.gz | parallel -P1 dirname | sort 
 
 wc failed_dreamlet.lsf
 
-cat failed_dreamlet.lsf | parallel -P1 "bsub < {}"
+cat failed_dreamlet.lsf | grep -v -f <( bjobs -w | awk '{print $7}' | grep dreamlet) | parallel -P1 "bsub < {}"
 
 
 # list of crumblr jobs that did not produce topTable.tsv.gz
@@ -105,63 +127,29 @@ c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)", "(1|BatchID)")
 
 scale(Age) + Sex + scale(PMI) + log(n_genes) + (1|BatchID)
 
-7) Combine all results
+7) Combine all results and upload 
+cd /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/
 
-# dreamlet results
-##################
+upload_meta.R
 
-library(tidyverse)
-library(parallel)
 
-parent = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/"
 
-files = dir(parent, pattern="topTable.tsv.gz", recursive=TRUE, full.names=TRUE)
+covariates_base = c(covariates_base, "percent_mito", "mito_genes", "ribogenes", "mito_ribo")
 
-df = mclapply(files, read_tsv, show_col_types=FALSE, mc.cores=12) %>%
-		bind_rows
 
-outfile = "topTable_combined.tsv.gz"
+form = ~ scale(Age) + Sex + scale(PMI) + log(n_genes) + 
+    TechPC1 + TechPC2 + TechPC3 + percent_mito + mito_genes + 
+    ribo_genes + mito_ribo
 
-df %>%
-	mutate( logFC = signif(logFC, digits=4),
-			AveExpr = signif(AveExpr, digits=4),
-			t = signif(t, digits=4),
-			P.Value = signif(P.Value, digits=4),
-			adj.P.Val = signif(adj.P.Val, digits=4),
-			B = signif(B, digits=4),
-			z.std = signif(z.std, digits=4)) %>%
-	write_tsv(file=outfile )
+dfvp = fitVarPart( res.proc, form, assay=c("EN", "Astro"))
 
-system("ml python; synapse add --parentid syn53144970 topTable_combined.tsv.gz")
+fig = plotVarPart( sortCols(dfvp), label.angle=45)
 
-# crumblr results
-#################
+ggsave(fig, file="~/www/test.png", height=12, width=12)
 
-library(tidyverse)
-library(parallel)
 
-parent = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/"
 
-files = dir(parent, pattern="topTable_crumblr.tsv.gz", recursive=TRUE, full.names=TRUE)
 
-df = lapply(files, function(file){
-
-	spl = strsplit(file, '/')[[1]]
-
-	read_tsv(file, show_col_types=FALSE) %>%
-		mutate(coef = id, 
-			id = NULL,
-			Dataset = spl[11],
-			SampleLevel = spl[13],
-			AnnoLevel = spl[14])
-}) %>%
-bind_rows
-
-outfile = "topTable_combined_crumblr.tsv.gz"
-
-write_tsv(df, file=outfile )
-
-system("ml python; synapse add --parentid syn53144970 topTable_combined_crumblr.tsv.gz")
 
 
 

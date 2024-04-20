@@ -467,12 +467,14 @@ hres = heivrPairs(as.matrix(Beta[,-1]),
                   as.matrix(SE[,-1])^2)
 
 
+C = pairsToMatrix(hres, "rho")
+
 main = paste0("x: ", coef1, " (", getCohort(coef1), ") | y: ", coef2, " (", getCohort(coef2), ")")
 
 png("~/www/test.png", height=600, width=600)
 breaksList = seq(-1, 1, by=.025)
 
-pheatmap::pheatmap(hres, 
+pheatmap::pheatmap(C, 
   cluster_rows=FALSE, 
   cluster_cols=FALSE, 
   color=colorRampPalette(c("navy", "white", "red"))(length(breaksList)),

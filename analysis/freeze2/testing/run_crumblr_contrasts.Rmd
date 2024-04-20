@@ -324,7 +324,7 @@ if( params$variable_type == "ORD" ){
 ```
 
 # Plot of top association
-```{r plot.line}
+```{r plot.line, eval=FALSE}
 tab = topTable(fit, coef=ctr$contrasts[1], number=Inf) 
 id = rownames(tab)[1]
 
