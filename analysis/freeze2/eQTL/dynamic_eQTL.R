@@ -1,0 +1,3 @@
+
+
+# /sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearsonsubtype_level/dynamic_state_eQTL/Aging/

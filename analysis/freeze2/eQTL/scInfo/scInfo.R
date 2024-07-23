@@ -44,9 +44,6 @@ file = c(FULL = paste0(path, "FULL_2024-02-01_18_49.h5ad"))
  
 sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, version="0.8.0")
 
-
-
-
 # Number of cells observed per Subject
 figA = colData(sce) %>%
   xtabs( ~ SubID + class,.) %>%

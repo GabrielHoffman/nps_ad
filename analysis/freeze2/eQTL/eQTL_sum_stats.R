@@ -9,15 +9,16 @@ library(parallel)
 library(tidyverse)
 library(arrow)
 
-files = system("ls /sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearson*_level/cis-eQTL_detection/eQTL_results/eQTL_result_MSSM_*_chr*.gz", intern=TRUE)
+# MSSM
+# files = system("ls /sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearson*_level/cis-eQTL_detection/eQTL_results/eQTL_result_MSSM_*_chr*.gz", intern=TRUE)
 
 # meta analysis eQTLs
-# ls /sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearson*_level/cis-eQTL_detection/meta_eQTL_detection/adjust_combined_result_*_allChr
-
+files = system("ls /sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearson*_level/cis-eQTL_detection/eQTL_results/meta_results/eQTL_result_merged_*chr*.gz", intern=TRUE)
 
 ptrn = "^eQTL_result_([a-zA-Z]+)_((\\S+)+)_(\\S+).gz$"
 info = lapply(files, function(file){
 	Source = gsub(ptrn, "\\1", basename(file))
+	Source = ifelse(Source == "merged", "meta", Source)
 	Level = gsub(".*pearson([a-zA-Z]+)_level.*", "\\1", file)
 	CellType = gsub(ptrn, "\\2", basename(file))
 	Chrom = gsub(ptrn, "\\3", basename(file))
@@ -83,10 +84,11 @@ cn = c('chr', 'start', 'end', 'variant', 'nonassessed_allele', 'assessed_allele'
 
 # for each 
 res = mclapply( unique(info$key), function(keyValue){
-
+	message(keyValue)
 	# get file paths
 	idx = which(info$key == keyValue)
 	files = info$file[idx]
+	files = files[file.size(files) > 100]
 
 	# read files
 	df = read_tsv(files, col_names=cn, progress=FALSE, show_col_types = FALSE, num_threads=1)
@@ -106,7 +108,7 @@ res = mclapply( unique(info$key), function(keyValue){
 		mutate(isTopHit = (variant == first(variant))) %>%
 		write_parquet(outFile)
 	NA
-}, mc.cores=36, mc.preschedule=FALSE)
+}, mc.cores=24, mc.preschedule=FALSE)
 
 # Read data for analysis
 ########################
@@ -352,7 +354,7 @@ plot_eGene_count = function( df4, lvl){
 			ggtitle(paste(lvl, collapse=', '))
 }
 
-fig1 = plot_eGene_count( df4, c("bulk", "class"))
+fig1 = plot_eGene_count( df4, c("class"))
 fig2 = plot_eGene_count( df4, "subclass")
 fig3 = plot_eGene_count( df4, "subtype")
 fig = plot_grid(fig1, fig2, fig3, nrow=1)
@@ -367,18 +369,20 @@ ggsave(fig, file="plots/eGenes_readCount_v2.pdf", height=5, width=8)
 
 
 # Barplot of # eGenes
-ymax = max(df4$nGenes) * 1.02
+# ymax = max(df4$nGenes) * 1.02
+ymax = 11000
 fig = df4 %>%
 	mutate(Dataset = factor(Dataset, assay_order)) %>%
 	# filter(is.na(Fraction))
-	# filter(Type == "subclass") %>%
-	ggplot(aes(Dataset, nGenes, fill=Dataset)) +
+	filter(Type %in% c("class", "subclass")) %>%
+	ggplot(aes(Dataset, nGenes, fill=Dataset, label=nGenes)) +
 		geom_bar(stat="identity") +
 		theme_classic() +
 		coord_flip() +
 		scale_fill_manual(name = "Cell type", values=cols) +
 		theme(aspect.ratio=3, legend.position="none") +
-		scale_y_continuous(limits=c(0, ymax), expand=c(0,0))
+		scale_y_continuous(limits=c(0, ymax), expand=c(0,0)) +
+		geom_text()
 ggsave(fig, file="plots/eGenes_v3.pdf", height=12, width=8)
 
 # scp sklar1:"/sc/arion/projects/CommonMind/hoffman/sceqtl/sumStats/plots/*" .
