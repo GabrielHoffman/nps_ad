@@ -7,7 +7,6 @@ library(tidyverse)
 library(UpSetR)
 library(arrow)
 
-
 assay_order = readRDS("assay_order.RDS")
 
 # get colors
@@ -84,9 +83,9 @@ dev.off()
 
 
 # SUBCLASS
-df_subclass = read.table(files[2], row.names=1, header=TRUE) %>%
-				rownames_to_column("Gene") %>%
-				as_tibble
+# files = c("/sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearsonsubclass_level/cis-eQTL_detection/analysis/evaluate_eQTL_sharing_mashR/get_lfsr/another2/analysis/lfsr_results_for_psychAD_sceQTL_subclass", "/sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearsonsubclass_level/cis-eQTL_detection/analysis/evaluate_eQTL_sharing_mashR/get_lfsr/another2/analysis/lfsr_results_for_psychAD_sceQTL_subclass_additional")
+
+df_subclass = read.table(files[2], row.names=1, header=TRUE)
 
 res = apply(df_subclass[,-1], 2, function(x) which(x < 0.05))
 
@@ -103,10 +102,23 @@ upset(fromList(res[ord]), order.by = "freq", nsets=6, keep.order=TRUE, sets=ord,
 dev.off()
 
 
-
-
+#
 # Strong cell type specificity
 ##############################
+files = c("/sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearsonsubclass_level/cis-eQTL_detection/analysis/evaluate_eQTL_sharing_mashR/get_lfsr/another2/analysis/lfsr_results_for_psychAD_sceQTL_subclass", "/sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearsonsubclass_level/cis-eQTL_detection/analysis/evaluate_eQTL_sharing_mashR/get_lfsr/another2/analysis/lfsr_results_for_psychAD_sceQTL_subclass_additional")
+
+df_subclass = read.table(files[1], row.names=1, header=TRUE) %>%
+				rownames_to_column("Gene") %>%
+				as_tibble %>%
+		mutate(ID = Gene) %>%
+		mutate(Gene = gsub("^(\\S+)_.*$", "\\1", Gene))
+
+df2 = read_tsv(files[2]) %>%
+	rename(Gene = `cell_colocalized gene` ) %>%
+	mutate(ID = gsub("^.* (\\S+)$", "\\1", Gene)) %>%
+	mutate(Gene = gsub("^.* (\\S+)_.*$", "\\1", Gene))
+
+df_subclass = bind_rows(df_subclass, df2)
 
 df_lfsr = df_class %>%
 			column_to_rownames("Gene")
@@ -138,7 +150,6 @@ res_prob = res %>%
 
 res_prob %>%
 	arrange(-prob) %>%
-	# filter(prob > .1) %>%
 	write_tsv(file="specific_eQTL_class.tsv.gz")
 
 fig = res_prob %>%
@@ -159,11 +170,14 @@ ggsave(fig, file="plots/specific_eQTL_class.pdf")
 
 # SUBCLASS
 #-----------------------
+
 df_lfsr = df_subclass %>%
-			column_to_rownames("Gene")
+			select(!Gene)  %>%
+			column_to_rownames('ID') 
 
 ctlist = list("Astro", "Endo", "Micro", "Oligo", "OPC", "PC", "PVM", "SMC", "VLMC", "EN_L3.*", "EN_L5_6_NP", "EN_L6.*", "EN.*", "IN.*", "IN_LAMP5.*", "IN_PVALB_CHC")
 
+# Probability that eQTL is specific for each subclass
 res = lapply(ctlist, function(query){
 
 	include = grep(paste0("^", query), colnames(df_lfsr), value=TRUE)
@@ -182,37 +196,43 @@ res = bind_cols(res) %>%
 		rownames_to_column("Gene") %>%
 		as_tibble
 
-ord.class = assay_order %>%
+ord.subclass = assay_order %>%
 				grep("^subclass", ., value=TRUE) %>%
 				gsub("^subclass / ", "", .) 
 
-ids = colnames(res)[-1][!colnames(res)[-1] %in% ord.class]
+ids = colnames(res)[-1][!colnames(res)[-1] %in% ord.subclass]
 
 for(query in ids){
-	i = grep(paste0("^", query), ord.class)
+	i = grep(paste0("^", query), ord.subclass)
  
- 	ord.class <- append(ord.class, query, after=max(i))
+ 	ord.class <- append(ord.subclass, query, after=max(i))
 
- 	cols[query] = mean_col(cols[ord.class[i]])
+ 	cols[query] = mean_col(cols[ord.subclass[i]])
 }
 
+# Probability that eQTL is specific for each subclass
 res_prob = res %>%
-			pivot_longer(cols=!Gene, names_to = "class", values_to="prob")
+			pivot_longer(cols=!Gene, names_to = "subclass", values_to="prob") %>%
+			mutate(ID = Gene) %>%
+			mutate(Gene = gsub("^(\\S+)_.*$", "\\1", Gene)) 
 
 res_prob %>%
 	arrange(-prob) %>%
 	# filter(prob > .1) %>%
 	write_tsv(file="specific_eQTL_subclass.tsv.gz")
 
+a = unique(res_prob$subclass)
+ord.other = a[!a %in% ord.subclass]
+
 fig = res_prob %>%
-	group_by(class) %>%
+	group_by(subclass) %>%
 	summarize( nSignif = sum(prob > 0.50)) %>%
-	mutate(class = factor(class, ord.class)) %>%
-	ggplot(aes(nSignif, class, fill=class, label=nSignif)) +
+	mutate(subclass = factor(subclass, c(ord.other, ord.subclass))) %>%
+	ggplot(aes(nSignif, subclass, fill=subclass, label=nSignif)) +
 		geom_bar(stat="identity") +
 		theme_classic() +
 		theme(aspect.ratio=1, legend.position = "none")  +
-		scale_x_continuous(limits=c(0, NA), expand=c(0,0)) +
+		scale_x_continuous(limits=c(0, 320), expand=c(0,0)) +
 		scale_fill_manual(values = cols) +
 		geom_text() +
 		xlab("# genes with probability of specific eQTL > 50%") 
@@ -233,80 +253,185 @@ tail(res_prob[i,], 5000) %>%
 # Gene heatmap
 ###############
 
-genes = c("GRID2", "AUTS2", "NXN", "LEPR", "SHANK2", "PDE4B", "LRP8", "NRG3", "PTPRG", "APOE", "TSNARE1", "RERE", "CACNA1A", "CACNA1C", "GRIN2A", "GRIN2B", "BDNF", "SCN2A", "BIN1", "PICALM", "APH1B", "CLU", "STAT3",'INO80D', 
-'FANCA',
-'SIRT6',
-'MAP4K4',
-'HELLS',
-'YES1',
-'IL5',
-'BRAF')
+# genes = c("GRID2", "AUTS2", "NXN", "LEPR", "SHANK2", "PDE4B", "LRP8", "NRG3", "PTPRG", "APOE", "TSNARE1", "RERE", "CACNA1A", "CACNA1C", "GRIN2A", "GRIN2B", "BDNF", "SCN2A", "BIN1", "PICALM", "APH1B", "CLU", "STAT3",'INO80D', 
+# 'FANCA',
+# 'SIRT6',
+# 'MAP4K4',
+# 'HELLS',
+# 'YES1',
+# 'IL5',
+# 'BRAF')
 
-genes_shared = c('APH1B', "BRAF", "CLU", "CACNA1C", "IL5", "STAT3")
-genes_specific = c("APOE", "AUTS2", "BIN1", "CACNA1A", "GRIN2B", "EGFR", "PDE4B", "SHANK2", "NXN")
-genes = c(genes_shared, genes_specific, genes)
+# genes_shared = c('APH1B', "BRAF", "CLU", "CACNA1C", "IL5", "STAT3")
+# genes_specific = c("APOE", "AUTS2", "BIN1", "CACNA1A", "GRIN2B", "EGFR", "PDE4B", "SHANK2", "NXN")
+# genes = c(genes_shared, genes_specific, genes)
 
-genes = res_prob %>%
-	arrange(-prob) %>%
-	select(Gene) %>%
-	distinct %>%
-	head(400) %>%
-	pull %>%
-	c(genes) %>%
-	unique
+# genes = res_prob %>%
+# 	arrange(-prob) %>%
+# 	select(Gene) %>%
+# 	distinct %>%
+# 	head(400) %>%
+# 	pull %>%
+# 	c(genes) %>%
+# 	unique
 
-
-df_prob = df_lfsr %>%
-	rownames_to_column("Gene") %>%
-	filter(Gene %in% genes) %>%
-	pivot_longer(cols=!Gene, names_to = "class", values_to="prob") %>%
-	mutate(CellType = factor(class, ord.class)) %>%
-	mutate(Gene = factor(Gene, genes))
 
 # read coloc results
 df_coloc = read_tsv("coloc_subclass.tsv", show_col_types=FALSE) %>%
 			filter(ppH4 > .5) %>%
 			select(Trait, CellType, Gene, ppH4)
 
+# Get set of genes with specific eQTLs at prob > 0 .5
+df1 = res_prob %>%
+		filter(prob > 0.5) %>%
+		select(Gene, ID, subclass) %>%
+		rename(CellType.specific = subclass)
+
+
+# Get gene cell type pairs for 
+# 1) Genes that coloc in any cell type and 
+# 2) have a specific eQTL in any cell type
+df_coloc %>%
+	select(Gene, CellType) %>%
+	rename(CellType.coloc = CellType) %>%
+	distinct %>%
+	inner_join(df1, relationship = "many-to-many") %>%
+	filter(CellType.coloc != CellType.specific) %>%
+	filter(!grepl("\\.\\*", CellType.specific)) %>%
+	arrange(Gene) %>%
+	write_tsv(file="merge_coloc_mashr.tsv")
+
+
+df1 %>%
+	filter(Gene == 'PFKFB2')
+
+df_coloc %>%
+	filter(Gene == 'PFKFB2')
+
+
+df1 %>%
+	filter(Gene == 'APP')
+
+df_coloc %>%
+	filter(Gene == 'APP')
+
+
+
+# cell type specific eQTLs that also coloc with GWAS
+res_spec_coloc = res_prob %>%
+		mutate(CellType = factor(subclass, c(ord.other, ord.subclass))) %>%
+		select(-subclass) %>%
+		full_join(df_coloc, by=c("Gene"), relationship = "many-to-many") %>%
+		filter(!is.na(Trait)) %>%
+		filter(prob > 0.5) %>%
+		arrange(Gene)
+
+
+res_spec_coloc  %>% 
+	filter(Gene == "APP")
+
+
+
+res_prob %>% 
+	filter(Gene == "APP") %>%
+	arrange(-prob)
+
+
+
+df_coloc %>% 
+	filter(Gene == "APP")
+
+
+
+
+# Reprt standard 
+df_prob = df_lfsr %>%
+	rownames_to_column("Gene") %>%
+	pivot_longer(cols=!Gene, names_to = "subclass", values_to="lfsr") %>%
+	mutate(CellType = factor(subclass,  c(ord.other, ord.subclass))) %>%
+	select(-subclass)  %>%
+	mutate(ID = Gene) %>%
+	mutate(Gene = gsub("^(\\S+)_.*$", "\\1", Gene)) 
+
 df_join = df_prob %>%
-			left_join(df_coloc)
+			left_join(df_coloc, relationship = "many-to-many") %>%
+			# filter(!is.na(Trait)) %>%
+			mutate(prob = 1 - lfsr)
 
 df_overlap = df_join %>%
-	filter(!is.na(Trait)) %>%
-	filter(prob > 0.05) %>%
+	filter(prob > 0.5) %>%
 	filter(ppH4 > 0.5) %>%
+	arrange( Gene, CellType ) %>%
 	data.frame 
 
 df_overlap %>%
 	write_tsv("specific_and_coloc.tsv")
 
-fig = df_join %>%
-	ggplot(aes(Gene, CellType, fill = 1- prob)) +
-		geom_tile() +
+
+
+genes = c('NALCN', 'WNT5B', 'DOCK1', "GRIA1", 'APP', 'CACNA1C', 'PSD3', "INPP5D", "SERPINB1", "TLE4", res_spec_coloc$Gene)
+genes = sort(unique(genes))
+
+df_sub = df_join %>%	
+	filter(Gene %in% genes) %>%
+	mutate(Gene = factor(Gene, genes)) %>%
+	mutate(CellType = factor(CellType, c(ord.other, ord.subclass))) %>%
+	mutate(variant = gsub("^\\S*_(\\S+)$", "\\1", ID))
+
+
+files3 = dir('/sc/arion/projects/CommonMind/hoffman/sceqtl/sumStats/', pattern="meta-.*-subclass.*parquet", full.names=TRUE)
+
+dSet = open_dataset(files)
+
+# get target SNP
+df_merge = dSet %>%
+		rename(Gene = gene) %>%
+		filter(Gene %in% genes)  %>%
+		inner_join(df_sub, by=c("Gene", "CellType", "variant")) %>%
+			collect
+
+# get target beta
+df_target = df_merge %>%
+	# filter(Gene == "APP") %>% 
+	group_by(ID) %>%
+	summarize(beta.target = beta[which.max(abs(z))])
+
+
+fig = df_merge %>%
+	select(-Source, -Level, -chr, -start, -end, -nonassessed_allele, -assessed_allele, -isTopHit, -se, -Trait, -ppH4 ) %>%
+	inner_join(df_target)  %>%
+	# filter(Gene == "APP") %>% 
+	# filter(variant == "rs2226349") %>%
+	# filter(variant == "rs128648") %>%
+	# filter(CellType %in% c("Oligo", "Astro", "IN_LAMP5_RELN")) %>%
+	mutate(CellType = factor(CellType, c(ord.other, ord.subclass))) %>%
+	mutate(score =if_else(sign(beta) == sign(beta.target), -log10(lfsr + 1e-4), -log10(pmax(1-lfsr- 1e-4, lfsr+ 1e-4)) )) %>%
+	ggplot(aes(ID, CellType, color = score, size=score, label=ifelse(lfsr < 0.05, "x", ''))) +
+		geom_point() +
 		theme_classic() + 
 		coord_equal() +
-		scale_fill_gradient(low="white", high="red", limits=c(0, 1)) +
-		scale_x_discrete(guide = guide_axis(angle = 90)) 
+		scale_size_area() +
+		scale_color_gradient(low="white", high="red", limits=c(0, 4)) +
+		scale_x_discrete(guide = guide_axis(angle = 90)) +
+		geom_text(color="black", hjust=0.5, vjust=0.5) 
 
-ggsave(fig, file="plots/gene_heatmap.pdf", height = 20, width=8)
-
-
-
-
+ggsave(fig, file="plots/gene_heatmap.pdf", width=20)
 
 
 
 
+df_sub %>%
+	filter(!is.na(ppH4))
 
 
-
-
+# DRD2 mashr in Astro, IN_VIP, EN_L3_5_IT_3
+# coloc with SCZ in EN_L2_3_IT, EN_L3_5_IT_2
 
 
 
 ord.class = assay_order %>%
 				grep("^subclass", ., value=TRUE) %>%
-				gsub("^subclass / ", "", .) %>%
+				gsub("^subclass / ", "", .) 
 		
 
 fig = df_lfsr %>%
@@ -335,7 +460,7 @@ library(ggplot2)
 })
 
 
-plotGenePanels = function(files, GENE, CT){
+plotGenePanels = function(files, GENE, CT, SNP,window = 2e6, min.p=1e-7){
 
 	dSet = open_dataset(files)
 
@@ -344,7 +469,9 @@ plotGenePanels = function(files, GENE, CT){
 
 	# get target SNP
 	df_sub = dSet %>%
-				filter(isTopHit, 
+				filter(
+					# isTopHit, 
+					variant == SNP,
 					CellType == CT, 
 					gene == GENE) %>%
 				collect
@@ -353,6 +480,7 @@ plotGenePanels = function(files, GENE, CT){
 			filter(gene == GENE, 
 				variant == df_sub$variant) %>%
 				collect
+
 
 	ord.class = assay_order %>%	
 				grep("^subclass", ., value=TRUE) %>%
@@ -377,20 +505,29 @@ plotGenePanels = function(files, GENE, CT){
 				collect %>%
 				mutate(p.value = 2*pnorm(abs(z), lower.tail=FALSE))
 
+	# filter by window width
+	center = mean(df_sub$start)
+	df_sub = df_sub %>%
+		filter(start > center - window, start < center + window) %>%
+		arrange(-p.value)
+
 	CTs = df_sub %>%
 		group_by(CellType) %>%
 		summarize(p.min = min(p.value)) %>%
-		filter(p.min < 1e-7) %>%
+		filter(p.min < min.p) %>%
 		pull(CellType)
 
 	fig.mht = df_sub %>%
 			filter( CellType %in% CTs) %>%
-			ggplot(aes(start, -log10(p.value))) +
+			mutate(isTarget = variant == SNP) %>%
+			arrange(isTarget) %>%
+			ggplot(aes(start, -log10(p.value), color=isTarget)) +
 				geom_point() +
 				theme_classic() +
-				theme(plot.title = element_text(hjust = 0.5)) +
+				theme(plot.title = element_text(hjust = 0.5), legend.position='none') +
 				facet_wrap(~CellType, ncol=1, scales="free_y") +
-				ggtitle(GENE) 
+				ggtitle(paste(GENE, '/', SNP)) +
+				scale_color_manual(values=c("black", "red"))
 
 	# Expression level
 	#-----------------
@@ -431,7 +568,11 @@ lst = list(c(GENE = "AUTS2",  CT = "Micro"),
 		c(GENE = "SHANK2", CT = "Oligo"),
 		c(GENE = "NXN", CT = "IN_PVALB_CHC"),
 		c(GENE = "STAT3", CT = "IN_PVALB_CHC"),
-		c(GENE = "RERE", CT = "Astro"))
+		c(GENE = "RERE", CT = "Astro"),
+		c(GENE = "APP", CT = "Oligo", SNP='rs128648'),	
+		c(GENE = "APP", CT = "Astro", SNP='rs2226349'),		
+		c(GENE = "DRD2", CT = "IN_VIP"),
+		x)
 
 lst2 = lapply(seq(nrow(df_overlap)), function(i){
 	c(GENE = df_overlap$Gene[i], GENE = df_overlap$CellType[i])
@@ -440,15 +581,16 @@ lst2 = lapply(seq(nrow(df_overlap)), function(i){
 for(x in  append(lst, lst2)){
 	GENE = x[1]
 	CT = x[2]
+	SNP = x[3]
 	message(GENE)
 
-	res = plotGenePanels(files3, GENE, CT)
+	res = plotGenePanels(files3, GENE, CT, SNP, 2e6, min.p=1e-5)
 
-	file = paste0("plots/details/", GENE, "_", CT, "_forrest.pdf")
+	file = paste0("plots/details/", GENE, "_", CT, "_", SNP, "_forrest.pdf")
 	ggsave(res$fig.forrest, file=file)
-	file = paste0("plots/details/", GENE, "_", CT, "_manhattan.pdf")
+	file = paste0("plots/details/", GENE, "_", CT, "_", SNP, "_manhattan.pdf")
 	ggsave(res$fig.mht, file=file, height=10, width=4)
-	file = paste0("plots/details/", GENE, "_", CT, "_expression.pdf")
+	file = paste0("plots/details/", GENE, "_", CT, "_", SNP, "_expression.pdf")
 	ggsave(res$fig.expr, file=file, height=10, width=4)
 }
 
@@ -458,56 +600,6 @@ for(x in  append(lst, lst2)){
 
 
 
-
-library(muscat)
-library(SingleCellExperiment)
-
-data(example_sce)
-
-plotProjection(example_sce, "TSNE", "cluster_id", 1)
-
-
-
-
-
-# hist(apply(df_class, 1, max))
-
-
-
-
-	df_lfsr[which.max(prob),]
-
-	sum(prob > 0.05)
-
-	genes.out = sort(prob[prob > 0.05], decreasing=TRUE)
-
-	data.frame(Prob = genes.out) %>%
-		rownames_to_column('Gene') %>%
-		write.table(file="Microglia.tsv", sep="\t", quote=FALSE, row.names=FALSE)
-
-
-
-ids = names(sort(prob, decreasing=TRUE))
-df_lfsr[ids,][1:10,]
-
-
-more /sc/arion/projects/CommonMind/hoffman/sceqtl/sumStats/Microglia.tsv
-
-
-
-
-
-include = c("EX_neurons", "IN_neurons")
-exclude = setdiff(colnames(df_lfsr), include)
-
-prob = dreamlet:::.compositePosteriorTest( 1 - df_lfsr, include = include, exclude = exclude, test="all")
-
-df_lfsr[which.max(prob),]
-
-sum(prob > 0.05)
-
-ids = names(sort(prob, decreasing=TRUE))
-df_lfsr[ids,][1:10,]
 
 
 

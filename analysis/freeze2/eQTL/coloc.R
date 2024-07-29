@@ -67,7 +67,7 @@ write_tsv(df, file="coloc_class.tsv")
 df_genes = df %>%
 			group_by(Trait, Gene) %>%
 			summarize(maxSignal = max(ppH4, na.rm=TRUE)) %>%
-			filter(maxSignal > .8)
+			filter(maxSignal > .5)
 
 df_sub = df %>% 
 		inner_join(df_genes, by=c("Trait", "Gene")) %>%
@@ -91,17 +91,18 @@ gene.ord = unique(unlist(res))
 fig = df_sub %>%  	
 	mutate(CellType = factor(CellType, ord.class)) %>%
 	mutate(Gene = factor(Gene, gene.ord)) %>%
-	ggplot(aes(Gene, CellType, color = ppH4, size=ppH4)) +
+	ggplot(aes(Gene, CellType, color = ppH4, size=ppH4, label=ifelse(ppH4 >=0.8, 'x', ''))) +
 		geom_point() +
 		theme_classic() +
 		scale_color_gradient(low="grey98", high="red1", limits=c(0,1)) +
 		scale_x_discrete(guide = guide_axis(angle = 90)) +
 		ggtitle("COLOC") +
+		geom_text(color="black", vjust=0.5, hjust=0.5) +
 		scale_size_area(max_size=4) + 
 		facet_wrap(~ Trait, nrow=1, scales="free_x")
 
 file = paste0("plots/coloc_class.pdf")
-ggsave(fig, file=file, height = 3.2, width=18)
+ggsave(fig, file=file, height = 3.2, width=80, limitsize=FALSE)
 
 
 # Subclass
@@ -120,7 +121,7 @@ df_genes = df %>%
 			filter(Trait != "AD") %>%
 			group_by(Trait, Gene) %>%
 			summarize(maxSignal = max(ppH4, na.rm=TRUE)) %>%
-			filter(maxSignal > .8)
+			filter(maxSignal > .5)
 
 df_sub = df %>% 
 		inner_join(df_genes, by=c("Trait", "Gene"))%>%
@@ -143,18 +144,18 @@ gene.ord = unique(unlist(res))
 fig = df_sub %>%  	
 	mutate(CellType = factor(CellType, ord.subclass)) %>%
 	mutate(Gene = factor(Gene, gene.ord)) %>%
-	ggplot(aes(Gene, CellType, color = ppH4, size=ppH4)) +
+	ggplot(aes(Gene, CellType, color = ppH4, size=ppH4, label=ifelse(ppH4 >=0.8, 'x', ''))) +
 		geom_point() +
 		theme_classic() +
-		# coord_equal() +
 		scale_color_gradient(low="grey98", high="red1", limits=c(0,1)) +
 		scale_x_discrete(guide = guide_axis(angle = 90)) +
 		ggtitle("COLOC") +
+		geom_text(color="black", vjust=0.5, hjust=0.5) +
 		scale_size_area(max_size=4) + 
 		facet_wrap(~ Trait, nrow=1, scales="free_x")
 
 file = paste0("plots/coloc_subclass.pdf")
-ggsave(fig, file=file, height = 6, width=19)
+ggsave(fig, file=file, height = 6, width=105, limitsize=FALSE)
 
 
 
