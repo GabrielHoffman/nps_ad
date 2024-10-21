@@ -5,6 +5,58 @@
 # Plot info about reads and cell count for each cell type
 
 
+# Expression of each gene in each cell subtype
+library(SingleCellExperiment)
+library(tidyverse)
+library(ggplot2)
+library(dreamlet)
+
+files = dir("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", pattern="FULL_2024-02-.*_PB_SubID_.*.RDS", full.names=TRUE)
+
+res = lapply( files[-1], function(file){
+	pb = readRDS(file)
+	level = gsub("^.*_(\\S+).RDS", "\\1", basename(file))
+	outFile = paste0("expressionSpecificity_", level, ".tsv.gz")
+
+	df_cts <- cellTypeSpecificity(pb)
+	df_cts <- df_cts[df_cts$totalCPM > 100, ]
+
+	df_cts %>%
+		as.data.frame %>%
+		rownames_to_column("Gene") %>%
+		as_tibble %>%
+		write_tsv( file=outFile)
+})
+
+
+df = read_tsv("expressionSpecificity_subclass.tsv.gz")
+gene = "PTK2B"
+
+cols = colnames(df[-c(1,2,5)])
+
+
+fig = df %>%
+	filter(Gene == gene) %>%
+	pivot_longer(!Gene &!totalCPM) %>%
+	mutate(CPM = totalCPM * value) %>%
+	ggplot(aes(Gene, name, fill=CPM)) +
+		geom_tile() +
+		theme_classic() + 
+		coord_equal() +
+		scale_fill_gradient(low="white", high="red", limits=c(0, NA)) +
+		xlab('') +
+		ylab('')
+
+ggsave(fig, file="~/www/test.png")
+
+
+
+
+
+
+
+
+
 suppressPackageStartupMessages({
 library(SingleCellExperiment)
 library(zellkonverter)
@@ -43,6 +95,8 @@ path = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/h5ad_final/"
 file = c(FULL = paste0(path, "FULL_2024-02-01_18_49.h5ad"))
  
 sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, version="0.8.0")
+
+
 
 # Number of cells observed per Subject
 figA = colData(sce) %>%
@@ -105,10 +159,16 @@ ggsave(figC, file="~/www/Cells_per_subject_C.pdf", width=15, height=10)
 
 
 
+# Donors
+ids = read.table("/sc/arion/projects/CommonMind/zengb02/single_cell_eQTL_for_Gabriel_02212024/eQTL_detection_on_pearsonclass_level/1384_individuals")$V1 
+
+table(sce$SubID %in% ids)
+
+
+
 library(dreamlet)
 
 # Read from RDS
-
 files = dir("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/", pattern="FULL_2024-02-.*_PB_SubID_.*.RDS", full.names=TRUE)
 
 # reads per cell

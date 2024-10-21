@@ -199,6 +199,7 @@ df_reads = readRDS("df_counts.RDS") %>%
 #####################
 library(ape)
 library(dendextend)
+library(ggplot2)
 library(ggtree)
 
 plot_tree_simple = function(tree, xmax.scale=1.5){
@@ -220,12 +221,33 @@ files = system("ls /sc/arion/projects/psychAD/NPS-AD/freeze2_proc/231109_PsychAD
 plotList = lapply( files, function(file){
 	tree = read.tree(file)
 
+	tree = drop.tip(tree, "Adaptive")
+	tree = drop.tip(tree, "EN_L5_ET")
+
 	plot_tree_simple(as.phylo(tree), xmax.scale=1.5) + theme(legend.position="bottom")
 })
 
 pdf("plots/trees.pdf")
 plotList
 dev.off()
+
+
+tree = read.tree(files[1])
+tree = drop.tip(tree, "Adaptive")
+tree = drop.tip(tree, "EN_L5_ET")
+tree$tip.label[] = ''
+fig = plot_tree_simple(as.phylo(tree), xmax.scale=1.5) + theme(legend.position="bottom")
+ggsave(fig, file="plots/trees_1.pdf", height=.5*4, width=.17*4)
+
+
+tree = read.tree(files[2])
+tree = drop.tip(tree, "Adaptive")
+tree = drop.tip(tree, "EN_L5_ET")
+tree$tip.label[] = ''
+fig = plot_tree_simple(as.phylo(tree), xmax.scale=1.5) + theme(legend.position="bottom")
+ggsave(fig, file="plots/trees_2.pdf", height=1.76*4, width=.17*4)
+
+
 
 assay_order = lapply(plotList, ggtree::get_taxa_name)
 
@@ -238,6 +260,57 @@ assay_order = c("bulk / bulk", paste0("class / ", assay_order[[1]]),
 
 # plot of # eGenes
 #-----------------
+
+# Upset: class
+res_gene = df_QTL %>%
+			filter(Level == "class") 
+
+qtlLst = lapply(unique(res_gene$CellType), function(CT){
+	res_gene %>%
+		filter(FDR_gene < 0.05) %>%
+		filter(CellType == CT) %>%
+		pull(gene) %>%
+		unique
+	})
+names(qtlLst) = unique(res_gene$CellType)
+
+assay_order = readRDS("assay_order.RDS")
+ord = assay_order %>%
+		grep("^class", ., value=TRUE) %>%
+		gsub("^class / ", '', .)
+
+pdf("plots/standard_upset_class.pdf", height=5, width=7)
+upset(fromList(qtlLst[ord]), order.by = "freq", nsets=8, keep.order=TRUE, sets=ord, nintersects=15)
+dev.off()
+
+# Upset: subclass
+res_gene = df_QTL %>%
+			filter(Level == "subclass") 
+
+qtlLst = lapply(unique(res_gene$CellType), function(CT){
+	res_gene %>%
+		filter(FDR_gene < 0.05) %>%
+		filter(CellType == CT) %>%
+		pull(gene) %>%
+		unique
+	})
+names(qtlLst) = unique(res_gene$CellType)
+
+assay_order = readRDS("assay_order.RDS")
+ord = assay_order %>%
+		grep("^subclass", ., value=TRUE) %>%
+		gsub("^subclass / ", '', .)
+
+ord = ord[ord %in% names(qtlLst)]
+
+pdf("plots/standard_upset_subclass.pdf", height=9, width=7)
+upset(fromList(qtlLst[ord]), order.by = "freq", nsets=8, keep.order=TRUE, sets=ord, nintersects=15)
+dev.off()
+
+
+
+
+
 
 # For Oligo, keep from top Level
 df4 = df_QTL %>%
@@ -260,7 +333,7 @@ plot_eGene_count = function( df4, lvl){
 	f = function(data){
 		fit = lm(nGenes ~ Fraction, data = data)
 		rsq = summary(fit)$r.sq
-		data.frame(rsq)
+		data.frame(rsq = rsq, p = coef(summary(fit))[2,4])
 	}
 	df_rsq = df4 %>%
 		filter(Level %in% lvl) %>%
@@ -270,7 +343,7 @@ plot_eGene_count = function( df4, lvl){
 	# i = which(df_rsq$isNeuron)
 	i = 1
 	df_rsq$text = NA
-	df_rsq$text[i] = paste("Rsq:", format(df_rsq$rsq[i], digits=3), "\n")
+	df_rsq$text[i] = paste("Rsq:", format(df_rsq$rsq[i], digits=3), "\np:", format(df_rsq$p[i], digits=3))
 	# df_rsq$text[-i] = paste("Non-neuron:", format(df_rsq$rsq[-i], digits=3))
 
 	# xlimit = range(100*df4$Fraction, na.rm=TRUE)
@@ -321,14 +394,14 @@ plot_eGene_count = function( df4, lvl){
 	f = function(data){
 		fit = lm(nGenes ~ meanReadCount, data = data)
 		rsq = summary(fit)$r.sq
-		data.frame(rsq)
+		data.frame(rsq = rsq, p = coef(summary(fit))[2,4])
 	}
 	df_rsq = df4 %>%
 		filter(Level %in% lvl) %>%
 		group_modify(~f(.))
 
 	df_rsq$text = NA
-	df_rsq$text = paste("Rsq:", format(df_rsq$rsq, digits=3), "\n")
+	df_rsq$text = paste("Rsq:", format(df_rsq$rsq, digits=3), "\np:", df_rsq$p)
 
 	ymax = df4 %>%
 		filter(Level %in% lvl) %>%
@@ -446,7 +519,7 @@ df3 = df2 %>%
 f = function(data){
 	fit = lm(cor ~ Fraction, data = data)
 	rsq = summary(fit)$r.sq
-	data.frame(rsq)
+	data.frame(rsq = rsq, p = coef(summary(fit))[2,4])
 }
 df_rsq = df3 %>%
 	group_by(isNeuron) %>%

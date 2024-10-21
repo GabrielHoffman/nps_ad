@@ -39,8 +39,12 @@ df = read.table(files[2], header=FALSE) %>%
 		as_tibble 
 colnames(df) = c("CellType", "Trait", "effect", "se")
 
+ord = c('ALZ', 'ALZ3', 'ALS2', 'ALS', 'MS', 'PD', 'ADHD', 'ASD', 'Bipolar', 'MDD', 'SZ',  'Neu',  'EduYear', 'BMI', 'CAD', 'CD', 'T2D', 'DRINKING', 'DS', 'HEIGHT', 'IBD', 'RA', 'SLE', 'UC')
+
+df$Trait = factor(df$Trait, ord)
+
 fig = df %>%
-		filter(Trait != "ALS", Trait != "ALZ") %>%
+		filter(! Trait %in% c("ALS", "ALZ", "ALZ2", "DRINKING", "DS")) %>%
 		mutate(z = effect / se)  %>%
 		arrange(-effect) %>%
 		# filter(Trait %in% traits) %>%
@@ -49,23 +53,30 @@ fig = df %>%
 		mutate(CellType = factor(CellType, ord.subclass)) %>%
 		mutate(z = pmax(z, 0)) %>%
 		mutate(effect = pmax(effect, 0)) %>%
-	ggplot(aes(Trait, CellType, color = z, alpha = z, size = log10(effect+1), label=ifelse(FDR < 0.05, "x", ''))) +
-		geom_point() +
+		mutate(Trait = fct_recode(Trait, "ALZ" = "ALZ3", "ALS" = "ALS2", BD = "Bipolar", "Height" = "HEIGHT")) %>%
+	ggplot(aes(CellType, Trait, color = z, alpha = z, size = log10(effect), label=ifelse(FDR < 0.05, "x", ''))) +
+		geom_point(stroke=0) +
 		theme_classic() +
 		coord_equal() +
 		scale_color_gradient2(low="white", mid="grey98", high="red1") +
 		scale_x_discrete(guide = guide_axis(angle = 90)) +
 		scale_size_area() +
 		geom_text(color="black", vjust=0.4, hjust=0.5, alpha = 1) 
-ggsave(fig, file="plots/LDSC_subclass.pdf")
+ggsave(fig, file="plots/LDSC_subclass.pdf", height=7, width=6.3)
+
+
 
 
 df = read.table(files[1], header=FALSE) %>%
 		as_tibble 
 colnames(df) = c("CellType", "Trait", "effect", "se")
 
+
+df$Trait = factor(df$Trait, ord)
+
 fig = df %>%
-		filter(Trait != "ALS", Trait != "ALZ") %>%
+		filter(! Trait %in% c("ALS", "ALZ", "ALZ2", "DRINKING", "DS")) %>%
+		mutate(Trait = fct_recode(Trait, "ALZ" = "ALZ3", "ALS" = "ALS2", BD = "Bipolar", "Height" = "HEIGHT")) %>%
 		mutate(z = effect / se)  %>%
 		arrange(-effect) %>%
 		# filter(Trait %in% traits) %>%
@@ -74,15 +85,16 @@ fig = df %>%
 		mutate(CellType = factor(CellType, ord.class)) %>%
 		mutate(z = pmax(z, 0)) %>%
 		mutate(effect = pmax(effect, 0)) %>%
-	ggplot(aes(Trait, CellType, color = z, alpha = z, size = log10(effect+1), label=ifelse(FDR < 0.05, "x", ''))) +
-		geom_point() +
+		mutate(Trait = fct_recode(Trait, "ALZ" = "ALZ3", "ALS" = "ALS2", BD = "Bipolar", "Height" = "HEIGHT")) %>%
+	ggplot(aes(CellType, Trait, color = z, alpha = z, size = log10(effect), label=ifelse(FDR < 0.05, "x", ''))) +
+		geom_point(stroke=0) +
 		theme_classic() +
 		coord_equal() +
 		scale_color_gradient2(low="white", mid="grey98", high="red1") +
 		scale_x_discrete(guide = guide_axis(angle = 90)) +
 		scale_size_area() +
 		geom_text(color="black", vjust=0.4, hjust=0.5, alpha = 1) 
-ggsave(fig, file="plots/LDSC_class.pdf")
+ggsave(fig, file="plots/LDSC_class.pdf", height=4.5, width=3.5)
 
 
 
@@ -98,16 +110,20 @@ df = read.table(files[2], header=FALSE) %>%
 		as_tibble 
 colnames(df) = c('Trait', 'CellType','h2_medi','h2_mediated_se', 'h2_percentage_mediated','h2_percentage_mediated_se')
 
+df$Trait = factor(df$Trait, ord)
+
+
 fig = df %>% 
-		filter(Trait != "ALS", Trait != "ALZ") %>%
+		filter(! Trait %in% c("ALS", "ALZ", "ALZ2", "DRINKING", "DS")) %>%
+		mutate(Trait = fct_recode(Trait, "ALZ" = "ALZ3", "ALS" = "ALS2", BD = "Bipolar", "Height" = "HEIGHT")) %>%
 		mutate(h2_percentage_mediated = pmax(0, h2_percentage_mediated)) %>%
 		mutate(z = h2_percentage_mediated / h2_percentage_mediated_se)  %>%
 		# filter(Trait %in% traits) %>%
 		mutate(p.value = pnorm(z, lower.tail=FALSE)) %>%
 		mutate(FDR = p.adjust(p.value)) %>%
 		mutate(CellType = factor(CellType, ord.subclass)) %>% 
-	ggplot(aes(Trait, CellType, color = z, alpha = z, size = h2_percentage_mediated, label=ifelse(FDR < 0.05, "x", ''))) +
-		geom_point() +
+	ggplot(aes(CellType, Trait, color = z, alpha = z, size = h2_percentage_mediated, label=ifelse(FDR < 0.05, "x", ''))) +
+		geom_point(stroke=0) +
 		theme_classic() +
 		coord_equal() +
 		scale_color_gradient(low="grey98", high="red1") +
@@ -116,23 +132,26 @@ fig = df %>%
 		geom_text(color="black", vjust=0.4, hjust=0.5) +
 		ggtitle("MESC")
 
-ggsave(fig, file="plots/MESC_subclass.pdf", height = 7, width=7)
+ggsave(fig, file="plots/MESC_subclass.pdf", height = 6.2, width=6.2)
 
 
 df = read.table(files[1], header=FALSE) %>%
 		as_tibble 
 colnames(df) = c('Trait', 'CellType','h2_medi','h2_mediated_se', 'h2_percentage_mediated','h2_percentage_mediated_se')
 
+df$Trait = factor(df$Trait, ord)
+
 fig = df %>% 
-		filter(Trait != "ALS", Trait != "ALZ") %>%
+		filter(! Trait %in% c("ALS", "ALZ", "ALZ2", "DRINKING", "DS")) %>%
+		mutate(Trait = fct_recode(Trait, "ALZ" = "ALZ3", "ALS" = "ALS2", BD = "Bipolar", "Height" = "HEIGHT")) %>%
 		mutate(h2_percentage_mediated = pmax(0, h2_percentage_mediated)) %>%
 		mutate(z = h2_percentage_mediated / h2_percentage_mediated_se)  %>%
 		# filter(Trait %in% traits) %>%
 		mutate(p.value = pnorm(z, lower.tail=FALSE)) %>%
 		mutate(FDR = p.adjust(p.value)) %>%
 		mutate(CellType = factor(CellType, ord.class)) %>% 
-	ggplot(aes(Trait, CellType, color = z, alpha = z, size = h2_percentage_mediated, label=ifelse(FDR < 0.05, "x", ''))) +
-		geom_point() +
+	ggplot(aes(CellType, Trait, color = z, alpha = z, size = h2_percentage_mediated, label=ifelse(FDR < 0.05, "x", ''))) +
+		geom_point(stroke=0) +
 		theme_classic() +
 		coord_equal() +
 		scale_color_gradient(low="grey98", high="red1") +
@@ -141,7 +160,7 @@ fig = df %>%
 		geom_text(color="black", vjust=0.4, hjust=0.5) +
 		ggtitle("MESC")
 
-ggsave(fig, file="plots/MESC_class.pdf", height = 7, width=7)
+ggsave(fig, file="plots/MESC_class.pdf", height = 4.5, width=4.5)
 
 
 
