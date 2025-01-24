@@ -21,10 +21,9 @@ vignette: >
 
 <!--- 
 
-cd /sc/arion/projects/CommonMind/hoffman/dreamlet_analysis/Mathys_2023
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/Mathys_2023
 R
-
-system("git pull"); rmarkdown::render("Mathys_2023_Major_Cell_Type.Rmd");
+rmarkdown::render("Mathys_2023_Major_Cell_Type.Rmd");
 
 
 # https://hoffmg01.u.hpc.mssm.edu/dreamlet_analysis/Mathys_2023/Mathys_2023_Major_Cell_Type.html
@@ -430,9 +429,55 @@ if( length(coefSet) == 1){
 write_parquet(df_all, "Mathys_Cell_2023_Major_Cell_Type_dreamlet.parquet")
 ```
 
+# crumblr
+```r
+library(crumblr)
 
+cobj = crumblr(cellCounts(pb))
 
+colData(pb)$CERAD = 5 - colData(pb)$ceradsc
 
+form.base = ~ age + sex + Study + pmi 
+
+fitListCr = lapply( traits, function(trait){
+  form = as.formula(paste(as.character(form.base), "+", trait))
+
+  fit = dream(cobj, form, colData(pb))
+  fit = eBayes(fit)
+})
+names(fitListCr) = traits
+
+df_all = lapply(names(fitListCr), function(trait){
+
+  fit = fitListCr[[trait]]
+  coefSet = colnames(coef(fit))[-seq(5)]
+
+  tab = topTable(fit, coef=coefSet, number=Inf)
+  tab$trait = gsub("ordered\\((\\S+)\\)", "\\1", trait)
+  tab$coefSet = paste(coefSet, collapse=' + ')
+  tab = tab %>%
+          rownames_to_column("CellType") %>%
+          as_tibble
+
+  if( length(coefSet) == 1){    
+    cols = c("CellType", "logFC", "AveExpr", "t", "P.Value", "adj.P.Val", "trait", "coefSet")
+    tab = tab %>% 
+      select(all_of(cols)) %>%
+      rename(stat = "t")
+  }else{
+    cols = c( "CellType", "logFC", "AveExpr", "F", "P.Value", "adj.P.Val","trait", "coefSet")
+    tab = tab %>% 
+      mutate(logFC = NA) %>%
+      select(all_of(cols)) %>%
+      rename(stat = "F")
+  }
+
+}) %>% 
+  bind_rows %>%
+  arrange(P.Value)
+
+write_parquet(df_all, "Mathys_Cell_2023_Major_Cell_Type_crumblr.parquet")
+```
 
 
 
