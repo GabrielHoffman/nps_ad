@@ -1,0 +1,93 @@
+---
+title: "SEA_AD"
+subtitle: 'SEA_AD'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+    toc: true
+    smart: false
+vignette: >
+  %\VignetteIndexEntry{SEA_AD}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/Mathys_2023
+R
+rmarkdown::render("Mathys_2023_Major_Cell_Type.Rmd");
+
+
+# https://hoffmg01.u.hpc.mssm.edu/dreamlet_analysis/Mathys_2023/Mathys_2023_Major_Cell_Type.html
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+# Load packages
+```{r load.packages, cache=FALSE}
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(dreamlet)
+library(scater)
+library(GSEABase)
+library(zenith)
+library(ggrepel)
+library(knitr)
+library(kableExtra)
+library(scattermore)
+library(cowplot)
+library(ggplot2)
+library(viridis)
+library(qvalue)
+library(tidyverse)
+library(RColorBrewer)
+library(BiocParallel)
+library(arrow)
+library(formula.tools)
+
+```
+
+# Load data
+```{r load.data}
+# read H5AD file
+file = "/sc/arion/projects/CommonMind/leed62/ref/published/2024_SEA-AD_snRNA/SEAAD_A9_RNAseq_final-nuclei.2024-02-13.h5ad"
+sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE,  obsm=FALSE, uns=FALSE, layers=FALSE, var=FALSE, obs=FALSE)
+counts(sce) = assay(sce, "X")
+
+sce$Cell_Type = factor(sce$Cell_Type, sort(levels(sce$Cell_Type)))
+
+# create pseudobulk 
+pb <- aggregateToPseudoBulk(sce,
+    assay = "counts",     
+    cluster_id = "Major_Cell_Type",  
+    sample_id = "individualID")
+```
+
+# UMAP embedding
+```{r embedding}
+plotProjection(sce, "X_umap", annotation='Major_Cell_Type') 
+```
+
