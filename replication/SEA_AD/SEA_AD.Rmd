@@ -25,6 +25,11 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/SEA_AD
 R
 rmarkdown::render("SEA_AD.Rmd");
 
+
+
+
+
+
 FILE=/sc/arion/projects/CommonMind/leed62/ref/published/2024_SEA-AD_snRNA/SEAAD_A9_RNAseq_final-nuclei.2024-02-13.h5ad
 ../../../nps_ad/concat_h5ad.py -i <(echo $FILE) -d -o SEAAD_A9_RNAseq_final.h5ad
 
@@ -127,33 +132,34 @@ plotVoom( res.proc, ncol=4)
 ```
 
 <!---
-# Variance partitioning analysis
-```{r vp}
-# run variance partitioning analysis
-form = ~ age + sex + Study + pmi + ADdiag2types 
-vp.lst = fitVarPart( res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
-```
 
-```{r vp.plot, fig.height=6, fig.width=12}
-# Summarize variance fractions genome-wide for each cell type
-plotVarPart(sortCols(vp.lst), label.angle=60, ncol=4)   
-```
+# # Variance partitioning analysis
+# ```{r vp}
+# # run variance partitioning analysis
+# form = ~ Sex + Age.at.Death + PMI + Brain.pH
+# vp.lst = fitVarPart( res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
+# ```
 
-# dreamlet
-```{r dreamlet}
-form = ~ age + sex + Study + pmi + ADdiag2types 
-fit = dreamlet(res.proc, form) 
-```
+# ```{r vp.plot, fig.height=6, fig.width=12}
+# # Summarize variance fractions genome-wide for each cell type
+# plotVarPart(sortCols(vp.lst), label.angle=60, ncol=4)   
+# ```
 
-# Volcano
-```{r volcano, fig.height=9, fig.width=12}
-plotVolcano(fit, "ADdiag2typesAD")
-```
+# # dreamlet
+# ```{r dreamlet}
+# form = ~ Sex + Age.at.Death + PMI + Brain.pH 
+# fit = dreamlet(res.proc, form) 
+# ```
 
-```{r write.file}
-topTable(fit, coef = "ADdiag2typesAD", number=Inf) %>%
-  write.table(file="Mathys_2023_Major_Cell_Type_ADdiag2typesAD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
-```
+# # Volcano
+# ```{r volcano, fig.height=9, fig.width=12}
+# plotVolcano(fit, "ADdiag2typesAD")
+# ```
+
+# ```{r write.file}
+# topTable(fit, coef = "ADdiag2typesAD", number=Inf) %>%
+#   write.table(file="Mathys_2023_Major_Cell_Type_ADdiag2typesAD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
+# ```
 
 
 --->
