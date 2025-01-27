@@ -21,13 +21,22 @@ vignette: >
 
 <!--- 
 
-cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/Mathys_2023
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/SEA_AD
 R
-rmarkdown::render("Mathys_2023_Major_Cell_Type.Rmd");
+rmarkdown::render("SEA_AD.Rmd");
 
+FILE=/sc/arion/projects/CommonMind/leed62/ref/published/2024_SEA-AD_snRNA/SEAAD_A9_RNAseq_final-nuclei.2024-02-13.h5ad
+../../../nps_ad/concat_h5ad.py -i <(echo $FILE) -d -o SEAAD_A9_RNAseq_final.h5ad
 
 # https://hoffmg01.u.hpc.mssm.edu/dreamlet_analysis/Mathys_2023/Mathys_2023_Major_Cell_Type.html
 
+
+export R_LIBS_USER=
+export R_LIBS=
+# /sc/arion/projects/CommonMind/leed62/conda/envs/dreamlet430/bin/R --vanilla --quiet
+.libPaths("/sc/arion/projects/CommonMind/leed62/conda/envs/dreamlet430/lib/R/library")
+
+, obsm=FALSE, obsp=FALSE, uns=FALSE, var=FALSE,
 
 --->
 
@@ -67,27 +76,35 @@ library(RColorBrewer)
 library(BiocParallel)
 library(arrow)
 library(formula.tools)
-
 ```
+
 
 # Load data
 ```{r load.data}
 # read H5AD file
-file = "/sc/arion/projects/CommonMind/leed62/ref/published/2024_SEA-AD_snRNA/SEAAD_A9_RNAseq_final-nuclei.2024-02-13.h5ad"
-sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE,  obsm=FALSE, uns=FALSE, layers=FALSE, var=FALSE, obs=FALSE)
-counts(sce) = assay(sce, "X")
+# file = "/sc/arion/projects/CommonMind/leed62/ref/published/2024_SEA-AD_snRNA/SEAAD_A9_RNAseq_final-nuclei.2024-02-13.h5ad"
+# sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, layers=TRUE, version="0.8.0", reader="R")
+counts(sce) = assay(sce, "UMIs")
 
-sce$Cell_Type = factor(sce$Cell_Type, sort(levels(sce$Cell_Type)))
+sce = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/241202_PsychAD_external_validations/241202_SEA-AD.sce.rds")
 
 # create pseudobulk 
 pb <- aggregateToPseudoBulk(sce,
     assay = "counts",     
-    cluster_id = "Major_Cell_Type",  
-    sample_id = "individualID")
+    cluster_id = "Subclass",  
+    sample_id = "Donor.ID")
 ```
 
-# UMAP embedding
-```{r embedding}
-plotProjection(sce, "X_umap", annotation='Major_Cell_Type') 
-```
+form = ~ Sex + Age.at.Death + PMI + Brain.pH
+
+
+
+
+
+
+
+
+
+
+
 
