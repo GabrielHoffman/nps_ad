@@ -153,7 +153,7 @@ fit = dreamlet(res.proc, form)
 ```
 
 # Volcano
-```{r volcano, fig.height=9, fig.width=12}
+```{r volcano, fig.height=16, fig.width=10}
 plotVolcano(fit, "Cognitive.StatusDementia")
 ```
 
