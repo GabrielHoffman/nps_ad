@@ -133,6 +133,8 @@ details(res.proc)
 plotVoom( res.proc, ncol=4) 
 ```
 
+ Braak CERAD.score
+
 
 # Variance partitioning analysis
 ```{r vp}
@@ -157,7 +159,25 @@ fit = dreamlet(res.proc, form)
 plotVolcano(fit, "Cognitive.StatusDementia")
 ```
 
-```{r write.file}
+# All phenotypes
+```{r dreamlet.all}
+pb$Braak.score = as.numeric(droplevels(pb$Braak))
+pb$CERAD.score = as.numeric(droplevels(pb$CERAD.score))
+
+formBase = ~ Sex + Age.at.Death + PMI + Brain.pH  
+
+traits = c("Cognitive.Status", "Braak.score", "CERAD.score")
+
+fitList = lapply( traits, function(trait){
+  form = as.formula(paste(as.character(formBase), "+", trait))
+
+  fit = dreamlet(res.proc, form) 
+})
+names(fitList) = traits
+```
+
+
+
 topTable(fit, coef = "Cognitive.StatusDementia", number=Inf) %>%
   write.table(file="SEA_AD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
 ```
