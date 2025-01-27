@@ -84,8 +84,6 @@ library(formula.tools)
 # read H5AD file
 # file = "/sc/arion/projects/CommonMind/leed62/ref/published/2024_SEA-AD_snRNA/SEAAD_A9_RNAseq_final-nuclei.2024-02-13.h5ad"
 # sce = readH5AD(file, use_hdf5=TRUE, verbose=TRUE, layers=TRUE, version="0.8.0", reader="R")
-counts(sce) = assay(sce, "UMIs")
-
 sce = readRDS("/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/241202_PsychAD_external_validations/241202_SEA-AD.sce.rds")
 
 # create pseudobulk 
