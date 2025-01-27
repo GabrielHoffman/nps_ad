@@ -163,7 +163,7 @@ plotVolcano(fit, "Cognitive.StatusDementia")
 ```{r dreamlet.all}
 formBase = ~ Sex + Age.at.Death + PMI + Brain.pH  
 
-traits = c("Cognitive.Status", "Braak.score", "CERAD.score")
+traits = c("Cognitive.Status", "Braak.value", "CERAD.value")
 
 fitList = lapply( traits, function(trait){
   form = as.formula(paste(as.character(formBase), "+", trait))
