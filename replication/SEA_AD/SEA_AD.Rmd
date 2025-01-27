@@ -93,12 +93,70 @@ pb <- aggregateToPseudoBulk(sce,
     sample_id = "Donor.ID")
 ```
 
+
+
+## Process pseudobulk data to estimate precision weights
+```{r voom}
+pb = pb[,pb$PMI != "Reference"]
+
+pb$PMI = as.numeric(as.character(pb$PMI))
+pb$Brain.pH = as.numeric(as.character(pb$Brain.pH))
+pb$Age.at.Death = as.numeric(as.character(pb$Age.at.Death))
+
+# Normalize and apply voomWithDreamWeights
 form = ~ Sex + Age.at.Death + PMI + Brain.pH
 
+res.proc = processAssays( pb, 
+                          form,  
+                          min.cells = 2,
+                          min.count = 1,
+                          min.samples = 4,
+                          min.prop = 0.3,
+                          BPPARAM = SnowParam(6))
+```
+
+### Show details of processing
+```{r details}
+details(res.proc) 
+```
+
+### Show voom-style mean-variance trends
+```{r voom.plot, fig.height=6, fig.width=12}
+# show voom plot for each cell clusters  
+plotVoom( res.proc, ncol=4) 
+```
+
+<!---
+# Variance partitioning analysis
+```{r vp}
+# run variance partitioning analysis
+form = ~ age + sex + Study + pmi + ADdiag2types 
+vp.lst = fitVarPart( res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
+```
+
+```{r vp.plot, fig.height=6, fig.width=12}
+# Summarize variance fractions genome-wide for each cell type
+plotVarPart(sortCols(vp.lst), label.angle=60, ncol=4)   
+```
+
+# dreamlet
+```{r dreamlet}
+form = ~ age + sex + Study + pmi + ADdiag2types 
+fit = dreamlet(res.proc, form) 
+```
+
+# Volcano
+```{r volcano, fig.height=9, fig.width=12}
+plotVolcano(fit, "ADdiag2typesAD")
+```
+
+```{r write.file}
+topTable(fit, coef = "ADdiag2typesAD", number=Inf) %>%
+  write.table(file="Mathys_2023_Major_Cell_Type_ADdiag2typesAD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
+```
 
 
-
-
+--->
 
 
 
