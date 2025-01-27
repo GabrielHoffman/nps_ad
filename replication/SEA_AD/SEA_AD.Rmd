@@ -109,6 +109,8 @@ pb$PMI = as.numeric(as.character(pb$PMI))
 pb$Brain.pH = as.numeric(as.character(pb$Brain.pH))
 pb$Age.at.Death = as.numeric(as.character(pb$Age.at.Death))
 pb$Cognitive.Status = droplevels(pb$Cognitive.Status)
+pb$Braak.value = as.numeric(droplevels(pb$Braak))
+pb$CERAD.value = as.numeric(droplevels(pb$CERAD.score))
 
 # Normalize and apply voomWithDreamWeights
 form = ~ Sex + Age.at.Death + PMI + Brain.pH
@@ -132,8 +134,6 @@ details(res.proc)
 # show voom plot for each cell clusters  
 plotVoom( res.proc, ncol=4) 
 ```
-
- Braak CERAD.score
 
 
 # Variance partitioning analysis
@@ -161,9 +161,6 @@ plotVolcano(fit, "Cognitive.StatusDementia")
 
 # All phenotypes
 ```{r dreamlet.all}
-pb$Braak.score = as.numeric(droplevels(pb$Braak))
-pb$CERAD.score = as.numeric(droplevels(pb$CERAD.score))
-
 formBase = ~ Sex + Age.at.Death + PMI + Brain.pH  
 
 traits = c("Cognitive.Status", "Braak.score", "CERAD.score")
@@ -177,9 +174,9 @@ names(fitList) = traits
 ```
 
 
-
-topTable(fit, coef = "Cognitive.StatusDementia", number=Inf) %>%
-  write.table(file="SEA_AD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
+```{r write}
+# topTable(fit, coef = "Cognitive.StatusDementia", number=Inf) %>%
+  # write.table(file="SEA_AD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
 ```
 
 
