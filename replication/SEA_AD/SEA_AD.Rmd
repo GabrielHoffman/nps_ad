@@ -27,14 +27,14 @@ rmarkdown::render("SEA_AD.Rmd");
 
 
 
+# https://hoffmg01.hpc.mssm.edu/SEA_AD.html
+
+
 
 
 
 FILE=/sc/arion/projects/CommonMind/leed62/ref/published/2024_SEA-AD_snRNA/SEAAD_A9_RNAseq_final-nuclei.2024-02-13.h5ad
 ../../../nps_ad/concat_h5ad.py -i <(echo $FILE) -d -o SEAAD_A9_RNAseq_final.h5ad
-
-# https://hoffmg01.u.hpc.mssm.edu/dreamlet_analysis/Mathys_2023/Mathys_2023_Major_Cell_Type.html
-
 
 export R_LIBS_USER=
 export R_LIBS=
@@ -107,6 +107,7 @@ pb = pb[,pb$PMI != "Reference"]
 pb$PMI = as.numeric(as.character(pb$PMI))
 pb$Brain.pH = as.numeric(as.character(pb$Brain.pH))
 pb$Age.at.Death = as.numeric(as.character(pb$Age.at.Death))
+pb$Cognitive.Status = droplevels(pb$Cognitive.Status)
 
 # Normalize and apply voomWithDreamWeights
 form = ~ Sex + Age.at.Death + PMI + Brain.pH
@@ -126,24 +127,23 @@ details(res.proc)
 ```
 
 ### Show voom-style mean-variance trends
-```{r voom.plot, fig.height=6, fig.width=12}
+```{r voom.plot, fig.height=16, fig.width=10}
 # show voom plot for each cell clusters  
 plotVoom( res.proc, ncol=4) 
 ```
 
-<!---
 
-# # Variance partitioning analysis
-# ```{r vp}
-# # run variance partitioning analysis
-# form = ~ Sex + Age.at.Death + PMI + Brain.pH
-# vp.lst = fitVarPart( res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
-# ```
+# Variance partitioning analysis
+```{r vp}
+# run variance partitioning analysis
+form = ~ Sex + Age.at.Death + PMI + Brain.pH + Cognitive.Status
+vp.lst = fitVarPart( res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
+```
 
-# ```{r vp.plot, fig.height=6, fig.width=12}
-# # Summarize variance fractions genome-wide for each cell type
-# plotVarPart(sortCols(vp.lst), label.angle=60, ncol=4)   
-# ```
+```{r vp.plot, fig.height=16, fig.width=10}
+# Summarize variance fractions genome-wide for each cell type
+plotVarPart(sortCols(vp.lst), label.angle=60, ncol=4)   
+```
 
 # # dreamlet
 # ```{r dreamlet}
@@ -160,9 +160,6 @@ plotVoom( res.proc, ncol=4)
 # topTable(fit, coef = "ADdiag2typesAD", number=Inf) %>%
 #   write.table(file="Mathys_2023_Major_Cell_Type_ADdiag2typesAD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
 # ```
-
-
---->
 
 
 
