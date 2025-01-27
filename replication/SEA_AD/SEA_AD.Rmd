@@ -154,12 +154,12 @@ fit = dreamlet(res.proc, form)
 
 # Volcano
 ```{r volcano, fig.height=9, fig.width=12}
-plotVolcano(fit, "ADdiag2typesAD")
+plotVolcano(fit, "Cognitive.StatusDementia")
 ```
 
 ```{r write.file}
-# topTable(fit, coef = "ADdiag2typesAD", number=Inf) %>%
-#   write.table(file="Mathys_2023_Major_Cell_Type_ADdiag2typesAD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
+topTable(fit, coef = "Cognitive.StatusDementia", number=Inf) %>%
+  write.table(file="SEA_AD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
 ```
 
 
