@@ -22,6 +22,7 @@ vignette: >
 <!--- 
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/SEA_AD
+git pull 
 R
 rmarkdown::render("SEA_AD.Rmd");
 
@@ -145,21 +146,21 @@ vp.lst = fitVarPart( res.proc, form, BPPARAM = SnowParam(6, progressbar=TRUE))
 plotVarPart(sortCols(vp.lst), label.angle=60, ncol=4)   
 ```
 
-# # dreamlet
-# ```{r dreamlet}
-# form = ~ Sex + Age.at.Death + PMI + Brain.pH 
-# fit = dreamlet(res.proc, form) 
-# ```
+# dreamlet
+```{r dreamlet}
+form = ~ Sex + Age.at.Death + PMI + Brain.pH + Cognitive.Status
+fit = dreamlet(res.proc, form) 
+```
 
-# # Volcano
-# ```{r volcano, fig.height=9, fig.width=12}
-# plotVolcano(fit, "ADdiag2typesAD")
-# ```
+# Volcano
+```{r volcano, fig.height=9, fig.width=12}
+plotVolcano(fit, "ADdiag2typesAD")
+```
 
-# ```{r write.file}
+```{r write.file}
 # topTable(fit, coef = "ADdiag2typesAD", number=Inf) %>%
 #   write.table(file="Mathys_2023_Major_Cell_Type_ADdiag2typesAD.tsv", quote=FALSE, sep="\t", row.names=FALSE)
-# ```
+```
 
 
 
