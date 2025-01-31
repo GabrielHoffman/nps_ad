@@ -160,7 +160,7 @@ plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
 ```
 
 # PsychAD vs Mathys
-```{r plotTiles}
+```{r plotTiles, cache=FALSE}
 plotTiles = function(df1, df2, xlab, ylab){
 
   grd = expand.grid(CT1 = unique(df1$assay), 
@@ -188,7 +188,7 @@ plotTiles = function(df1, df2, xlab, ylab){
   df %>%
     mutate(CT1 = factor(CT1, sort(levels(CT1)))) %>%
     mutate(CT2 = factor(CT2, rev(sort(levels(CT2))))) %>%
-    ggplot(aes(CT1, CT2, fill=rho)) +
+    ggplot(aes(CT1, CT2, fill=pmax(rho, 0))) +
       geom_tile() +
       theme_classic() +
       coord_equal() +
@@ -212,7 +212,7 @@ plotTiles(df1, df2, xlab, ylab)
 
 
 # PsychAD vs SEA-AD
-```{r pad.SEAD}
+```{r pad.SEAD, cache=FALSE}
 df1 = res.pad %>%
   filter(AnnoLevel == "class", coef == 'm01x') 
 
