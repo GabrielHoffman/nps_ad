@@ -67,13 +67,14 @@ res.mathys = read_parquet(file)
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/SEA_AD/SEA_AD_dreamlet.parquet"
 res.seaad = read_parquet(file)
 
-file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/topTable_meta_m01x_FE.parquet"
-res.pad = read_parquet(file) %>%
- rename(logFC = "estimate", 
-  stat='statistic', 
-  P.Value = 'p.value') %>%
- mutate(adj.P.Val = p.adjust(P.Value, "fdr"))
-
+files = dir("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/", pattern = "topTable_meta_.*FE.parquet", full.names=TRUE)
+res.pad = lapply(files, function(file){
+  read_parquet(file) %>%
+   rename(logFC = "estimate", 
+    stat='statistic', 
+    P.Value = 'p.value')
+})
+res.pad = do.call(rbind, res.pad)
 
 # cell type order
 ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo')
@@ -132,10 +133,12 @@ plotConcordance = function( tab, xlab, ylab, col = c("grey70", "#b49dd1", "#9dd0
 tab = inner_join(res.pad %>% 
                   filter(AnnoLevel == "subclass", 
                     assay == 'Micro', 
-                    coef == 'm01x'),
+                    coef == 'm01x') %>%
+                  mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
                   res.mathys %>% 
                   filter(assay == 'Mic', 
-                    coefSet == 'ADdiag2typesAD'),
+                    coefSet == 'ADdiag2typesAD') %>%
+                  mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
                   by = "ID" )
 
 xlab = "PsychAD m01.x"
@@ -147,10 +150,12 @@ plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
 tab = inner_join(res.pad %>% 
                   filter(AnnoLevel == "subclass", 
                     assay == 'Micro', 
-                    coef == 'm01x'),
+                    coef == 'm01x') %>%
+                  mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
                   res.seaad %>% 
                   filter(assay == 'Microglia-PVM', 
-                    coefSet == 'CERAD.value'),
+                    coefSet == 'CERAD.value') %>%
+                  mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
                   by = "ID" )
 
 xlab = "PsychAD m01.x"
@@ -199,6 +204,7 @@ plotTiles = function(df1, df2, xlab, ylab){
 }
 ```
 
+## PsychAD m01x vs Mathys ADdiag2typesAD
 ```{r pad.mathys1}
 df1 = res.pad %>%
   filter(AnnoLevel == "class", coef == 'm01x') 
@@ -228,10 +234,10 @@ plotTiles(df1, df2, xlab, ylab)
 ```
 
 
-# PsychAD vs SEA-AD
+# PsychAD vs SEA-AD: CERAD
 ```{r pad.SEAD1}
 df1 = res.pad %>%
-  filter(AnnoLevel == "class", coef == 'm01x') 
+  filter(AnnoLevel == "class", coef == 'm19x') 
  
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value')
