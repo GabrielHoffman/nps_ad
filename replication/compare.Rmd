@@ -115,7 +115,7 @@ plotConcordance = function( tab, xlab, ylab, col = c("grey70", "#b49dd1", "#9dd0
     head(5)
 
   tab %>% 
-    arrange(-P.Value.x) %>%
+    arrange(-stat.x*stat.y) %>%
     ggplot(aes(logFC.x, logFC.y, color=Signif)) +
       geom_point() +
       theme_classic() +
@@ -151,7 +151,7 @@ plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
 tab = inner_join(res.pad %>% 
                   filter(AnnoLevel == "subclass", 
                     assay == 'Micro', 
-                    coef == 'm01x') %>%
+                    coef == 'm19x') %>%
                   mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
                   res.seaad %>% 
                   filter(assay == 'Microglia-PVM', 
@@ -159,7 +159,7 @@ tab = inner_join(res.pad %>%
                   mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
                   by = "ID" )
 
-xlab = "PsychAD m01.x"
+xlab = "PsychAD m19x"
 ylab = "SEA-AD CERAD"
 
 plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
@@ -223,12 +223,16 @@ ylab = "Mathys, et al AD"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 res$tab %>%
-  mutate(p.value = format(p.value, scientific=TRUE)) %>%
+  mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
     kbl(row.names=FALSE) %>%
     kable_styling(full_width = FALSE)
 ```
 
-<!---
+
+```{r exit, cache=FALSE}
+knitr::knit_exit()
+```
+
 
 ```{r pad.mathys2}
 df1 = res.pad %>%
@@ -244,7 +248,7 @@ ylab = "Mathys, et al AD"
 plotTiles(df1, df2, xlab, ylab)
 res$fig
 res$tab %>%
-  mutate(p.value = format(p.value, scientific=TRUE)) %>%
+  mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
     kbl(row.names=FALSE) %>%
     kable_styling(full_width = FALSE)
 ```
@@ -264,7 +268,7 @@ ylab = "SEA-AD CERAD"
 plotTiles(df1, df2, xlab, ylab)
 res$fig
 res$tab %>%
-  mutate(p.value = format(p.value, scientific=TRUE)) %>%
+  mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
     kbl(row.names=FALSE) %>%
     kable_styling(full_width = FALSE)
 ```
@@ -282,12 +286,10 @@ ylab = "SEA-AD CERAD"
 plotTiles(df1, df2, xlab, ylab)
 res$fig
 res$tab %>%
-  mutate(p.value = format(p.value, scientific=TRUE)) %>%
+  mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
     kbl(row.names=FALSE) %>%
     kable_styling(full_width = FALSE)
 ```
 
-
---->
 
 
