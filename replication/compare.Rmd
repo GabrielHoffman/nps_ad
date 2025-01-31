@@ -115,7 +115,7 @@ plotConcordance = function( tab, xlab, ylab, col = c("grey70", "#b49dd1", "#9dd0
     head(5)
 
   tab %>% 
-    arrange(-stat.x*stat.y) %>%
+    arrange(as.numeric(Signif)) %>%
     ggplot(aes(logFC.x, logFC.y, color=Signif)) +
       geom_point() +
       theme_classic() +
@@ -142,7 +142,7 @@ tab = inner_join(res.pad %>%
                   mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
                   by = "ID" )
 
-xlab = "PsychAD m01.x"
+xlab = "PsychAD m01x"
 ylab = "Mathys AD"
 
 plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
@@ -228,10 +228,6 @@ res$tab %>%
     kable_styling(full_width = FALSE)
 ```
 
-
-```{r exit, cache=FALSE}
-knitr::knit_exit()
-```
 
 
 ```{r pad.mathys2}
