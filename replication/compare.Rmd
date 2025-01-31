@@ -192,22 +192,24 @@ plotTiles = function(df1, df2, xlab, ylab){
   df = bind_rows(df)
 
   # write table
-  df %>%
+  tab = df %>%
     kbl() %>%
     kable_paper(full_width = TRUE)
  
   # make plot
-  df %>%
+  fig = df %>%
     mutate(CT1 = factor(CT1, sort(levels(CT1)))) %>%
     mutate(CT2 = factor(CT2, rev(sort(levels(CT2))))) %>%
     ggplot(aes(CT1, CT2, fill=pmax(rho, 0))) +
       geom_tile() +
       theme_classic() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=.5)) +
+      theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1)) +
       coord_equal() +
       scale_fill_gradient2(name = "rho", low="blue2", mid="white", high="red2", limits=c(0, .6)) +
       xlab(xlab) +
       ylab(ylab)
+
+  list(fig = fig, tab = tab)      
 }
 ```
 
@@ -223,7 +225,9 @@ df2 = res.mathys %>%
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
 
-plotTiles(df1, df2, xlab, ylab)
+res = plotTiles(df1, df2, xlab, ylab)
+res$tab
+res$fig
 ```
 
 ```{r pad.mathys2}
@@ -238,6 +242,8 @@ xlab = "PsychAD m01x"
 ylab = "Mathys, et al AD"
 
 plotTiles(df1, df2, xlab, ylab)
+res$tab
+res$fig
 ```
 
 
@@ -253,6 +259,8 @@ xlab = "PsychAD m01x"
 ylab = "SEA-AD CERAD"
 
 plotTiles(df1, df2, xlab, ylab)
+res$tab
+res$fig
 ```
 
 # PsychAD vs SEA-AD
@@ -267,6 +275,8 @@ xlab = "PsychAD m01x"
 ylab = "SEA-AD CERAD" 
 
 plotTiles(df1, df2, xlab, ylab)
+res$tab
+res$fig
 ```
 
 
