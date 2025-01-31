@@ -190,12 +190,6 @@ plotTiles = function(df1, df2, xlab, ylab){
               p.value = res$p.value)
   }, mc.cores=36)
   df = bind_rows(df)
-
-  # write table
-  tab = df %>%
-    mutate(p.value = format(p.value, scientific=TRUE)) %>%
-    kbl(row.names=FALSE) %>%
-    kable_styling(full_width = FALSE)
  
   # make plot
   fig = df %>%
@@ -210,7 +204,7 @@ plotTiles = function(df1, df2, xlab, ylab){
       xlab(xlab) +
       ylab(ylab)
 
-  list(fig = fig, tab = tab)      
+  list(fig = fig, tab = df)      
 }
 ```
 
@@ -227,9 +221,13 @@ xlab = "PsychAD m01x"
 ylab = "Mathys, et al AD"
  
 res = plotTiles(df1, df2, xlab, ylab)
-res$tab
 res$fig
+res$tab %>%
+  mutate(p.value = format(p.value, scientific=TRUE)) %>%
+    kbl(row.names=FALSE) %>%
+    kable_styling(full_width = FALSE)
 ```
+
 
 ```{r pad.mathys2}
 df1 = res.pad %>%
@@ -243,8 +241,11 @@ xlab = "PsychAD m01x"
 ylab = "Mathys, et al AD"
  
 plotTiles(df1, df2, xlab, ylab)
-res$tab
 res$fig
+res$tab %>%
+  mutate(p.value = format(p.value, scientific=TRUE)) %>%
+    kbl(row.names=FALSE) %>%
+    kable_styling(full_width = FALSE)
 ```
 
 
@@ -260,8 +261,11 @@ xlab = "PsychAD m01x"
 ylab = "SEA-AD CERAD"
  
 plotTiles(df1, df2, xlab, ylab)
-res$tab
 res$fig
+res$tab %>%
+  mutate(p.value = format(p.value, scientific=TRUE)) %>%
+    kbl(row.names=FALSE) %>%
+    kable_styling(full_width = FALSE)
 ```
 
 # PsychAD vs SEA-AD
@@ -276,8 +280,11 @@ xlab = "PsychAD m01x"
 ylab = "SEA-AD CERAD" 
  
 plotTiles(df1, df2, xlab, ylab)
-res$tab
 res$fig
+res$tab %>%
+  mutate(p.value = format(p.value, scientific=TRUE)) %>%
+    kbl(row.names=FALSE) %>%
+    kable_styling(full_width = FALSE)
 ```
 
 
