@@ -200,7 +200,7 @@ plotTiles = function(df1, df2, xlab, ylab){
       theme_classic() +
       theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1)) +
       coord_equal() +
-      scale_fill_gradient2(name = "rho", low="blue2", mid="white", high="red2", limits=c(0, .6)) +
+      scale_fill_gradient2(name = "rho", low="blue2", mid="white", high="red2", limits=c(0, .64)) +
       xlab(xlab) +
       ylab(ylab)
 
@@ -228,6 +228,7 @@ res$tab %>%
     kable_styling(full_width = FALSE)
 ```
 
+<!---
 
 ```{r pad.mathys2}
 df1 = res.pad %>%
@@ -257,7 +258,7 @@ df1 = res.pad %>%
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value')
 
-xlab = "PsychAD m01x" 
+xlab = "PsychAD m19x" 
 ylab = "SEA-AD CERAD"
  
 plotTiles(df1, df2, xlab, ylab)
@@ -275,7 +276,7 @@ df1 = res.pad %>%
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value')
 
-xlab = "PsychAD m01x"
+xlab = "PsychAD m19x"
 ylab = "SEA-AD CERAD" 
  
 plotTiles(df1, df2, xlab, ylab)
@@ -287,6 +288,6 @@ res$tab %>%
 ```
 
 
-
+--->
 
 
