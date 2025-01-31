@@ -23,8 +23,11 @@ vignette: >
 
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/
 git pull 
-R
-rmarkdown::render("SEA_AD.Rmd");
+
+
+
+
+rmarkdown::render("compare.Rmd");
 
 
 
@@ -57,7 +60,7 @@ library(arrow)
 ```
 
 
-```{r load}
+```{r load.data}
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/Mathys_2023/Mathys_Cell_2023_Major_Cell_Type_dreamlet.parquet"
 res.mathys = read_parquet(file)
 
@@ -77,8 +80,7 @@ ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5
 ```
 
 # Microglia
-```{r compare}
-
+```{r plotConcordance}
 plotConcordance = function( tab, xlab, ylab, col = c("grey70", "#b49dd1", "#9dd0d1", "red2")){
 
   tab$Signif = "no"
@@ -158,7 +160,7 @@ plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
 ```
 
 # PsychAD vs Mathys
-```{r merge}
+```{r plotTiles}
 plotTiles = function(df1, df2, xlab, ylab){
 
   grd = expand.grid(CT1 = unique(df1$assay), 
@@ -210,7 +212,7 @@ plotTiles(df1, df2, xlab, ylab)
 
 
 # PsychAD vs SEA-AD
-```{r merge}
+```{r pad.SEAD}
 df1 = res.pad %>%
   filter(AnnoLevel == "class", coef == 'm01x') 
 
