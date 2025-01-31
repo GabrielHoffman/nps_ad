@@ -268,10 +268,9 @@ res$tab %>%
     kable_styling(full_width = FALSE)
 ```
 
-# PsychAD vs SEA-AD
 ```{r pad.SEAD2}
 df1 = res.pad %>%
-  filter(AnnoLevel == "subclass", coef == 'm01x') 
+  filter(AnnoLevel == "subclass", coef == 'm19x') 
  
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value')
