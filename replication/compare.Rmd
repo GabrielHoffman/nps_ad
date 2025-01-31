@@ -193,8 +193,9 @@ plotTiles = function(df1, df2, xlab, ylab){
 
   # write table
   tab = df %>%
-    kbl() %>%
-    kable_styling(full_width = TRUE)
+    mutate(p.value = format(p.value, scientific=TRUE)) %>%
+    kbl(row.names=FALSE) %>%
+    kable_styling(full_width = FALSE)
  
   # make plot
   fig = df %>%
@@ -224,7 +225,7 @@ df2 = res.mathys %>%
 
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
-
+ 
 res = plotTiles(df1, df2, xlab, ylab)
 res$tab
 res$fig
@@ -240,7 +241,7 @@ df2 = res.mathys %>%
  
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
-
+ 
 plotTiles(df1, df2, xlab, ylab)
 res$tab
 res$fig
@@ -257,7 +258,7 @@ df2 = res.seaad %>%
 
 xlab = "PsychAD m01x" 
 ylab = "SEA-AD CERAD"
-
+ 
 plotTiles(df1, df2, xlab, ylab)
 res$tab
 res$fig
@@ -273,7 +274,7 @@ df2 = res.seaad %>%
 
 xlab = "PsychAD m01x"
 ylab = "SEA-AD CERAD" 
-
+ 
 plotTiles(df1, df2, xlab, ylab)
 res$tab
 res$fig
