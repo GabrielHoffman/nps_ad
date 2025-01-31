@@ -182,7 +182,7 @@ plotTiles = function(df1, df2, xlab, ylab){
               CT2 = grd$CT2[i], 
               rho = res$estimate,
               p.value = res$p.value)
-  }, mc.cores=20)
+  }, mc.cores=36)
   df = bind_rows(df)
 
   df %>%
@@ -191,7 +191,7 @@ plotTiles = function(df1, df2, xlab, ylab){
     ggplot(aes(CT1, CT2, fill=pmax(rho, 0))) +
       geom_tile() +
       theme_classic() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=.5)) +
       coord_equal() +
       scale_fill_gradient2(name = "rho", low="blue2", mid="white", high="red2", limits=c(0, .6)) +
       xlab(xlab) +
@@ -207,7 +207,7 @@ df2 = res.mathys %>%
   filter(coefSet == 'ADdiag2typesAD') %>%
   rename(coef = coefSet)
 
-xlab = "PsychAD m01x"
+xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
 
 plotTiles(df1, df2, xlab, ylab)
@@ -220,7 +220,7 @@ df1 = res.pad %>%
 df2 = res.mathys %>% 
   filter(coefSet == 'ADdiag2typesAD') %>%
   rename(coef = coefSet)
-
+ 
 xlab = "PsychAD m01x"
 ylab = "Mathys, et al AD"
 
@@ -231,7 +231,7 @@ plotTiles(df1, df2, xlab, ylab)
 # PsychAD vs SEA-AD
 ```{r pad.SEAD1}
 df1 = res.pad %>%
-  filter(AnnoLevel == "subclass", coef == 'm01x') 
+  filter(AnnoLevel == "class", coef == 'm01x') 
  
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value')
@@ -245,7 +245,7 @@ plotTiles(df1, df2, xlab, ylab)
 # PsychAD vs SEA-AD
 ```{r pad.SEAD2}
 df1 = res.pad %>%
-  filter(AnnoLevel == "class", coef == 'm01x') 
+  filter(AnnoLevel == "subclass", coef == 'm01x') 
  
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value')
