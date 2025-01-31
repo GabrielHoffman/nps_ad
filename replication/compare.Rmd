@@ -1,0 +1,229 @@
+---
+title: "Compare PsychAD with SEA_AD and Mathys, et al."
+subtitle: 'Compare differential expression signatures'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+    toc: true
+    smart: false
+vignette: >
+  %\VignetteIndexEntry{SEA_AD}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+
+
+
+<!--- 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/
+git pull 
+R
+rmarkdown::render("SEA_AD.Rmd");
+
+
+
+# https://hoffmg01.hpc.mssm.edu/SEA_AD.html
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+# Load packages
+```{r load, cache=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ggcorrplot)
+library(ggrepel)
+library(parallel)
+library(arrow)
+```
+
+
+```{r load}
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/Mathys_2023/Mathys_Cell_2023_Major_Cell_Type_dreamlet.parquet"
+res.mathys = read_parquet(file)
+
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/SEA_AD/SEA_AD_dreamlet.parquet"
+res.seaad = read_parquet(file)
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/topTable_meta_m01x_FE.parquet"
+res.pad = read_parquet(file) %>%
+ rename(logFC = "estimate", 
+  stat='statistic', 
+  P.Value = 'p.value') %>%
+ mutate(adj.P.Val = p.adjust(P.Value, "fdr"))
+
+
+# cell type order
+ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo')
+```
+
+# Microglia
+```{r compare}
+
+plotConcordance = function( tab, xlab, ylab, col = c("grey70", "#b49dd1", "#9dd0d1", "red2")){
+
+  tab$Signif = "no"
+  i = with(tab, adj.P.Val.x < 0.05)
+  tab$Signif[i] = xlab
+  i = with(tab, adj.P.Val.y < 0.05)
+  tab$Signif[i] = ylab
+  i = with(tab, adj.P.Val.x < 0.05 & adj.P.Val.y < 0.05)
+  tab$Signif[i] = "both"
+
+  tab$Signif = factor(tab$Signif, c("no", xlab, ylab, "both"))
+  names(col) = levels(tab$Signif)
+
+  # fit = lm(logFC.y ~ logFC.x, tab)
+  # pv = coef(summary(fit))[2,4]
+  # rvalue = format(summary(fit)$r.squared, digits=3)
+  # txt = paste("R2 =", rvalue, "\np =", format(pv, digits=3))
+
+  res = with(tab, cor.test(logFC.x, logFC.y, method="spearman"))
+  rho = format(res$estimate, digits=2)
+  p = format(res$p.value, digits=3)
+  # txt1 = bquote(rho==.(rho))
+  # txt2 = bquote(p==.(p))
+  txt = paste0("rho = ", rho, "\np = ", format(p, digits=3))
+
+  # top genes
+  tab.top = tab %>% 
+    arrange(-stat.x*stat.y) %>%
+    filter(adj.P.Val.x < 0.05 & adj.P.Val.y < 0.05) %>%
+    head(5)
+
+  tab %>% 
+    arrange(-P.Value.x) %>%
+    ggplot(aes(logFC.x, logFC.y, color=Signif)) +
+      geom_point() +
+      theme_classic() +
+      theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+      geom_abline(color="grey", linetype="dashed") +
+      geom_hline(yintercept=0, color="grey") +
+      geom_vline(xintercept=0, color="grey") +
+      annotate("text", x=-.6, y=1.6, label=txt) +
+      scale_color_manual(values=col) +
+      geom_text_repel(data = tab.top, aes(x = logFC.x, y = logFC.y, label=ID), box.padding=.6, label.padding=.6, min.segment.length=.1, color="black") +
+      xlab(paste0("logFC (", xlab, ")")) +
+      ylab(paste0("logFC (", ylab, ")"))
+}
+
+# Microglia: Mathys
+tab = inner_join(res.pad %>% 
+                  filter(AnnoLevel == "subclass", 
+                    assay == 'Micro', 
+                    coef == 'm01x'),
+                  res.mathys %>% 
+                  filter(assay == 'Mic', 
+                    coefSet == 'ADdiag2typesAD'),
+                  by = "ID" )
+
+xlab = "PsychAD m01.x"
+ylab = "Mathys AD"
+
+plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
+
+# Microglia: SEA-AD
+tab = inner_join(res.pad %>% 
+                  filter(AnnoLevel == "subclass", 
+                    assay == 'Micro', 
+                    coef == 'm01x'),
+                  res.seaad %>% 
+                  filter(assay == 'Microglia-PVM', 
+                    coefSet == 'CERAD.value'),
+                  by = "ID" )
+
+xlab = "PsychAD m01.x"
+ylab = "SEA-AD CERAD"
+
+plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
+```
+
+# PsychAD vs Mathys
+```{r merge}
+plotTiles = function(df1, df2, xlab, ylab){
+
+  grd = expand.grid(CT1 = unique(df1$assay), 
+                    CT2 = unique(df2$assay) )
+
+  df = mclapply( seq(nrow(grd)), function(i){
+
+    tab.sub1 = df1 %>% 
+            filter(assay == grd$CT1[i])
+
+    tab.sub2 = df2 %>% 
+            filter(assay == grd$CT2[i])
+
+    tab.join = inner_join(tab.sub1, tab.sub2, by="ID")
+
+    res = with(tab.join, cor.test(logFC.x, logFC.y, method="spearman"))
+
+    data.frame(CT1 = grd$CT1[i], 
+              CT2 = grd$CT2[i], 
+              rho = res$estimate,
+              p.value = res$p.value)
+  }, mc.cores=12)
+  df = bind_rows(df)
+
+  df %>%
+    mutate(CT1 = factor(CT1, sort(levels(CT1)))) %>%
+    mutate(CT2 = factor(CT2, rev(sort(levels(CT2))))) %>%
+    ggplot(aes(CT1, CT2, fill=rho)) +
+      geom_tile() +
+      theme_classic() +
+      coord_equal() +
+      scale_fill_gradient2(low="blue2", mid="white", high="red2", limits=c(0, .6)) +
+      xlab(xlab) +
+      ylab(ylab)
+}
+
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm01x') 
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'ADdiag2typesAD') %>%
+  rename(coef = coefSet)
+
+xlab = "PsychAD m01x"
+ylab = "Mathys, et al AD"
+
+plotTiles(df1, df2, xlab, ylab)
+```
+
+
+# PsychAD vs SEA-AD
+```{r merge}
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm01x') 
+
+df2 = res.seaad %>% 
+      filter( coefSet == 'CERAD.value')
+
+xlab = "PsychAD m01x"
+ylab = "SEA-AD CERAD"
+
+plotTiles(df1, df2, xlab, ylab)
+```
+
+
+
+
+
