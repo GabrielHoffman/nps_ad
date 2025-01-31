@@ -182,7 +182,7 @@ plotTiles = function(df1, df2, xlab, ylab){
               CT2 = grd$CT2[i], 
               rho = res$estimate,
               p.value = res$p.value)
-  }, mc.cores=12)
+  }, mc.cores=20)
   df = bind_rows(df)
 
   df %>%
@@ -197,7 +197,9 @@ plotTiles = function(df1, df2, xlab, ylab){
       xlab(xlab) +
       ylab(ylab)
 }
+```
 
+```{r pad.mathys1}
 df1 = res.pad %>%
   filter(AnnoLevel == "class", coef == 'm01x') 
 
@@ -211,9 +213,37 @@ ylab = "Mathys, et al AD"
 plotTiles(df1, df2, xlab, ylab)
 ```
 
+```{r pad.mathys2}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm01x') 
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'ADdiag2typesAD') %>%
+  rename(coef = coefSet)
+
+xlab = "PsychAD m01x"
+ylab = "Mathys, et al AD"
+
+plotTiles(df1, df2, xlab, ylab)
+```
+
 
 # PsychAD vs SEA-AD
-```{r pad.SEAD}
+```{r pad.SEAD1}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm01x') 
+ 
+df2 = res.seaad %>% 
+      filter( coefSet == 'CERAD.value')
+
+xlab = "PsychAD m01x"
+ylab = "SEA-AD CERAD"
+
+plotTiles(df1, df2, xlab, ylab)
+```
+
+# PsychAD vs SEA-AD
+```{r pad.SEAD2}
 df1 = res.pad %>%
   filter(AnnoLevel == "class", coef == 'm01x') 
  
