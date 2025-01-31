@@ -194,7 +194,7 @@ plotTiles = function(df1, df2, xlab, ylab){
   # write table
   tab = df %>%
     kbl() %>%
-    kable_paper(full_width = TRUE)
+    kable_styling(full_width = TRUE)
  
   # make plot
   fig = df %>%
