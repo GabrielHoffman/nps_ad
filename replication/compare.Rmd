@@ -45,7 +45,7 @@ knitr::opts_chunk$set(
   message=FALSE,
   error = FALSE,
   tidy = FALSE,
-  dev = c("png", "pdf"),
+  dev = c("pdf"),
   cache = TRUE,
   cache.lazy = FALSE)
 ```
@@ -284,10 +284,7 @@ ylab = "Mathys, et al AD"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
-# res$tab %>%
-#   mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
-#     kbl(row.names=FALSE) %>%
-#     kable_styling(full_width = FALSE)
+write_tsv(res$tab, file="m01x_mathys_AD_class.tsv")
 ```
 
 
@@ -308,6 +305,7 @@ ylab = "Mathys, et al cogdx"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m17x_mathys_braaksc_class.tsv")
 ```
 
 
@@ -328,6 +326,7 @@ ylab = "Mathys, et al braaksc"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m18x_mathys_braaksc_class.tsv")
 ```
 
 ## PsychAD m19x vs Mathys CERAD
@@ -347,6 +346,7 @@ ylab = "Mathys, et al CERAD"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m19x_mathys_braaksc_class.tsv")
 ```
 
 
@@ -368,10 +368,7 @@ ylab = "Mathys, et al AD"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
-# res$tab %>%
-#   mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
-#     kbl(row.names=FALSE) %>%
-#     kable_styling(full_width = FALSE)
+write_tsv(res$tab, file="m01x_mathys_AD_subclass.tsv")
 ```
 
 
@@ -392,6 +389,7 @@ ylab = "Mathys, et al cogdx"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m17x_mathys_braaksc_subclass.tsv")
 ```
 
 
@@ -412,6 +410,7 @@ ylab = "Mathys, et al braaksc"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m18x_mathys_braaksc_subclass.tsv")
 ```
 
 ## PsychAD m19x vs Mathys CERAD
@@ -431,6 +430,7 @@ ylab = "Mathys, et al CERAD"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m19x_mathys_CERAD_subclass.tsv")
 ```
 
 
@@ -460,6 +460,7 @@ ylab = "SEA-AD Cognitive.StatusDementia"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m17x_SEAAD_dementia_class.tsv")
 ```
 
 ## PsychAD m18x vs SEA-AD Braak.value
@@ -478,11 +479,12 @@ ylab = "SEA-AD Braak.value"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m18x_SEAAD_Braak_class.tsv")
 ```
 
 
 ## PsychAD m19x vs SEA-AD CERAD
-```{r m19x_SEAAD_Braak_class}
+```{r m19x_SEAAD_CERAD_class}
 df1 = res.pad %>%
   filter(AnnoLevel == "class", coef == 'm19x') %>%
   mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
@@ -497,6 +499,7 @@ ylab = "SEA-AD CERAD.value"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m19x_SEAAD_CERAD_class.tsv")
 ```
 
 
@@ -520,6 +523,7 @@ ylab = "SEA-AD Cognitive.StatusDementia"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m17x_SEAAD_dementia_subclass.tsv")
 ```
 
 ## PsychAD m18x vs SEA-AD Braak.value
@@ -538,11 +542,12 @@ ylab = "SEA-AD Braak.value"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m18x_SEAAD_Braak_subclass.tsv")
 ```
 
 
 ## PsychAD m19x vs SEA-AD CERAD
-```{r m19x_SEAAD_Braak_subclass}
+```{r m19x_SEAAD_CERAD_subclass}
 df1 = res.pad %>%
   filter(AnnoLevel == "subclass", coef == 'm19x') %>%
   mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
@@ -557,6 +562,7 @@ ylab = "SEA-AD CERAD.value"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m19x_SEAAD_CERAD_subclass.tsv")
 ```
 
 
