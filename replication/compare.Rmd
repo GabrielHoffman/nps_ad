@@ -265,8 +265,9 @@ plotConcordanceRank = function(tab, ylab){
 }
 ```
 
-# PsychAD m01x vs Mathys ADdiag2typesAD
-```{r pad.mathys1}
+# PsychAD class vs Mathys
+## PsychAD m01x vs Mathys ADdiag2typesAD
+```{r m01x_mathys_AD_class}
 df1 = res.pad %>%
   filter(AnnoLevel == "class", coef == 'm01x') %>%
   mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
@@ -281,6 +282,7 @@ ylab = "Mathys, et al AD"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
+plotConcordanceRank( res$tab, ylab)
 # res$tab %>%
 #   mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
 #     kbl(row.names=FALSE) %>%
@@ -288,12 +290,68 @@ res$fig
 ```
 
 
-```{r pad.mathys1a}
+## PsychAD m17x vs Mathys cogdx
+```{r m17x_mathys_braaksc_class}
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm17x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'cogdx') %>%
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
+
+xlab = "PsychAD m17x" 
+ylab = "Mathys, et al cogdx"
+   
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
 plotConcordanceRank( res$tab, ylab)
 ```
-  
 
-```{r pad.mathys2}
+
+## PsychAD m18x vs Mathys braaksc
+```{r m18x_mathys_braaksc_class}
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm18x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'braaksc') %>%
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
+
+xlab = "PsychAD m18x" 
+ylab = "Mathys, et al braaksc"
+   
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+```
+
+## PsychAD m19x vs Mathys CERAD
+```{r m19x_mathys_braaksc_class}
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm19x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'CERAD') %>%
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
+
+xlab = "PsychAD m19x" 
+ylab = "Mathys, et al CERAD"
+   
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+```
+
+
+# PsychAD subclass vs Mathys
+## PsychAD m01x vs Mathys ADdiag2typesAD
+```{r m01x_mathys_AD_subclass}
 df1 = res.pad %>%
   filter(AnnoLevel == "subclass", coef == 'm01x') %>%
   mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
@@ -302,25 +360,128 @@ df2 = res.mathys %>%
   filter(coefSet == 'ADdiag2typesAD') %>%
   rename(coef = coefSet) %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
-  
+
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
-  
+   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
+plotConcordanceRank( res$tab, ylab)
 # res$tab %>%
 #   mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
 #     kbl(row.names=FALSE) %>%
 #     kable_styling(full_width = FALSE)
 ```
 
-```{r pad.mathys2a}
+
+## PsychAD m17x vs Mathys cogdx
+```{r m17x_mathys_braaksc_subclass}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm17x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'cogdx') %>%
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
+
+xlab = "PsychAD m17x" 
+ylab = "Mathys, et al cogdx"
+   
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
 plotConcordanceRank( res$tab, ylab)
 ```
-  
 
-# PsychAD vs SEA-AD: CERAD
-```{r pad.SEAD1}
+
+## PsychAD m18x vs Mathys braaksc
+```{r m18x_mathys_braaksc_subclass}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm18x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'braaksc') %>%
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
+
+xlab = "PsychAD m18x" 
+ylab = "Mathys, et al braaksc"
+   
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+```
+
+## PsychAD m19x vs Mathys CERAD
+```{r m19x_mathys_CERAD_subclass}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm19x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'CERAD') %>%
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
+
+xlab = "PsychAD m19x" 
+ylab = "Mathys, et al CERAD"
+   
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+```
+
+
+
+
+
+
+
+
+
+
+# PsychAD class vs SEA-AD
+
+## PsychAD m17x vs SEA-AD Cognitive.StatusDementia
+```{r m17x_SEAAD_dementia_class}
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm17x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
+ 
+df2 = res.seaad %>% 
+      filter( coefSet == 'Cognitive.StatusDementia') %>%
+      mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
+
+xlab = "PsychAD m17x" 
+ylab = "SEA-AD Cognitive.StatusDementia"
+  
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+```
+
+## PsychAD m18x vs SEA-AD Braak.value
+```{r m18x_SEAAD_Braak_class}
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm18x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
+ 
+df2 = res.seaad %>% 
+      filter( coefSet == 'Braak.value') %>%
+      mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
+
+xlab = "PsychAD m18x" 
+ylab = "SEA-AD Braak.value"
+  
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+```
+
+
+## PsychAD m19x vs SEA-AD CERAD
+```{r m19x_SEAAD_Braak_class}
 df1 = res.pad %>%
   filter(AnnoLevel == "class", coef == 'm19x') %>%
   mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
@@ -330,21 +491,57 @@ df2 = res.seaad %>%
       mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
 xlab = "PsychAD m19x" 
-ylab = "SEA-AD CERAD"
+ylab = "SEA-AD CERAD.value"
   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
-# res$tab %>%
-#   mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
-#     kbl(row.names=FALSE) %>%
-#     kable_styling(full_width = FALSE)
-```
-
-```{r pad.SEAD1a}
 plotConcordanceRank( res$tab, ylab)
 ```
+
+
+
+
+# PsychAD subclass vs SEA-AD
+
+## PsychAD m17x vs SEA-AD Cognitive.StatusDementia
+```{r m17x_SEAAD_dementia_subclass}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm17x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
+ 
+df2 = res.seaad %>% 
+      filter( coefSet == 'Cognitive.StatusDementia') %>%
+      mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
+
+xlab = "PsychAD m17x" 
+ylab = "SEA-AD Cognitive.StatusDementia"
   
-```{r pad.SEAD2}
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+```
+
+## PsychAD m18x vs SEA-AD Braak.value
+```{r m18x_SEAAD_Braak_subclass}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm18x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
+ 
+df2 = res.seaad %>% 
+      filter( coefSet == 'Braak.value') %>%
+      mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
+
+xlab = "PsychAD m18x" 
+ylab = "SEA-AD Braak.value"
+  
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+```
+
+
+## PsychAD m19x vs SEA-AD CERAD
+```{r m19x_SEAAD_Braak_subclass}
 df1 = res.pad %>%
   filter(AnnoLevel == "subclass", coef == 'm19x') %>%
   mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
@@ -353,18 +550,22 @@ df2 = res.seaad %>%
       filter( coefSet == 'CERAD.value') %>%
       mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
-xlab = "PsychAD m19x"
-ylab = "SEA-AD CERAD" 
- 
+xlab = "PsychAD m19x" 
+ylab = "SEA-AD CERAD.value"
+  
 res = plotTiles(df1, df2, xlab, ylab)
-res$fig 
-# res$tab %>%
-  # mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
-  #   kbl(row.names=FALSE) %>%
-  #   kable_styling(full_width = FALSE)
-```
-
-```{r pad.SEAD2a}
+res$fig
 plotConcordanceRank( res$tab, ylab)
 ```
-  
+
+
+
+
+
+
+
+
+
+
+
+
