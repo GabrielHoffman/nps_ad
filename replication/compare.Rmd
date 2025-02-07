@@ -25,9 +25,7 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/
 git pull 
 
 
-
-
-rmarkdown::render("compare.Rmd");
+system("git pull"); rmarkdown::render("compare.Rmd");
 
 
 
@@ -69,16 +67,49 @@ file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/SEA
 res.seaad = read_parquet(file)
 
 files = dir("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/meta/", pattern = "topTable_meta_.*FE.parquet", full.names=TRUE)
-res.pad = lapply(files, function(file){
-  read_parquet(file) %>%
+
+res.pad = open_dataset(files)  %>%
    rename(logFC = "estimate", 
     stat='statistic', 
-    P.Value = 'p.value')
-})
-res.pad = do.call(rbind, res.pad)
+    P.Value = 'p.value') %>%
+   collect
 
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
-df_celltype = read_tsv( file )
+df_celltype = read_tsv( file ) 
+
+process = function(IDs){
+  sapply(IDs, function(x) strsplit(x, ",")) %>%
+    unlist  %>%
+    array %>%
+    unique
+}
+
+cellTypeOrder = list(
+PsychAD_class = df_celltype %>% filter(annotationLevel == "class") %>% pull(PsychAD),
+PsychAD_subclass = df_celltype %>% filter(annotationLevel == "subclass") %>% pull(PsychAD),
+SEAAD_subclass = process(df_celltype$SEA_AD_subclass),
+SEAAD_supertype = process(df_celltype$SEA_AD_supertype),
+Mathys_major_cell_type =process(df_celltype$Mathys_major_cell_type),
+Mathys_cell_type = process(df_celltype$Mathys_cell_type))
+
+# Given CT1 in df_celltype$PsychAD, 
+# check if CT2 is a match in that row
+isValidPair = function( CT1, CT2 ){
+
+  df_sub = df_celltype %>% 
+            filter(PsychAD == CT1) 
+
+  validCellTypes = df_sub[,3:6] %>%
+                  array %>%
+                  unlist %>%
+                  unique %>%
+                  paste(collapse=",")  %>%
+                  strsplit(",") %>%
+                  unlist
+
+  CT2 %in% validCellTypes
+}  
+
 ```
 
 # Microglia
@@ -189,19 +220,24 @@ plotTiles = function(df1, df2, xlab, ylab){
               p.value = res$p.value)
   }, mc.cores=36)
   df = bind_rows(df)
+
+  df$isMatch = sapply(seq(nrow(df)), function(i){
+    isValidPair( df$CT1[i], df$CT2[i])
+    })
  
   # make plot
   fig = df %>%
-    mutate(CT1 = factor(CT1, sort(levels(CT1)))) %>%
-    mutate(CT2 = factor(CT2, rev(sort(levels(CT2))))) %>%
+    mutate(CT1 = factor(CT1, levels(df1$assay))) %>%
+    mutate(CT2 = factor(CT2, rev(levels(df2$assay)))) %>%
     ggplot(aes(CT1, CT2, fill=pmax(rho, 0))) +
       geom_tile() +
+      geom_text(aes(label=ifelse(isMatch, "*", "")), size=10, hjust="middle", vjust=.9) +
       theme_classic() +
       theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1)) +
       coord_equal() +
       scale_fill_gradient2(name = "rho", low="blue2", mid="white", high="red2", limits=c(0, .64)) +
       xlab(xlab) +
-      ylab(ylab)
+      ylab(ylab) 
 
   list(fig = fig, tab = df)      
 }
@@ -210,11 +246,13 @@ plotTiles = function(df1, df2, xlab, ylab){
 # PsychAD m01x vs Mathys ADdiag2typesAD
 ```{r pad.mathys1}
 df1 = res.pad %>%
-  filter(AnnoLevel == "class", coef == 'm01x') 
- 
+  filter(AnnoLevel == "class", coef == 'm01x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
+
 df2 = res.mathys %>% 
   filter(coefSet == 'ADdiag2typesAD') %>%
-  rename(coef = coefSet)
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
@@ -231,11 +269,13 @@ res$fig
 
 ```{r pad.mathys2}
 df1 = res.pad %>%
-  filter(AnnoLevel == "subclass", coef == 'm01x') 
+  filter(AnnoLevel == "subclass", coef == 'm01x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
 
 df2 = res.mathys %>% 
   filter(coefSet == 'ADdiag2typesAD') %>%
-  rename(coef = coefSet)
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
  
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
@@ -252,10 +292,12 @@ res$fig
 # PsychAD vs SEA-AD: CERAD
 ```{r pad.SEAD1}
 df1 = res.pad %>%
-  filter(AnnoLevel == "class", coef == 'm19x') 
+  filter(AnnoLevel == "class", coef == 'm19x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
  
 df2 = res.seaad %>% 
-      filter( coefSet == 'CERAD.value')
+      filter( coefSet == 'CERAD.value') %>%
+      mutate(assay = factor(assay, cellTypeOrder$SEA_AD_subclass)
 
 xlab = "PsychAD m19x" 
 ylab = "SEA-AD CERAD"
@@ -270,7 +312,8 @@ res$fig
 
 ```{r pad.SEAD2}
 df1 = res.pad %>%
-  filter(AnnoLevel == "subclass", coef == 'm19x') 
+  filter(AnnoLevel == "subclass", coef == 'm19x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$SEA_AD_subclass))
  
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value')
