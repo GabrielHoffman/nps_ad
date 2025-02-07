@@ -246,6 +246,23 @@ plotTiles = function(df1, df2, xlab, ylab){
 
   list(fig = fig, tab = df)      
 }
+
+plotConcordanceRank = function(tab, ylab){
+  main = paste("Concordance with", ylab)
+  tab %>%
+    mutate(CT1 = factor(CT1, rev(levels(CT1)))) %>%
+    arrange(isMatch) %>%
+    ggplot(aes(CT1, rho, color=isMatch)) +
+      geom_point() +
+      # geom_errorbar(aes(ymin = rho - 1.96*se, ymax = rho + 1.96*se), width=0) +
+      theme_classic() +
+      theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
+      xlab(xlab) +
+      coord_flip() +
+      scale_color_manual(values = c("grey", "red")) +
+      ylab("Spearman correlation bewteen logFC") +
+      ggtitle(main)
+}
 ```
 
 # PsychAD m01x vs Mathys ADdiag2typesAD
@@ -271,6 +288,10 @@ res$fig
 ```
 
 
+```{r pad.mathys1a}
+plotConcordanceRank( res$tab, ylab)
+```
+  
 
 ```{r pad.mathys2}
 df1 = res.pad %>%
@@ -293,6 +314,10 @@ res$fig
 #     kable_styling(full_width = FALSE)
 ```
 
+```{r pad.mathys2a}
+plotConcordanceRank( res$tab, ylab)
+```
+  
 
 # PsychAD vs SEA-AD: CERAD
 ```{r pad.SEAD1}
@@ -315,6 +340,10 @@ res$fig
 #     kable_styling(full_width = FALSE)
 ```
 
+```{r pad.SEAD1a}
+plotConcordanceRank( res$tab, ylab)
+```
+  
 ```{r pad.SEAD2}
 df1 = res.pad %>%
   filter(AnnoLevel == "subclass", coef == 'm19x') %>%
@@ -335,5 +364,7 @@ res$fig
   #   kable_styling(full_width = FALSE)
 ```
 
-
-
+```{r pad.SEAD2a}
+plotConcordanceRank( res$tab, ylab)
+```
+  
