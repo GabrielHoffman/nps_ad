@@ -306,7 +306,7 @@ df2 = res.seaad %>%
 
 xlab = "PsychAD m19x" 
 ylab = "SEA-AD CERAD"
- 
+  
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 # res$tab %>%
@@ -328,7 +328,7 @@ xlab = "PsychAD m19x"
 ylab = "SEA-AD CERAD" 
  
 res = plotTiles(df1, df2, xlab, ylab)
-res$fig
+res$fig 
 # res$tab %>%
   # mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
   #   kbl(row.names=FALSE) %>%
