@@ -234,7 +234,7 @@ plotTiles = function(df1, df2, xlab, ylab){
     mutate(CT2 = factor(CT2, rev(levels(df2$assay)))) %>%
     ggplot(aes(CT1, CT2, fill=pmax(rho, 0))) +
       geom_tile() +
-      geom_text(aes(label=ifelse(isMatch, "*", "")), size=10, hjust="middle", vjust=.9) +
+      geom_text(aes(label=ifelse(isMatch, "*", "")), size=5, hjust="middle", vjust=.9) +
       theme_classic() +
       theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1)) +
       coord_equal() +
@@ -259,7 +259,7 @@ df2 = res.mathys %>%
 
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
- 
+  
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 # res$tab %>%
@@ -279,7 +279,7 @@ df2 = res.mathys %>%
   filter(coefSet == 'ADdiag2typesAD') %>%
   rename(coef = coefSet) %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
- 
+  
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
  
