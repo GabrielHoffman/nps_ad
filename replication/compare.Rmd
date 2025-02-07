@@ -45,7 +45,7 @@ knitr::opts_chunk$set(
   message=FALSE,
   error = FALSE,
   tidy = FALSE,
-  dev = c("pdf"),
+  dev = c("png", "pdf"),
   cache = TRUE,
   cache.lazy = FALSE)
 ```
