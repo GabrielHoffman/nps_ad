@@ -30,7 +30,8 @@ system("git pull");
 
 rmarkdown::render("compare.Rmd");
 
-
+scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare.html" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
+scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare_files/figure-html/*pdf" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
 
 # https://hoffmg01.hpc.mssm.edu/replication/compare.html
 
@@ -241,7 +242,7 @@ plotTiles = function(df1, df2, xlab, ylab){
       theme_classic() +
       theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust=1)) +
       coord_equal() +
-      scale_fill_gradient2(name = "rho", low="blue2", mid="white", high="red2", limits=c(0, .64)) +
+      scale_fill_gradient2(name = "rho", low="blue2", mid="white", high="red2", limits=c(0, .67)) +
       xlab(xlab) +
       ylab(ylab) 
 
