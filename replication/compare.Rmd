@@ -326,7 +326,7 @@ ylab = "SEA-AD CERAD"
  
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
-res$tab %>%
+# res$tab %>%
   # mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
   #   kbl(row.names=FALSE) %>%
   #   kable_styling(full_width = FALSE)
