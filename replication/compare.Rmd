@@ -31,7 +31,7 @@ rmarkdown::render("compare.Rmd");
 
 
 
-# https://hoffmg01.hpc.mssm.edu/SEA_AD.html
+# https://hoffmg01.hpc.mssm.edu/replication/compare.html
 
 --->
 
@@ -77,8 +77,8 @@ res.pad = lapply(files, function(file){
 })
 res.pad = do.call(rbind, res.pad)
 
-# cell type order
-ctorder = c('EN_L2_3_IT', 'EN_L3_5_IT_1', 'EN_L3_5_IT_2', 'EN_L3_5_IT_3', 'EN_L5_6_NP', 'EN_L6_CT', 'EN_L6_IT', 'EN_NF', 'IN_ADARB2', 'IN_LAMP5', 'IN_PVALB', 'IN_PVALB_CHC', 'IN_SST', 'IN_VIP', 'Oligo', 'OPC', 'Astro', 'Micro_PVM', 'CD8_T', 'PC', 'VLMC','Endo')
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
+df_celltype = read_tsv( file )
 ```
 
 # Microglia
@@ -112,7 +112,7 @@ plotConcordance = function( tab, xlab, ylab, col = c("grey70", "#b49dd1", "#9dd0
   tab.top = tab %>% 
     arrange(-stat.x*stat.y) %>%
     filter(adj.P.Val.x < 0.05 & adj.P.Val.y < 0.05) %>%
-    head(5)
+    head(10)
 
   tab %>% 
     arrange(as.numeric(Signif)) %>%
@@ -124,7 +124,7 @@ plotConcordance = function( tab, xlab, ylab, col = c("grey70", "#b49dd1", "#9dd0
       geom_hline(yintercept=0, color="grey") +
       geom_vline(xintercept=0, color="grey") +
       annotate("text", x=-.6, y=1.6, label=txt) +
-      scale_color_manual(values=col) +
+      scale_color_manual(name = "FDR < 5%", values=col) +
       geom_text_repel(data = tab.top, aes(x = logFC.x, y = logFC.y, label=ID), box.padding=.6, label.padding=.6, min.segment.length=.1, color="black") +
       xlab(paste0("logFC (", xlab, ")")) +
       ylab(paste0("logFC (", ylab, ")"))
@@ -221,10 +221,10 @@ ylab = "Mathys, et al AD"
  
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
-res$tab %>%
-  mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
-    kbl(row.names=FALSE) %>%
-    kable_styling(full_width = FALSE)
+# res$tab %>%
+#   mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
+#     kbl(row.names=FALSE) %>%
+#     kable_styling(full_width = FALSE)
 ```
 
 
@@ -242,10 +242,10 @@ ylab = "Mathys, et al AD"
  
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
-res$tab %>%
-  mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
-    kbl(row.names=FALSE) %>%
-    kable_styling(full_width = FALSE)
+# res$tab %>%
+#   mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
+#     kbl(row.names=FALSE) %>%
+#     kable_styling(full_width = FALSE)
 ```
 
 
@@ -262,10 +262,10 @@ ylab = "SEA-AD CERAD"
  
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
-res$tab %>%
-  mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
-    kbl(row.names=FALSE) %>%
-    kable_styling(full_width = FALSE)
+# res$tab %>%
+#   mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
+#     kbl(row.names=FALSE) %>%
+#     kable_styling(full_width = FALSE)
 ```
 
 ```{r pad.SEAD2}
@@ -281,9 +281,9 @@ ylab = "SEA-AD CERAD"
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 res$tab %>%
-  mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
-    kbl(row.names=FALSE) %>%
-    kable_styling(full_width = FALSE)
+  # mutate(p.value = format(p.value, digits=3, scientific=TRUE)) %>%
+  #   kbl(row.names=FALSE) %>%
+  #   kable_styling(full_width = FALSE)
 ```
 
 
