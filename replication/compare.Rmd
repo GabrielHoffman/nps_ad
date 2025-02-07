@@ -300,7 +300,7 @@ df1 = res.pad %>%
  
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value') %>%
-      mutate(assay = factor(assay, cellTypeOrder$SEA_AD_subclass))
+      mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
 xlab = "PsychAD m19x" 
 ylab = "SEA-AD CERAD"
@@ -316,7 +316,7 @@ res$fig
 ```{r pad.SEAD2}
 df1 = res.pad %>%
   filter(AnnoLevel == "subclass", coef == 'm19x') %>%
-  mutate(assay = factor(assay, cellTypeOrder$SEA_AD_subclass))
+  mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
  
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value')
