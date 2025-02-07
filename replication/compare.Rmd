@@ -217,9 +217,11 @@ plotTiles = function(df1, df2, xlab, ylab){
 
     res = with(tab.join, cor.test(logFC.x, logFC.y, method="spearman"))
 
+    n = nrow(tab.join)
     data.frame(CT1 = grd$CT1[i], 
               CT2 = grd$CT2[i], 
               rho = res$estimate,
+              se = sqrt((1-res$estimate^2)/(n-2)),
               p.value = res$p.value)
   }, mc.cores=36)
   df = bind_rows(df)
@@ -259,7 +261,7 @@ df2 = res.mathys %>%
 
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
-  
+   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 # res$tab %>%
@@ -282,7 +284,7 @@ df2 = res.mathys %>%
   
 xlab = "PsychAD m01x" 
 ylab = "Mathys, et al AD"
- 
+  
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 # res$tab %>%
