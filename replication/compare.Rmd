@@ -25,7 +25,10 @@ cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/
 git pull 
 
 
-system("git pull"); rmarkdown::render("compare.Rmd");
+system("git pull"); 
+
+
+rmarkdown::render("compare.Rmd");
 
 
 
@@ -297,7 +300,7 @@ df1 = res.pad %>%
  
 df2 = res.seaad %>% 
       filter( coefSet == 'CERAD.value') %>%
-      mutate(assay = factor(assay, cellTypeOrder$SEA_AD_subclass)
+      mutate(assay = factor(assay, cellTypeOrder$SEA_AD_subclass))
 
 xlab = "PsychAD m19x" 
 ylab = "SEA-AD CERAD"
