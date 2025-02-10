@@ -81,7 +81,7 @@ res.pad = open_dataset(files)  %>%
    rename(logFC = "estimate", 
     stat='statistic', 
     P.Value = 'p.value') %>%
-   filter(coef %in% c('m01x', 'm17x', 'm18x', 'm19x')) %>%
+   filter(coef %in% c('m01x', 'm17x', 'm18x', 'm19x', 'm21x')) %>%
    collect
 
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
