@@ -255,20 +255,34 @@ plotTiles = function(df1, df2, xlab, ylab){
 }
 
 plotConcordanceRank = function(tab, ylab){
+
+  # For each CT1, 
+  # perform a z-test of the isMatch=TRUE entry versis others
+  tab2 = tab %>%
+    as_tibble %>%
+    group_by(CT1) %>%
+    summarize( mu = mean(rho[!isMatch]),
+              se = sd(rho[!isMatch]),
+              topRho = max(rho[isMatch]),
+              p.value = pnorm(topRho, mu, se, lower.tail=FALSE),
+              FDR = p.adjust(p.value, "fdr"),
+              label = ifelse(FDR < 0.05, "#", ''), 
+              y = max(tab$rho) * 1.2)
+
   main = paste("Concordance with", ylab)
   tab %>%
     mutate(CT1 = factor(CT1, rev(levels(CT1)))) %>%
     arrange(isMatch) %>%
-    ggplot(aes(CT1, rho, color=isMatch)) +
-      geom_point() +
-      # geom_errorbar(aes(ymin = rho - 1.96*se, ymax = rho + 1.96*se), width=0) +
+    ggplot(aes(CT1, rho)) +
+      geom_point(aes(color=isMatch)) +
       theme_classic() +
       theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
       xlab(xlab) +
+      geom_text(aes(CT1, y, label=label), data=tab2) +
       coord_flip() +
       scale_color_manual(values = c("grey", "red")) +
       ylab("Spearman correlation bewteen logFC") +
-      ggtitle(main)
+      ggtitle(main) 
 }
 ```
 
@@ -293,9 +307,6 @@ plotConcordanceRank( res$tab, ylab)
 write_tsv(res$tab, file="m01x_mathys_AD_class.tsv")
 ```
 
-```{r exit, cache=FALSE}
-knitr::knit_exit()
-```
 
 ## PsychAD m17x vs Mathys cogdx
 ```{r m17x_mathys_braaksc_class}
@@ -317,6 +328,9 @@ plotConcordanceRank( res$tab, ylab)
 write_tsv(res$tab, file="m17x_mathys_cogdx_class.tsv")
 ```
 
+```{r exit, cache=FALSE}
+knitr::knit_exit()
+```
 
 ## PsychAD m18x vs Mathys braaksc
 ```{r m18x_mathys_braaksc_class}
