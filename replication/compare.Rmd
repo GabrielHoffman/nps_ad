@@ -328,9 +328,6 @@ plotConcordanceRank( res$tab, ylab)
 write_tsv(res$tab, file="m17x_mathys_cogdx_class.tsv")
 ```
 
-```{r exit, cache=FALSE}
-knitr::knit_exit()
-```
 
 ## PsychAD m18x vs Mathys braaksc
 ```{r m18x_mathys_braaksc_class}
