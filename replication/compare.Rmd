@@ -32,6 +32,10 @@ rmarkdown::render("compare.Rmd");
 
 scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare.html" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
 scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare_files/figure-html/*pdf" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
+scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/*class.tsv" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
+
+
+
 
 # https://hoffmg01.hpc.mssm.edu/replication/compare.html
 
@@ -179,7 +183,7 @@ tab = inner_join(res.pad %>%
                   by = "ID" )
 
 xlab = "PsychAD m01x"
-ylab = "Mathys AD"
+ylab = "Mathys 2023 (AD)"
 
 plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
 
@@ -196,7 +200,7 @@ tab = inner_join(res.pad %>%
                   by = "ID" )
 
 xlab = "PsychAD m19x"
-ylab = "SEA-AD CERAD"
+ylab = "Gabitto 2024 (CERAD)"
 
 plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
 ```
@@ -280,7 +284,7 @@ df2 = res.mathys %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m01x" 
-ylab = "Mathys, et al AD"
+ylab = "Mathys 2023 (AD)"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -301,12 +305,12 @@ df2 = res.mathys %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m17x" 
-ylab = "Mathys, et al cogdx"
+ylab = "Mathys 2023 (Dementia)"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
-write_tsv(res$tab, file="m17x_mathys_braaksc_class.tsv")
+write_tsv(res$tab, file="m17x_mathys_cogdx_class.tsv")
 ```
 
 
@@ -322,7 +326,7 @@ df2 = res.mathys %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m18x" 
-ylab = "Mathys, et al braaksc"
+ylab = "Mathys 2023 (Braak)"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -342,14 +346,33 @@ df2 = res.mathys %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m19x" 
-ylab = "Mathys, et al CERAD"
+ylab = "Mathys 2023 (CERAD)"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
-write_tsv(res$tab, file="m19x_mathys_braaksc_class.tsv")
+write_tsv(res$tab, file="m19x_mathys_CERAD_class.tsv")
 ```
 
+## PsychAD m21x vs Mathys CERAD
+```{r m21x_mathys_braaksc_class}
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm21x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'cogdx') %>%
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
+
+xlab = "PsychAD m21x" 
+ylab = "Mathys 2023 (Dementia)"
+   
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m21x_mathys_cogdx_class.tsv")
+```
 
 # PsychAD subclass vs Mathys
 ## PsychAD m01x vs Mathys ADdiag2typesAD
@@ -364,7 +387,7 @@ df2 = res.mathys %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m01x" 
-ylab = "Mathys, et al AD"
+ylab = "Mathys 2023 (AD)"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -385,12 +408,12 @@ df2 = res.mathys %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m17x" 
-ylab = "Mathys, et al cogdx"
+ylab = "Mathys 2023 (Dementia)"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
-write_tsv(res$tab, file="m17x_mathys_braaksc_subclass.tsv")
+write_tsv(res$tab, file="m17x_mathys_cogdx_subclass.tsv")
 ```
 
 
@@ -406,7 +429,7 @@ df2 = res.mathys %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m18x" 
-ylab = "Mathys, et al braaksc"
+ylab = "Mathys 2023 (Braak)"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -426,7 +449,7 @@ df2 = res.mathys %>%
   mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
 
 xlab = "PsychAD m19x" 
-ylab = "Mathys, et al CERAD"
+ylab = "Mathys 2023 (CERAD)"
    
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -434,6 +457,26 @@ plotConcordanceRank( res$tab, ylab)
 write_tsv(res$tab, file="m19x_mathys_CERAD_subclass.tsv")
 ```
 
+
+## PsychAD m21x vs Mathys cogdx
+```{r m21x_mathys_braaksc_subclass}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm21x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
+
+df2 = res.mathys %>% 
+  filter(coefSet == 'cogdx') %>%
+  rename(coef = coefSet) %>%
+  mutate(assay = factor(assay, cellTypeOrder$Mathys_major_cell_type))
+
+xlab = "PsychAD m21x" 
+ylab = "Mathys 2023 (Dementia)"
+   
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m21x_mathys_cogdx_subclass.tsv")
+```
 
 
 
@@ -456,7 +499,7 @@ df2 = res.seaad %>%
       mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
 xlab = "PsychAD m17x" 
-ylab = "SEA-AD Cognitive.StatusDementia"
+ylab = "Gabitto 2024 (Dementia)"
   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -475,7 +518,7 @@ df2 = res.seaad %>%
       mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
 xlab = "PsychAD m18x" 
-ylab = "SEA-AD Braak.value"
+ylab = "Gabitto 2024 (Braak)"
   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -495,12 +538,32 @@ df2 = res.seaad %>%
       mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
 xlab = "PsychAD m19x" 
-ylab = "SEA-AD CERAD.value"
+ylab = "Gabitto 2024 (CERAD)"
   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
 plotConcordanceRank( res$tab, ylab)
 write_tsv(res$tab, file="m19x_SEAAD_CERAD_class.tsv")
+```
+
+
+## PsychAD m21x vs SEA-AD Cognitive.StatusDementia
+```{r m21x_SEAAD_CERAD_class}
+df1 = res.pad %>%
+  filter(AnnoLevel == "class", coef == 'm21x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_class))
+ 
+df2 = res.seaad %>% 
+      filter( coefSet == 'Cognitive.StatusDementia') %>%
+      mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
+
+xlab = "PsychAD m21x" 
+ylab = "Gabitto 2024 (Dementia)"
+  
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m21x_SEAAD_dementia_class.tsv")
 ```
 
 
@@ -519,7 +582,7 @@ df2 = res.seaad %>%
       mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
 xlab = "PsychAD m17x" 
-ylab = "SEA-AD Cognitive.StatusDementia"
+ylab = "Gabitto 2024 (Dementia)"
   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -538,7 +601,7 @@ df2 = res.seaad %>%
       mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
 xlab = "PsychAD m18x" 
-ylab = "SEA-AD Braak.value"
+ylab = "Gabitto 2024 (Braak)"
   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -558,7 +621,7 @@ df2 = res.seaad %>%
       mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
 
 xlab = "PsychAD m19x" 
-ylab = "SEA-AD CERAD.value"
+ylab = "Gabitto 2024 (CERAD)"
   
 res = plotTiles(df1, df2, xlab, ylab)
 res$fig
@@ -566,6 +629,25 @@ plotConcordanceRank( res$tab, ylab)
 write_tsv(res$tab, file="m19x_SEAAD_CERAD_subclass.tsv")
 ```
 
+
+## PsychAD m21x vs SEA-AD Cognitive.StatusDementia
+```{r m21x_SEAAD_dementia_subclass}
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass", coef == 'm21x') %>%
+  mutate(assay = factor(assay, cellTypeOrder$PsychAD_subclass))
+ 
+df2 = res.seaad %>% 
+      filter( coefSet == 'Cognitive.StatusDementia') %>%
+      mutate(assay = factor(assay, cellTypeOrder$SEAAD_subclass))
+
+xlab = "PsychAD m21x" 
+ylab = "Gabitto 2024 (Dementia)"
+  
+res = plotTiles(df1, df2, xlab, ylab)
+res$fig
+plotConcordanceRank( res$tab, ylab)
+write_tsv(res$tab, file="m21x_SEAAD_dementia_subclass.tsv")
+```
 
 
 
