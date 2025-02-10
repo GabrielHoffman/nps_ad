@@ -30,6 +30,7 @@ system("git pull");
 
 rmarkdown::render("compare.Rmd");
 
+
 scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare.html" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
 scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare_files/figure-html/*pdf" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
 scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/*class.tsv" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
@@ -292,6 +293,9 @@ plotConcordanceRank( res$tab, ylab)
 write_tsv(res$tab, file="m01x_mathys_AD_class.tsv")
 ```
 
+```{r exit, cache=FALSE}
+knitr::knit_exit()
+```
 
 ## PsychAD m17x vs Mathys cogdx
 ```{r m17x_mathys_braaksc_class}
