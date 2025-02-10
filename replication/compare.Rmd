@@ -1,7 +1,7 @@
 ---
 title: "Compare PsychAD with SEA_AD and Mathys, et al."
 subtitle: 'Compare differential expression signatures'
-author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/) on [GitHub](https://github.com/GabrielHoffman/nps_ad/blob/master/replication/compare.Rmd)"
 date: "Run on `r Sys.time()`"
 documentclass: article
 output: 
