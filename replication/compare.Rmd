@@ -188,6 +188,25 @@ ylab = "Mathys 2023 (AD)"
 
 plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
 
+
+# Microglia: Mathys CERAD
+tab = inner_join(res.pad %>% 
+                  filter(AnnoLevel == "subclass", 
+                    assay == 'Micro', 
+                    coef == 'm19x') %>%
+                  mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
+                  res.mathys %>% 
+                  filter(assay == 'Mic', 
+                    coefSet == 'CERAD') %>%
+                  mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
+                  by = "ID" )
+
+xlab = "PsychAD m19x"
+ylab = "Mathys 2023 (CERAD)"
+
+plotConcordance(tab, xlab, ylab) + ggtitle("Microglia")
+
+
 # Microglia: SEA-AD
 tab = inner_join(res.pad %>% 
                   filter(AnnoLevel == "subclass", 
@@ -199,6 +218,7 @@ tab = inner_join(res.pad %>%
                     coefSet == 'CERAD.value') %>%
                   mutate(adj.P.Val = p.adjust(P.Value, "fdr")),
                   by = "ID" )
+
 
 xlab = "PsychAD m19x"
 ylab = "Gabitto 2024 (CERAD)"
