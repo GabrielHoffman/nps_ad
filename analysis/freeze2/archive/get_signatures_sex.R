@@ -55,20 +55,6 @@ if( params$SampleLevel == "Channel" ){
 }
 
 
-# combine base covariance with testing variables
-covariates = setdiff(union(covariates_base, ctr$covariates_incl), ctr$covariates_excl)
-
-# user-specified formula
-if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
-  form = paste0("~ ", ctr$variable, " + ", paste0(covariates, collapse=" + "))  
-  form.vp = form
-}else{
-  form = paste0("~ 0 + ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
-  form.vp = paste0("~ (1|", ctr$variable, ") + ", paste0(covariates, collapse=" + "))
-}
-form = as.formula(form)
-form.vp = as.formula(form.vp)
-
 if( params$SampleLevel == "Channel"){
   # merge subject-level metadata with colData(res.proc)
   metadata_sub = metadata[metadata$SubID %in% colData(res.proc)$SubID,]
