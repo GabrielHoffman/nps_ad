@@ -139,6 +139,12 @@ if( params$variable_type == "CAT" ){
 	df$FDR = FDR
 	table(df$FDR < 0.1)
 
+	df$test = opt$test
+	df$test = factor(df$test)
+
+	df$AnnoLevel = opt$AnnoLevel
+	df$AnnoLevel = factor(df$AnnoLevel)
+
 	file = paste0(outpath, ".parquet")
 	write_parquet(df, sink=file)
 
@@ -208,10 +214,14 @@ if( params$variable_type == "CAT" ){
 
 	table(df$FDR < 0.1)
 
+	df$test = opt$test
+	df$test = factor(df$test)
+
+	df$AnnoLevel = opt$AnnoLevel
+	df$AnnoLevel = factor(df$AnnoLevel)
+
 	file = paste0(outpath, ".parquet")
 	write_parquet(df, sink=file)
-
-
 
 	# df %>%
 	# 	head %>%
