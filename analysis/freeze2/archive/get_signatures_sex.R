@@ -97,8 +97,6 @@ if( params$variable_type == "CAT" ){
 
 	coefNames(fit)
 
-	topTable(fit, coef='Dx_diff')
-
 	tabF = topTable(fit, coef='Dx_AD_F', number=Inf) %>% 
 			as_tibble %>%
 			mutate(se = logFC / t)
@@ -127,12 +125,23 @@ if( params$variable_type == "CAT" ){
 
 	df$test = opt$test
 	df$test = factor(df$test)
-
 	df$AnnoLevel = opt$AnnoLevel
 	df$AnnoLevel = factor(df$AnnoLevel)
 
 	file = paste0(outpath, ".parquet")
 	write_parquet(df, sink=file)
+
+	df2 = topTable(fit, coef='Dx_diff', number=Inf) %>% 
+			as_tibble %>%
+			mutate(se = logFC / t)
+
+	df2$test = opt$test
+	df2$test = factor(df2$test)
+	df2$AnnoLevel = opt$AnnoLevel
+	df2$AnnoLevel = factor(df2$AnnoLevel)
+
+	file = paste0(outpath, "_diff.parquet")
+	write_parquet(df2, sink=file)
 
 	# # Plot comparison
 	# fig = df %>% 
