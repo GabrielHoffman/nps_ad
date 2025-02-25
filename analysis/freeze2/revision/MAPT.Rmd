@@ -251,22 +251,12 @@ fit = dreamlet( res.proc, form,
 ```{r zenith}
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
+ 
+res.zenith = lapply(ctr$variable, function(coef){
+	zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
+})   
+res.zenith = do.call(rbind, res.zenith)
 
-if( params$variable_type == "ORD" ){
-  
-  pattern = paste0("^", ctr$variable)
-  coef.test = grep(pattern, coefNames(fit), value=TRUE)
-
-  res.zenith = zenith_gsa(fit, coef = coef.test, go.gs, progressbar=FALSE)
-}else{     
-
-	coef.test = ctr$variable
-
-  res.zenith = lapply(coef.test, function(coef){
-    zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
-    })   
-  res.zenith = do.call(rbind, res.zenith)
-}
 ```
 
 
