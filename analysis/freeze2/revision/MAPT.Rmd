@@ -58,8 +58,29 @@ params = list(variable_type = variable_type,
 	SampleLevel = SampleLevel, 
 	variable= variable)
 
-Rscript -e "rmarkdown::render(\"$DIR/MAPT.Rmd\", output_file = \"$OUTFILE\", 
-params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", AnnoLevel = \"$AnnoLevel\", SampleLevel = \"$SampleLevel\", ctst_key = \"$ctst_key\"))"
+echo ""  > jobs.sh
+for dataset in $(echo "HBCC" "MSSM" "RUSH", "FULL")
+do
+for AnnoLevel in $(echo "class" "subclass")
+do
+echo $dataset $AnnoLevel
+ctst_key=${dataset}_${variable}_${SampleLevel}_${AnnoLevel}
+OUTFILE=/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/${ctst_key}/${ctst_key}
+mkdir -p $OUTFILE
+echo "rmarkdown::render(\"$DIR/MAPT.Rmd\", output_file = \"$OUTFILE\", 
+params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", AnnoLevel = \"$AnnoLevel\", SampleLevel = \"$SampleLevel\", ctst_key = \"$ctst_key\"))" >>  jobs.sh
+done
+done
+
+cat jobs.sh
+
+/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/*/*_H1H2/SubID/*/
+
+
+
+
+
+
 
 
 --->
@@ -185,7 +206,7 @@ stopifnot(length(file) ==1)
 
 res.proc = readRDS( file )
  # , "TechPC1", "TechPC2", "TechPC3"
-covariates_base = c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)", "percent_mito", "mito_genes", "ribo_genes", "mito_ribo")
+covariates_base = c("scale(Age)", "Sex", "scale(PMI)", "log(n_genes)", "percent_mito", "mito_genes", "ribo_genes", "mito_ribo", "Brain_bank")
 if( params$SampleLevel == "Channel" ){
   covariates_base = c(covariates_base, "(1|SubID)")
 }
