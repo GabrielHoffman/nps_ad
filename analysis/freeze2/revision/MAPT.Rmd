@@ -259,13 +259,8 @@ if( params$variable_type == "ORD" ){
 
   res.zenith = zenith_gsa(fit, coef = coef.test, go.gs, progressbar=FALSE)
 }else{     
-  if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){   
-    coef.test = ctr$variable
-  }else{
-    coef.test = ctr$contrasts 
-  }
 
-  save(fit, coef.test, file="~/test.RDATA")
+	coef.test = ctr$variable
 
   res.zenith = lapply(coef.test, function(coef){
     zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
