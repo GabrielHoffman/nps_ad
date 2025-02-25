@@ -249,6 +249,7 @@ fit = dreamlet( res.proc, form,
 
 # Gene set analysis
 ```{r zenith}
+browser()
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
 
