@@ -266,6 +266,8 @@ if( params$variable_type == "ORD" ){
     coef.test = ctr$contrasts 
   }
 
+  cat("coef.test:", coef.test, "\n")
+
   res.zenith = lapply(coef.test, function(coef){
     zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
     })   
