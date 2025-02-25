@@ -249,7 +249,6 @@ fit = dreamlet( res.proc, form,
 
 # Gene set analysis
 ```{r zenith}
-browser()
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
 
@@ -266,7 +265,7 @@ if( params$variable_type == "ORD" ){
     coef.test = ctr$contrasts 
   }
 
-  cat("coef.test:", coef.test, "\n")
+  save(fit, coef.test, file="~/test.RDATA")
 
   res.zenith = lapply(coef.test, function(coef){
     zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
