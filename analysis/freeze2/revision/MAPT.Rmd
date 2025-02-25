@@ -252,7 +252,7 @@ fit = dreamlet( res.proc, form,
 # Run zenith gene set analysis on result of dreamlet
 go.gs = get_GeneOntology(to="SYMBOL")
  
-res.zenith = lapply(ctr$variable, function(coef){
+res.zenith = lapply("H1H2", function(coef){
 	zenith_gsa(fit, coef = coef, go.gs, progressbar=FALSE)
 })   
 res.zenith = do.call(rbind, res.zenith)
