@@ -39,24 +39,31 @@ ls jobs/*crumblr* | parallel -P1 "bsub < {}"
 # rmarkdown::render("run_dreamlet_contrasts.Rmd")
 
 
-DIR=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/testing/
+DIR=/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision/
+
+
+suffix2 = with(params, gsub(paste0(dataset, "/", dataset, "/"), paste0(dataset, "/"), paste0(toupper(dataset), "/", ctst_key, "/", SampleLevel, "/", AnnoLevel)))
+
+
 
 variable_type="CAT"
-ctst_key="HBCC_H1H2"
 dataset="HBCC"
 AnnoLevel="class"
 SampleLevel="SubID"
+variable="H1H2"
+ctst_key=${dataset}_${variable}_${SampleLevel}_${AnnoLevel}
 OUTFILE=/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/${ctst_key}/${ctst_key}
+mkdir -p OUTFILE
 
-params = list(variable_type = variable_type, 
-	ctst_key = ctst_key, 
-	dataset = dataset, 
-	AnnoLevel = AnnoLevel, 
-	SampleLevel = SampleLevel, 
-	variable="H1H2")
+# params = list(variable_type = variable_type, 
+# 	ctst_key = ctst_key, 
+# 	dataset = dataset, 
+# 	AnnoLevel = AnnoLevel, 
+# 	SampleLevel = SampleLevel, 
+# 	variable="H1H2")
 
 Rscript -e "rmarkdown::render(\"$DIR/MAPT.Rmd\", output_file = \"$OUTFILE\", 
-params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", AnnoLevel = \"$AnnoLevel\", SampleLevel \"$SampleLevel\", ctst_key = \"$ctst_key\"))"
+params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", AnnoLevel = \"$AnnoLevel\", SampleLevel = \"$SampleLevel\", ctst_key = \"$ctst_key\"))"
 
 
 --->
@@ -142,7 +149,6 @@ CONTRASTS[["NUM"]] = append(CONTRASTS[["NUM"]], prs.lst)
 suffix2 = with(params, gsub(paste0(dataset, "/", dataset, "/"), paste0(dataset, "/"), paste0(toupper(dataset), "/", ctst_key, "/", SampleLevel, "/", AnnoLevel)))
 
 outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", suffix2)
-
 
 ctr = list(variable = params$variable)
 
