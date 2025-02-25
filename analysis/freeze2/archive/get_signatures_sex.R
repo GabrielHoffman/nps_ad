@@ -28,9 +28,7 @@ outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/
 
 suppressPackageStartupMessages({
 library(dreamlet)
-library(SingleCellExperiment)
 library(tidyverse)
-# library(zenith)
 library(qvalue)
 library(arrow)
 })
@@ -108,19 +106,19 @@ if( params$variable_type == "CAT" ){
 	df = inner_join(tabF, tabM, by=c("assay", "ID")) %>%
 				mutate(z = (logFC.x - logFC.y) / sqrt(se.x^2 + se.y^2),
 					p.value = pnorm(z, lower.tail=FALSE),
-					FDR = p.adjust(p.value))
+					FDR = p.adjust(p.value)) %>%
+				arrange(CT)
 
-	FDR = c()
-	for( CT in unique(df$assay) ){
-		values = df %>% 
-		filter(assay == CT) %>%
-		mutate(FDR = p.adjust(p.value)) %>%
-		pull(FDR)
+	# df_FDR = lapply(unique(df$assay), function(CT){
+	# 	df %>% 
+	# 	filter(assay == CT) %>%
+	# 	mutate(FDR = p.adjust(p.value)) %>%
+	# 	select(assay, ID, FDR)
+	# })
+	# df_FDR = bind_rows(df_FDR)
 
-		FDR = c(FDR, values)
-	}
+	# df = inner_join(df, df_FDR, by=c("assay", 'ID'))
 
-	df$FDR = FDR
 	table(df$FDR < 0.1)
 
 	df$test = opt$test
@@ -144,21 +142,90 @@ if( params$variable_type == "CAT" ){
 	write_parquet(df2, sink=file)
 
 	# # Plot comparison
-	# fig = df %>% 
-	# 	ggplot(aes(logFC.x, logFC.y, color=FDR < 0.05)) +
-	# 		geom_point() +
-	# 		theme_classic() +
-	# 		geom_abline(intercept=0, slope=1) + 
-	# 		theme(aspect.ratio=1) +
-	# 		facet_wrap(~assay) +
-	# 		xlab("Disease effect (Female)") +
-	# 		ylab("Disease effect (Male)") 
-	# ggsave(fig, file="~/www/test.png")
+	fig = df %>% 
+		ggplot(aes(logFC.x, logFC.y, color=FDR < 0.05)) +
+			geom_point() +
+			theme_classic() +
+			geom_abline(intercept=0, slope=1) + 
+			theme(aspect.ratio=1) +
+			facet_wrap(~assay) +
+			xlab("Disease effect (Female)") +
+			ylab("Disease effect (Male)") 
+	ggsave(fig, file="~/www/test.png")
 
 
 	# # plotVolcano
-	# fig = plotVolcano( fit, coef = 'Dx_diff', nGenes=1)
-	# ggsave(fig, file="~/www/test.png")
+	fig = plotVolcano( fit, coef = 'Dx_diff', nGenes=5, assay="Micro", cutoff = .2)
+	ggsave(fig, file="~/www/test.pdf", height=4)
+
+	df %>%
+		arrange(p.value) %>%
+		head %>%
+		select(assay, ID, test, logFC.x, se.x, logFC.y, se.y, z, p.value, FDR) 
+
+
+
+
+	df %>%
+		filter(ID == "RAB11B-AS1", assay == "IN_VIP") %>%
+		select(assay, ID, test, logFC.x, se.x, logFC.y, se.y, z, p.value, FDR) %>%
+		arrange(p.value)
+
+
+	df %>%
+		mutate(FDR = p.adjust(p.value)) %>%
+		filter(ID == "LINC01094", assay == "Micro") %>%
+		mutate(beta = 2*(logFC.x/se.x^2 - logFC.y/se.y^2)/(1/se.x^2 + 1/se.y^2)) %>%
+		mutate(se = sqrt(se.x^2 + se.y^2)) %>%
+		data.frame
+
+
+	df2 %>% 
+		filter(ID == "LINC01094", assay == "Micro") 
+
+	fig = df2 %>% 
+		group_by(assay) %>%
+		summarize(pi1 = 1 - pi0est(P.Value)$pi0) %>%
+		mutate(assay = factor(assay, names(cols))) %>%
+		ggplot(aes(assay, pi1, fill=assay)) +
+			geom_bar(stat="identity") +
+			theme_classic() +
+			theme(aspect.ratio=1, legend.position="none") +
+			scale_y_continuous(limits=c(0, NA), expand=c(0, 0)) + 
+			coord_flip() +
+			scale_fill_manual(name = "Cell type", values=cols) +
+			ylab("Storey's pi1") +
+			ggtitle("c02x")
+		ggsave(fig, file="~/www/test.pdf", height=10)
+
+
+	df2 %>% 
+		group_by(assay) %>%
+		summarize(pi1 = 1 - pi0est(P.Value)$pi0) %>%
+		arrange(-pi1)
+
+
+
+
+	fig = extractData(res.proc, "Oligo", 
+		cols = c("Sex", "c02x"),
+		genes="LILRB3") %>%
+		filter(!is.na(c02x)) %>%
+		mutate(Disease = as.character(c02x)) %>%
+		mutate(Disease = factor(Disease, c("Control", "AD"))) %>%
+		ggplot(aes(Disease, `LILRB3`, fill=Disease)) +
+			geom_violin() +
+			geom_boxplot(width=.1, position = "dodge2", fill="grey80") +
+			theme_classic() +
+			theme(aspect.ratio=2) +
+			geom_smooth(method="lm") +
+			scale_fill_manual(values=c(AD = "red3", Control="green3")) +
+			facet_wrap(~Sex) +
+			ggtitle("LILRB3")
+	    
+	ggsave(fig, file="~/www/test.pdf")
+
+
 
 	# go.gs = get_GeneOntology(to="SYMBOL")
 

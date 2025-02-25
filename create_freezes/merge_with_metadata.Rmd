@@ -23,7 +23,7 @@ system("git pull origin master"); rmarkdown::render("merge_with_metadata.Rmd");
 # https://hoffmg01.hpc.mssm.edu/nps_ad/create_freezes/merge_with_metadata.html
 
 # start high-mem interactive job to run merging
-bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 12 bash
+bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_CommonMind -n 24 bash
 
 # regular job to run this script
 bsub -Is -q premium -R span[hosts=1] -R rusage[mem=10000] -W 12:00 -P acc_CommonMind -n 12 bash
@@ -308,7 +308,7 @@ bsub -Is -q premium -R span[hosts=1] -R rusage[mem=60790] -W 12:00 -P acc_Common
 #BSUB 
 
 # convert basilisk version
- sed -i 's/1.8.0/1.12.0/g' job*lsf
+sed -i 's/1.8.0/1.12.0/g' job*lsf
 
 # run each merging
 cd /sc/arion/scratch/hoffmg01/tmp/

@@ -32,8 +32,8 @@ rmarkdown::render("compare.Rmd");
 
 
 scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare.html" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
-scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare_files/figure-html/*pdf" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
-scp minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/*class.tsv" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
+rsync -avPz minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/compare_files/figure-html/*pdf" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
+rsync -avPz minerva:"/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/*class.tsv" /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/psychAD/DE\ signatures/
 
 
 

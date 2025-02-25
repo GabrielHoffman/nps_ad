@@ -53,7 +53,6 @@ ls jobs/*crumblr* | grep _class | grep SubID | parallel -P1 "bsub < {}; sleep .5
 ls jobs/*crumblr* | grep _subclass | grep SubID | parallel -P1 "bsub < {}; sleep .5"
 
 
-
 # Need more work on ordinal variables:
 RUSH_BRAAK_SubID_subtype_crumblr
 

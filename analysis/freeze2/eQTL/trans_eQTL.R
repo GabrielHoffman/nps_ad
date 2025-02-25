@@ -122,7 +122,7 @@ geneInfo = read_tsv("geneInfo.tsv", show_col_types = FALSE) %>%
 # geneInfo$mapInfo = FALSE
 # geneInfo$mapInfo[geneInfo$EnsID %in% ids] = TRUE
 
-
+write_tsv(geneInfo, file="geneInfo.tsv.gz")
 
 
 
@@ -671,7 +671,125 @@ df = lapply(files, function(file){
 
 
 
+# Oct 21
+#######
 
+# cd /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/PsychAD3.0/supplementary_figures/trans-eQTL/circos_plot
+
+library(ggplot2)
+library(tidyverse)
+
+# hubs
+df = read.table("adjust_trans_eQTL_hits_hub") 
+colnames(df) = c("CellType", "SNP", "N")
+
+cols = c("Immune" = "#c70813", "Astro" = "#d2af81", "OPC" = "#8f8a80","Oligo"="#d5e4a2", "EN"="#197ec0","IN"="#1a9993")
+
+fig = df %>%
+	group_by(CellType, N) %>%
+	summarize(Count = n()) %>%
+	mutate(CellType = factor(CellType, rev(names(cols)))) %>%
+	ggplot(aes(factor(N), Count, fill=CellType, label=Count)) +
+		geom_bar(stat="identity") +
+		facet_wrap(~CellType, nrow=1) +
+		theme_classic() +
+		theme(aspect.ratio=1, legend.position="none") +
+		scale_fill_manual("Cell", values = cols) +
+		scale_y_continuous(limits=c(0,24), expand=c(0,0)) +
+		geom_text() +
+		xlab("Number of trans genes in regulatory hub")
+ 
+ggsave(fig, file="trans_hubs.pdf")
+
+
+# Trans/coloc overlap
+#####################
+
+# cd /Users/gabrielhoffman/Library/CloudStorage/Dropbox/projects/PsychAD3.0/supplementary_figures/trans-eQTL/Trans-eQTL_GWAS_integration
+
+library(tidyverse)
+
+df = read_tsv("merged_infor_for_trans_eGenes_6_cells")
+
+
+
+df %>% 
+  filter(ppH4 > 0.8) %>%
+  filter(cell_trans_ == cell_eQTL)
+
+
+
+df %>% 
+  filter(ppH4 > 0.5) %>%
+  pull(gene) %>%
+  unique %>%
+  length
+
+
+
+
+ord = c("EN", "IN",  "Oligo", "OPC", "Astro", "Immune")
+
+
+
+# heatmap sorted by genes
+#########################
+
+for(ds in names(table(df$disease)) ){
+  df2 = df %>% 
+  	# filter(gene %in% genes) %>%
+    mutate(cell_eQTL = factor(cell_eQTL, ord)) %>%
+    mutate(cell_trans_ = factor(cell_trans_, ord)) %>%
+    filter(!is.na(cell_eQTL)) %>%
+    complete(cell_trans_, cell_eQTL, gene, disease, fill=list(ppH4 = 0)) %>%
+    filter(disease == ds) 
+
+  # subset to genes with a non-zero score
+  genes = df2 %>%
+    group_by(gene) %>%
+    summarize(max = max(ppH4)) %>%
+    filter(max > 0) %>%
+    pull(gene)
+
+  if( length(genes) > 3){
+    # order
+    M = df2 %>%
+      filter(gene %in% genes) %>%
+      mutate(cell2 = paste(cell_trans_, cell_eQTL)) %>%
+      select(-disease, -cell_trans_, -cell_eQTL) %>%
+      pivot_wider(names_from = gene, values_from = ppH4 ) %>%
+      column_to_rownames('cell2') %>%
+      as.matrix %>%
+      t
+
+    hcl = hclust( dist(M))
+    genes = hcl$labels[hcl$order]
+  }
+
+  df2$txt = ""
+  df2$txt[df2$ppH4 > 0.5] = "*"
+  df2$txt[df2$ppH4 > 0.8] = "#"
+
+  fig = df2 %>%
+    filter(gene %in% genes) %>%
+    mutate(gene = factor(gene, genes)) %>%
+    ggplot(aes(cell_eQTL, gene, color=ppH4, size=ppH4, label=txt)) +
+      geom_point(stroke=0) +
+      facet_grid(disease~cell_trans_) +
+      coord_equal() +
+      scale_color_gradient(low="white", high="red", limits=c(0,1)) +
+      scale_size_area(limits=c(0,1)) +
+      theme_classic() +
+      scale_x_discrete(guide = guide_axis(angle = 90), name="Cell class with colocalization signal") +
+      ggtitle(ds) +
+      geom_text( aes( vjust=0.5), color="black")
+
+  file = paste0("coloc_trans_overlap_", ds, ".pdf")
+  ggsave(fig, file=file, height=7, width=9.5)
+}
+
+
+  
 
 
 
