@@ -76,9 +76,9 @@ cat jobs.sh
 
 /sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/*/*_H1H2/SubID/*/
 
+/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/FULL/FULL_H1H2_SubID_class/SubID/class/topTable.tsv.gz
 
-
-
+/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/FULL/FULL_H1H2_SubID_subclass/SubID/subclass/topTable.tsv.gz
 
 
 
@@ -249,7 +249,7 @@ res.proc@data = cbind(colData(res.proc), metadata_sub[idx,!cols])
 # ADD H1H2 data
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/231219_PsychAD_capstone_F3/MAPT_locus/240326_PsychAD_MAPT_locus_haplotype_data.csv"
 df = read.table(file, sep=',', header=TRUE, row.names=1)
-df$H1H2 = factor(df$haplotype, c("H1H1", "H1H2", "H2H2"))
+df$H1H2 = factor(df$haplotype, c("H2H2", "H1H2", "H1H1"))
 df$H1H2 = as.numeric(df$H1H2)
 
 idx = match( rownames(colData(res.proc)), rownames(df))
