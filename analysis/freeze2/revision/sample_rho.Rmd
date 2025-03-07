@@ -77,7 +77,7 @@ Errors bars indicate 95% confidence interval
 
 The association betweeen estimated transcriptome similarity and shared heritability values was estimated using an approach to model the uncertainty about these values.  Synthetic values were simulated from normal distribution centered at each estimate with the corresponding standard error.  For each of 10,000 synthetic datasets, the Spearman correlation between the sampled transcriptome similarity and shared heritability was computed.  Using a normal approximation of the rho statistic, we can reject the null hypothesis that rho is less than zero with p-value 0.0001081263.
 
-```{r resample}
+```{r resample, fig.width=5, fig.height=5}
 rhohat = sapply(seq(10000), function(i){
   x1 = with(df, rnorm(length(hsq), hsq, hsq.se))
   x2 = with(df, rnorm(length(geneExpr), geneExpr, geneExpr.se))
