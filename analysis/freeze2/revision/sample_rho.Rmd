@@ -22,6 +22,8 @@ params:
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision
 git pull
 
+system("git pull")
+
 rmarkdown::render("sample_rho.Rmd")
 
 --->
@@ -57,8 +59,8 @@ rho = with(df, cor(hsq, geneExpr, method="spearman"))
 rho = format(rho, digits=3)
 
 ggplot(df, aes(hsq, geneExpr)) +
-  geom_errorbar(aes(ymin = geneExpr - 1.96*geneExpr.se, ymax = geneExpr + 1.96*geneExpr.se, color=type), alpha = .2) +
-  geom_errorbar(aes(xmin = hsq - 1.96*hsq.se, xmax = hsq + 1.96*hsq.se, color=type), alpha = .2) +
+  geom_errorbar(aes(ymin = geneExpr - 1.96*geneExpr.se, ymax = geneExpr + 1.96*geneExpr.se, color=type), alpha = .3) +
+  geom_errorbar(aes(xmin = hsq - 1.96*hsq.se, xmax = hsq + 1.96*hsq.se, color=type), alpha = .3) +
   geom_point(aes(color=type)) +
   geom_smooth(method="lm") +
   xlab("Shared heritability") +
@@ -67,7 +69,7 @@ ggplot(df, aes(hsq, geneExpr)) +
   theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
   geom_text_repel(aes(label=label)) +
   scale_color_manual(values=col) +
-  coord_fixed(xlim=c(-.1, .8)) +
+  coord_fixed(xlim=c(-.2, .75)) +
   ggtitle(bquote(rho == .(rho)))
 ```
 
