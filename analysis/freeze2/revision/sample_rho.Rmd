@@ -16,7 +16,15 @@ params:
   SampleLevel: NULL
 ---
 
+<!---
 
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision
+git pull
+
+rmarkdown::render("sample_rho.Rmd")
+
+--->
 
 
 
@@ -44,7 +52,6 @@ colnames(df)[1] = "label"
 
 col = df$pal
 names(col) = df$type
-bquote(rho == .(rho))
 
 rho = with(df, cor(hsq, geneExpr, method="spearman"))
 rho = format(rho, digits=3)
