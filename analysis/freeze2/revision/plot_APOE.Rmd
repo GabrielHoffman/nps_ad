@@ -1,0 +1,96 @@
+---
+title: "Plots from including APOE"
+subtitle: 'Automated analysis'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+    self_contained: false
+params:
+  dataset: NULL
+  variable_type: NULL
+  ctst_key: NULL
+  AnnoLevel: NULL
+  SampleLevel: NULL
+---
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = FALSE,
+  cache.lazy = FALSE)
+```
+
+```{r load}
+setwd("/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision")
+
+library(dreamlet)
+library(ggplot2)
+library(tidyverse)
+library(qvalue)
+
+# ~ APOE
+res.APOE = readRDS("res.APOE.RDS")
+
+# ~ APOE + Dx
+res.AD = readRDS("res.AD.RDS") 
+
+# ~ Dx
+res.AD2 = readRDS("res.AD2.RDS")
+```
+
+
+No genes are differentially expressed with APOE genotype at a study-wide FDR cutoff of 5%
+```{r APOE.DE}
+res.APOE %>%
+  group_by(assay) %>%
+  summarize(nDE = sum(fdr < 0.05)) %>%
+  arrange(-nDE) %>%
+  data.frame
+```
+
+```{r join, fig.height=15}
+df = inner_join(res.AD2, res.AD, by=c("ID", "assay"))
+
+fig = df %>%
+  ggplot(aes(estimate.x, estimate.y)) +
+    geom_point() +
+    geom_abline(slope=1, intercept=0) +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    facet_wrap(~assay, scales="free", ncol=4) +
+    geom_hline(yintercept=0, linetype="dashed") +
+    geom_vline(xintercept=0, linetype="dashed") +
+    xlab("Effect size without APOE as a covariate")+
+    ylab("Effect size including APOE as a covariate")
+
+df %>% 
+  select(ID, assay, estimate.x, estimate.y, std.error.x, std.error.y) %>%
+  mutate(z.diff = (estimate.x - estimate.y) / sqrt(std.error.x^2 + std.error.y^2)) %>%
+  mutate(p.diff = 2*pnorm(abs(z.diff), lower.tail=FALSE)) %>%
+  arrange(p.diff) %>%
+  select(-std.error.x, -std.error.y)
+```
+
+
+
+
+
+
+
+
+
+
+
+
