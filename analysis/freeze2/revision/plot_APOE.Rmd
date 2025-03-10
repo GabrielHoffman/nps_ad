@@ -17,7 +17,13 @@ params:
 ---
 
 
+<!---
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision
+R
+system("git pull")
+rmarkdown::render("plot_APOE.Rmd")
 
+--->
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -63,7 +69,7 @@ res.APOE %>%
 ```{r join, fig.height=15}
 df = inner_join(res.AD2, res.AD, by=c("ID", "assay"))
 
-fig = df %>%
+df %>%
   ggplot(aes(estimate.x, estimate.y)) +
     geom_point() +
     geom_abline(slope=1, intercept=0) +
