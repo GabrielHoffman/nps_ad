@@ -73,7 +73,7 @@ df = inner_join(res.AD2, res.AD, by=c("ID", "assay"))
 df %>%
   ggplot(aes(estimate.x, estimate.y)) +
     # geom_point() +
-    geom_scattermore(pointsize=40) + 
+    geom_scattermore(pointsize=15) + 
     geom_abline(slope=1, intercept=0) +
     theme_classic() +
     theme(aspect.ratio=1) +
