@@ -160,6 +160,7 @@ traitset = c(MSSM = "r09x.L", RUSH = "r09x.L", Mathys = "cogdx", SEAAD = "Cognit
 res = make_plot( traitset ) 
 res$fig + ggtitle("Dementia")
 res$tbl
+```
 
 # Braak
 ```{r braak, fig.height=12}
