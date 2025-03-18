@@ -47,7 +47,7 @@ library(broom)
 library(metafor)
 ```
 
-```{r load, fig.height=12}
+```{r load}
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
 df_celltype = read_tsv( file ) %>%
             rename(CellType = PsychAD)
@@ -63,7 +63,6 @@ res.seaad = read_parquet(file)%>%
 
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined_crumblr.tsv.gz"
 res.pad = read_tsv(file)
-
 
 make_plot = function(traitset){
 
@@ -119,20 +118,29 @@ make_plot = function(traitset){
           geom_text_repel(box.padding=.5) +
           facet_wrap(~Dataset, ncol=1, scales="free_y")
 }
+```
+
 
 # AD
+```{r ad}
 traitset = c(MSSM = "c02xAD - c02xControl", RUSH = "c03xAD - c03xControl", Mathys = "ADdiag2types", SEAAD = 'none')
 make_plot( traitset ) + ggtitle("AD")
+```
 
+```{r dementia, fig.height=12}
 # Dementia (cogdx/CDR)
 traitset = c(MSSM = "r01x.L", RUSH = "r06x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
 make_plot( traitset ) + ggtitle("Dementia")
+```
 
 # Braak
+```{r braak, fig.height=12}
 traitset = c(MSSM = "r05x.L", RUSH = "r02x.L", Mathys = "braaksc", SEAAD = "Braak.value")
 make_plot( traitset ) + ggtitle("Braak")
+```
 
 # CERAD
+```{r cerad, fig.height=12}
 traitset = c(MSSM = "r03x.L", RUSH = "r04x.L", Mathys = "CERAD", SEAAD = "CERAD.value")
 make_plot( traitset ) + ggtitle("CERAD")
 ```
