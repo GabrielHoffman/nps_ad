@@ -53,7 +53,7 @@ file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/cel
 df_celltype = read_tsv( file ) %>%
             rename(CellType = PsychAD)
 
-file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/Mathys_2023/Mathys_Cell_2023_Major_Cell_Type_crumblr.parquet"
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/Mathys_2023/Mathys_Cell_2023_Cell_Type_crumblr.parquet"
 res.mathys = read_parquet(file) %>%
         rename(CellType1 = CellType) %>%
         filter(!grepl("order", coefSet))
