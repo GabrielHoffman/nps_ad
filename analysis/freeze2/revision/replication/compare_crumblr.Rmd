@@ -128,8 +128,9 @@ make_plot = function(traitset){
           xlab("Estimate (PsychAD)")+
           ylab("Estimate") +
           geom_text_repel(box.padding=.75) +
+          coord_cartesian(expand=FALSE) +
           geom_smooth(method="lm", color="red", se=FALSE) +
-          facet_wrap(~Dataset, ncol=1, scales="free_y")
+          facet_wrap(~Dataset, ncol=1, scales="free_y") 
 
   list(fig = fig, tbl = tbl)
 }
