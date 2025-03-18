@@ -113,7 +113,7 @@ make_plot = function(traitset){
  
   tbl = res %>% 
     kbl %>%
-    kable_styling(full_width = TRUE)
+    kable_styling(full_width = FALSE)
 
   fig = df_join %>%
         mutate(label = paste(CellType, CellType1, sep=' / ')) %>%
