@@ -115,7 +115,7 @@ make_plot = function(traitset){
           theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
           xlab("Estimate (PsychAD)")+
           ylab("Estimate") +
-          geom_text_repel(box.padding=.5) +
+          geom_text_repel(box.padding=.75) +
           facet_wrap(~Dataset, ncol=1, scales="free_y")
 }
 ```
