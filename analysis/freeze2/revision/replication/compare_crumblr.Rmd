@@ -149,11 +149,17 @@ res$fig + ggtitle("AD")
 
 # Dementia (cogdx/CDR)
 ```{r dementia, fig.height=12}
-traitset = c(MSSM = "r09x.L", RUSH = "r09x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
+traitset = c(MSSM = "r05x.L", RUSH = "r06x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
 res = make_plot( traitset ) 
 res$fig + ggtitle("Dementia")
 res$tbl
 ```
+
+```{r dementia2, fig.height=12}
+traitset = c(MSSM = "r09x.L", RUSH = "r09x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
+res = make_plot( traitset ) 
+res$fig + ggtitle("Dementia")
+res$tbl
 
 # Braak
 ```{r braak, fig.height=12}
