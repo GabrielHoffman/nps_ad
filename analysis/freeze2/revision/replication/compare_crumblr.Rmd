@@ -45,6 +45,7 @@ library(ggrepel)
 library(arrow)
 library(broom)
 library(metafor)
+library(kableExtra)
 ```
 
 ```{r load}
@@ -102,8 +103,25 @@ make_plot = function(traitset){
     mutate(se = logFC / stat) %>%
     mutate(Dataset = "SEAAD")
 
+  df_join = bind_rows(df_join1, df_join2)
 
-  bind_rows(df_join1, df_join2) %>%
+
+  df_join %>%
+    group_by(Dataset) %>%
+    group_modify(~ tidy(cor.test(logFC, estimate)))
+
+
+  res = lapply( unique(df_join$Dataset), function(ds){
+    fit = with(df_join[df_join$Dataset == ds,], cor.test(logFC, estimate, method="spearman"))
+    data.frame(Dataset = ds, rho = fit$estimate, p.value = fit$p.value)
+  })
+  res = do.call(rbind, res)
+ 
+  tbl = res %>% 
+    kbl %>%
+    kable_styling(full_width = TRUE)
+
+  fig = df_join %>%
         mutate(label = paste(CellType, CellType1, sep=' / ')) %>%
         ggplot(aes(estimate, logFC, label=label)) +
           geom_vline(xintercept=0, linetype="dashed") +
@@ -116,7 +134,10 @@ make_plot = function(traitset){
           xlab("Estimate (PsychAD)")+
           ylab("Estimate") +
           geom_text_repel(box.padding=.75) +
+          geom_smooth(method="lm", color="red")
           facet_wrap(~Dataset, ncol=1, scales="free_y")
+
+  list(fig = fig, tbl = tbl)
 }
 ```
 
