@@ -140,7 +140,7 @@ make_plot = function(traitset){
 
 
 # AD
-```{r ad}
+```{r ad, eval=FALSE}
 traitset = c(MSSM = "c02xAD - c02xControl", RUSH = "c03xAD - c03xControl", Mathys = "ADdiag2types", SEAAD = 'none')
 res = make_plot( traitset ) 
 res$fig + ggtitle("AD")
@@ -149,7 +149,7 @@ res$fig + ggtitle("AD")
 
 ```{r dementia, fig.height=12}
 # Dementia (cogdx/CDR)
-traitset = c(MSSM = "r01x.L", RUSH = "r06x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
+traitset = c(MSSM = "r09x.L", RUSH = "r09x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
 res = make_plot( traitset ) 
 res$fig + ggtitle("Dementia")
 res$tbl
@@ -157,7 +157,7 @@ res$tbl
 
 # Braak
 ```{r braak, fig.height=12}
-traitset = c(MSSM = "r05x.L", RUSH = "r02x.L", Mathys = "braaksc", SEAAD = "Braak.value")
+traitset = c(MSSM = "r01x.L", RUSH = "r02x.L", Mathys = "braaksc", SEAAD = "Braak.value")
 res = make_plot( traitset ) 
 res$fig + ggtitle("Braak")
 res$tbl
