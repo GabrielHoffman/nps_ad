@@ -120,16 +120,17 @@ make_plot = function(traitset){
         ggplot(aes(estimate, logFC, label=label)) +
           geom_vline(xintercept=0, linetype="dashed") +
           geom_hline(yintercept=0, linetype="dashed") +
+
           geom_errorbar(aes(xmin=estimate - 1.96*std.error, xmax=estimate + 1.96*std.error), width=0, alpha = .4, color="grey70") +
           geom_errorbar(aes(ymin=logFC - 1.96*se, ymax=logFC + 1.96*se), width=0, alpha = .4, color="grey70") +
+          geom_text_repel(box.padding=.75) +         
+          geom_smooth(method="lm", color="red", se=FALSE) +
           geom_point() +
           theme_classic() +
           theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
           xlab("Estimate (PsychAD)")+
           ylab("Estimate") +
-          geom_text_repel(box.padding=.75) +
           coord_cartesian(expand=FALSE) +
-          geom_smooth(method="lm", color="red", se=FALSE) +
           facet_wrap(~Dataset, ncol=1, scales="free_y") 
 
   list(fig = fig, tbl = tbl)
