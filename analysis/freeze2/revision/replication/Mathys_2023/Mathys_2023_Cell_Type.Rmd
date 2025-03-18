@@ -21,7 +21,8 @@ vignette: >
 
 <!--- 
 
-cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/Mathys_2023
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision/replication/Mathys_2023/
 R
 
 rmarkdown::render("Mathys_2023_Cell_Type.Rmd");
