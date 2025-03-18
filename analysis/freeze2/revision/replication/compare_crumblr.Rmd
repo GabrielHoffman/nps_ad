@@ -88,8 +88,9 @@ make_plot = function(traitset){
   df_join1 = df %>%
     left_join(df_celltype %>% 
       filter(annotationLevel == "subclass"), by="CellType" ) %>%
-    rename(CellType1 = Mathys_major_cell_type) %>%
-    select(-SEA_AD_supertype, -Mathys_cell_type, -SEA_AD_subclass) %>%
+    rename(CellType1 = Mathys_cell_type) %>%
+    # rename(CellType1 = Mathys_major_cell_type) %>%
+    # select(-SEA_AD_supertype, -Mathys_cell_type, -SEA_AD_subclass) %>%
     inner_join(res.mathys %>% filter(trait == traitset["Mathys"]), by="CellType1") %>%
     mutate(se = logFC / stat) %>%
     mutate(Dataset = "Mathys")
