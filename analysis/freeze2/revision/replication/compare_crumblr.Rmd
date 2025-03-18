@@ -105,12 +105,6 @@ make_plot = function(traitset){
 
   df_join = bind_rows(df_join1, df_join2)
 
-
-  df_join %>%
-    group_by(Dataset) %>%
-    group_modify(~ tidy(cor.test(logFC, estimate)))
-
-
   res = lapply( unique(df_join$Dataset), function(ds){
     fit = with(df_join[df_join$Dataset == ds,], cor.test(logFC, estimate, method="spearman"))
     data.frame(Dataset = ds, rho = fit$estimate, p.value = fit$p.value)
