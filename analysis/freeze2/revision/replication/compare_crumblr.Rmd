@@ -138,14 +138,14 @@ make_plot = function(traitset){
 }
 ```
 
-
+<!----
 # AD
 ```{r ad, eval=FALSE}
 traitset = c(MSSM = "c02xAD - c02xControl", RUSH = "c03xAD - c03xControl", Mathys = "ADdiag2types", SEAAD = 'none')
 res = make_plot( traitset ) 
 res$fig + ggtitle("AD")
-
 ```
+--->
 
 ```{r dementia, fig.height=12}
 # Dementia (cogdx/CDR)
