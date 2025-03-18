@@ -20,8 +20,7 @@ params:
 <!---
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision/replication
 R
-system("git pull")
-rmarkdown::render("compare_crumblr.Rmd")
+system("git pull"); rmarkdown::render("compare_crumblr.Rmd")
 
 --->
 
@@ -48,7 +47,7 @@ library(broom)
 library(metafor)
 ```
 
-```{r load, fig.height=10}
+```{r load, fig.height=12}
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
 df_celltype = read_tsv( file ) %>%
             rename(CellType = PsychAD)
