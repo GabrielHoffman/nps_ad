@@ -147,8 +147,8 @@ res$fig + ggtitle("AD")
 ```
 --->
 
-```{r dementia, fig.height=12}
 # Dementia (cogdx/CDR)
+```{r dementia, fig.height=12}
 traitset = c(MSSM = "r09x.L", RUSH = "r09x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
 res = make_plot( traitset ) 
 res$fig + ggtitle("Dementia")
