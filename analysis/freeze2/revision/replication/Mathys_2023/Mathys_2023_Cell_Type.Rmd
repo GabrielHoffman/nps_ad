@@ -434,7 +434,7 @@ write_parquet(df_all, "Mathys_Cell_2023_Cell_Type_dreamlet.parquet")
 
 
 # crumblr
-```r
+```{r crumblr}
 library(crumblr)
 
 cobj = crumblr(cellCounts(pb))
