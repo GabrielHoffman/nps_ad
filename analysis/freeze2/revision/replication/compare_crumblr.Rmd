@@ -192,12 +192,17 @@ df_merge = rbind(df_merge, res$df_join)
 
 
 ```{r joint, eval=FALSE}
+library(lmerTest)
+library(RNOmni)
+
+df_merge %>%
+  select(CellType, estimate, logFC, Dataset, trait)
 
 # Test relationship between logFC for all traits jointly
 # using inverse normal transform
-fit = lmer(RankNorm(logFC1) ~ RankNorm(logFC2) + (1|trait), df)
-summary(fit)
+fit = lmer(RankNorm(logFC) ~ RankNorm(estimate) + Dataset + (1|trait), df_merge)
 
+coef(summary(fit))
 ```
 
 
