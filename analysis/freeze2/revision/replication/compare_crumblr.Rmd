@@ -115,11 +115,7 @@ make_plot = function(traitset){
       se = se,
       p.value = fit$p.value)
   })
-  res = do.call(rbind, res)
- 
-  tbl = res %>% 
-    kbl %>%
-    kable_styling(full_width = FALSE)
+  res = do.call(rbind, res)   
 
   fig = df_join %>%
         mutate(label = paste(CellType, CellType1, sep=' / ')) %>%
@@ -139,7 +135,7 @@ make_plot = function(traitset){
           coord_cartesian(expand=FALSE) +
           facet_wrap(~Dataset, ncol=1, scales="free_y") 
 
-  list(fig = fig, tbl = tbl)
+  list(fig = fig, res = res)
 }
 ```
 
@@ -157,14 +153,18 @@ res$fig + ggtitle("AD")
 traitset = c(MSSM = "r05x.L", RUSH = "r06x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
 res = make_plot( traitset ) 
 res$fig + ggtitle("Dementia")
-res$tbl
+res$res %>%
+  kbl %>%
+  kable_styling(full_width = FALSE)
 ```
 
 ```{r dementia2, fig.height=12}
 traitset = c(MSSM = "r09x.L", RUSH = "r09x.L", Mathys = "cogdx", SEAAD = "Cognitive.Status")
 res = make_plot( traitset ) 
 res$fig + ggtitle("Dementia")
-res$tbl
+res$res %>%
+  kbl %>%
+  kable_styling(full_width = FALSE)
 ```
 
 # Braak
@@ -172,7 +172,9 @@ res$tbl
 traitset = c(MSSM = "r01x.L", RUSH = "r02x.L", Mathys = "braaksc", SEAAD = "Braak.value")
 res = make_plot( traitset ) 
 res$fig + ggtitle("Braak")
-res$tbl
+res$res %>%
+  kbl %>%
+  kable_styling(full_width = FALSE)
 ```
 
 # CERAD
@@ -180,7 +182,9 @@ res$tbl
 traitset = c(MSSM = "r03x.L", RUSH = "r04x.L", Mathys = "CERAD", SEAAD = "CERAD.value")
 res = make_plot( traitset ) 
 res$fig + ggtitle("CERAD")
-res$tbl
+res$res %>%
+  kbl %>%
+  kable_styling(full_width = FALSE)
 ```
 
 
