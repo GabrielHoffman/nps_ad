@@ -195,8 +195,16 @@ df_merge = rbind(df_merge, res$df_join)
 library(lmerTest)
 library(RNOmni)
 
-df_merge %>%
+df_merge2 = df_merge %>%
   select(CellType, estimate, logFC, Dataset, trait)
+
+df_merge2$trait[df_merge2$trait == "Braak.value"] = "Braak" 
+df_merge2$trait[df_merge2$trait == "braaksc"] = "Braak" 
+df_merge2$trait[df_merge2$trait == "CERAD"] = "CERAD" 
+df_merge2$trait[df_merge2$trait == "CERAD.value"] = "CERAD" 
+df_merge2$trait[df_merge2$trait == "cogdx"] = "cogdx" 
+df_merge2$trait[df_merge2$trait == "Cognitive.Status"] = "cogdx" 
+table(df_merge2$trait)
 
 # Test relationship between logFC for all traits jointly
 # using inverse normal transform
