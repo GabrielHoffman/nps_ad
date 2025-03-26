@@ -191,7 +191,7 @@ df_merge = rbind(df_merge, res$df_join)
 ```
 
 
-```{r joint, eval=FALSE}
+```{r joint}
 library(lmerTest)
 library(RNOmni)
 
