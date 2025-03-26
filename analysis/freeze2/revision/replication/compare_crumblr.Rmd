@@ -135,7 +135,7 @@ make_plot = function(traitset){
           coord_cartesian(expand=FALSE) +
           facet_wrap(~Dataset, ncol=1, scales="free_y") 
 
-  list(fig = fig, res = res)
+  list(fig = fig, res = res, df_join = df_join)
 }
 ```
 
@@ -190,6 +190,10 @@ res$res %>%
 
 
 
+# Test relationship between logFC for all traits jointly
+# using inverse normal transform
+fit = lmer(RankNorm(logFC1) ~ RankNorm(logFC2) + (1|trait), df)
+summary(fit)
 
 
 
