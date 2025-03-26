@@ -156,6 +156,7 @@ res$fig + ggtitle("Dementia")
 res$res %>%
   kbl %>%
   kable_styling(full_width = FALSE)
+df_merge = res$df_join
 ```
 
 ```{r dementia2, fig.height=12}
@@ -175,6 +176,7 @@ res$fig + ggtitle("Braak")
 res$res %>%
   kbl %>%
   kable_styling(full_width = FALSE)
+df_merge = rbind(df_merge, res$df_join)
 ```
 
 # CERAD
@@ -185,17 +187,18 @@ res$fig + ggtitle("CERAD")
 res$res %>%
   kbl %>%
   kable_styling(full_width = FALSE)
+df_merge = rbind(df_merge, res$df_join)
 ```
 
 
-
+```{r joint, eval=FALSE}
 
 # Test relationship between logFC for all traits jointly
 # using inverse normal transform
 fit = lmer(RankNorm(logFC1) ~ RankNorm(logFC2) + (1|trait), df)
 summary(fit)
 
-
+```
 
 
 
