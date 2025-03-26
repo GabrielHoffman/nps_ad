@@ -108,7 +108,12 @@ make_plot = function(traitset){
 
   res = lapply( unique(df_join$Dataset), function(ds){
     fit = with(df_join[df_join$Dataset == ds,], cor.test(logFC, estimate, method="spearman"))
-    data.frame(Dataset = ds, rho = fit$estimate, p.value = fit$p.value)
+    n = nrow(df_join[df_join$Dataset == ds,])
+    se = sqrt((1-fit$estimate^2) / (n-2))
+    data.frame(Dataset = ds, 
+      rho = fit$estimate, 
+      se = se,
+      p.value = fit$p.value)
   })
   res = do.call(rbind, res)
  
