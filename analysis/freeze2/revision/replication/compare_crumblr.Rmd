@@ -209,7 +209,14 @@ table(df_merge2$trait)
 # Test relationship between logFC for all traits jointly
 # using inverse normal transform
 fit = lmer(RankNorm(logFC) ~ RankNorm(estimate) + Dataset + (1|trait), df_merge)
+coef(summary(fit))
 
+# Mathys
+fit = lmer(RankNorm(logFC) ~ RankNorm(estimate) + (1|trait), df_merge[df_merge$Dataset == "Mathys",])
+coef(summary(fit))
+
+# SEAAD
+fit = lmer(RankNorm(logFC) ~ RankNorm(estimate) + (1|trait), df_merge[df_merge$Dataset == "SEAAD",])
 coef(summary(fit))
 ```
 
