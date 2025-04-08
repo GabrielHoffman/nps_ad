@@ -100,7 +100,7 @@ ggplot(res, aes(C, power, color=delta)) +
   theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
   xlab("# of cells") + 
   ylim(0, 1) + 
-  geom_vline(xintercept=n_cells, color="black", linetype="dashed") + 
+  # geom_vline(xintercept=n_cells, color="black", linetype="dashed") + 
   geom_hline(yintercept=0.8, color="red", linetype="dashed") + 
   ylab("Power") +
   facet_wrap(~n1, ncol=4)
@@ -152,6 +152,7 @@ ggplot(res, aes(d, power, color=rsq_text)) +
   facet_wrap(~n1, ncol=4)
 ```
 
+# Empirical results
 ```{r read}
 # read topTable
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/topTable.tsv.gz"
@@ -206,8 +207,8 @@ fig1 = df_dim %>%
     theme_classic() +  
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
     scale_color_manual(values = cols) +
-    xlab("# genes") +
-    ylab("# individuals") +
+    xlab("# expressed genes") +
+    ylab("# individuals passing filters") +
     ggtitle("# DE genes") 
 
 fig2 = df_dim %>%
@@ -216,8 +217,8 @@ fig2 = df_dim %>%
     theme_classic() +  
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
     scale_color_manual(values = cols) +
-    xlab("# genes") +
-    ylab("# individuals") +
+    xlab("# expressed genes") +
+    ylab("# individuals passing filters") +
     ggtitle("Mean abs beta of DE genes") 
 plot_grid(fig1, fig2)
 
@@ -227,12 +228,11 @@ df_dim %>%
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
     scale_color_manual(values = cols) +
     geom_smooth(method="rlm", color="black", linetype="dashed") +
-    geom_point(aes(color=assay), size=2) +
+    geom_point(aes(color=assay), size=3) +
     scale_x_log10() +
     scale_y_log10() +
     xlab("# DE genes [log10 scale]") +
     ylab("Mean abs beta of DE genes [log10 scale]") 
-
 
 # Effect size of All genes
 df %>%
@@ -244,9 +244,6 @@ df %>%
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
     scale_color_manual(values = cols) +
     scale_fill_manual(values = cols) 
-
-
-
 
 # Effect size of significant genes
 df %>%
