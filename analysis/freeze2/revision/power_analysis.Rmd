@@ -200,7 +200,7 @@ df_dim = lapply(assayNames(fit), function(CT){
 rm(fit)
 ```
 
-```{r DE.plots, fig.height=7, fig.width=12}
+```{r DE.plots}
 fig1 = df_dim %>%
   ggplot(aes(nGenes, nIndivs, color=assay, size=nDE)) +
     geom_point() +  
@@ -234,7 +234,9 @@ df_dim %>%
     scale_y_log10() +
     xlab("# DE genes [log10 scale]") +
     ylab("Mean abs beta of DE genes [log10 scale]") 
+```
 
+```{r logFC, fig.height=6, fig.width=12}
 # Effect size of All genes
 fig1 = df %>%
   mutate(assay = factor(assay, ord)) %>%
