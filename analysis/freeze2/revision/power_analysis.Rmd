@@ -201,7 +201,7 @@ df_dim = lapply(assayNames(fit), function(CT){
 rm(fit)
 ```
 
-```{r DE.plots, fig.height=6}
+```{r DE.plots, fig.height=4}
 fig1 = df_dim %>%
   ggplot(aes(nGenes, nIndivs, color=assay, size=nDE)) +
     geom_point() +  
