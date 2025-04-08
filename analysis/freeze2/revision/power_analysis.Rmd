@@ -235,6 +235,9 @@ df_dim %>%
     scale_y_log10() +
     xlab("# DE genes [log10 scale]") +
     ylab("Mean abs beta of DE genes [log10 scale]") 
+
+df_dim %>%
+  summarize(rho = cor(log(nDE), log(mu), method="spearman"))
 ```
 
 ```{r logFC, fig.height=6, fig.width=12}
