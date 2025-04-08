@@ -154,11 +154,6 @@ ggplot(res, aes(d, power, color=rsq_text)) +
 
 # Empirical results
 ```{r read, fig.height=7, fig.width=12}
-# read topTable
-file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/topTable.tsv.gz"
-df = read_tsv(file)
-
-
 # Get Colors
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/230816_PsychAD_capstone_F1/230921_PsychAD_color_palette.csv"
 df_colors = read_csv(file) %>%
@@ -199,7 +194,13 @@ df_dim = lapply(assayNames(fit), function(CT){
           meanAbsBeta = meanAbsBeta)
   }) %>%
   bind_rows
+rm(fit)
+```
 
+```{r topTable}
+# read topTable
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/topTable.tsv.gz"
+df = read_tsv(file)
 
 fig1 = df_dim %>%
   ggplot(aes(nGenes, nIndivs, color=assay, size=nDE)) +
@@ -220,8 +221,8 @@ fig2 = df_dim %>%
     xlab("# expressed genes") +
     ylab("# individuals passing filters") +
     ggtitle("Mean abs beta of DE genes") 
-    
-plot_grid(fig1, fig2)
+
+plot_grid(fig1, fig2, labels=LETTERS[1:2])
 
 df_dim %>%
   ggplot(aes(nDE, mu)) +
@@ -257,7 +258,7 @@ fig2 = df %>%
     scale_color_manual(values = cols) +
     scale_x_continuous(expand=c(0,0), limits=c(0,NA)) 
     
-plot_grid(fig1, fig2)
+plot_grid(fig1, fig2, labels=LETTERS[1:2])
 ```
 
 
