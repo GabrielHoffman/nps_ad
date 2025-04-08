@@ -59,7 +59,7 @@ params = list(variable_type = variable_type,
 	variable= variable)
 
 echo ""  > jobs.sh
-for dataset in $(echo "HBCC" "MSSM" "RUSH", "FULL")
+for dataset in $(echo  "FULL") #"HBCC" "MSSM" "RUSH"
 do
 for AnnoLevel in $(echo "class" "subclass")
 do

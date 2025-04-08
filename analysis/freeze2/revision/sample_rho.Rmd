@@ -26,6 +26,11 @@ system("git pull")
 
 rmarkdown::render("sample_rho.Rmd")
 
+
+/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision/sample_rho_files/figure-html/plots-1.pdf
+
+/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision/sample_rho_files/figure-html/resample-1.pdf
+
 --->
 
 

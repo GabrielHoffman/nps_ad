@@ -1,0 +1,279 @@
+---
+title: "Power analysis"
+subtitle: 'Response'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+    self_contained: true
+params:
+  dataset: NULL
+  variable_type: NULL
+  ctst_key: NULL
+  AnnoLevel: NULL
+  SampleLevel: NULL
+---
+
+
+<!---
+
+
+cd /Users/gabrielhoffman/workspace/repos/nps_ad/analysis/freeze2/revision
+
+
+rmarkdown::render("power_analysis.Rmd")
+
+                     
+--->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r pkgs}
+library(tidyverse)
+library(ggplot2)
+library(cowplot)
+library(dreamlet)
+library(MASS)
+```
+
+
+# Power to identify differences in proportion
+```{r power1}
+library(pwr)
+n_samples = c(25, 50, 100, 200, 400, 500, 750)
+n_cells = 5000
+n_cells_max = 8000
+prop_diff = list(c(0.001, 0.002), c(0.0001, 0.0003), c(0.00001, 0.0001))
+n_cell_types = 5*15 #20*5
+
+getPower = function(n1, n2, p1, p2, C, n_tests){
+    sSq1 = p1*(1-p1)/ C
+    sSq2 = p2*(1-p2)/ C
+
+    sigSq = ((n1-1)*sSq1 + (n2-1)*sSq2) / (n1 + n2 -2)
+    d = abs(p1 - p2)/sqrt(sigSq)
+
+    pwr.t2n.test(n1=n1, n2=n2, d=d, sig.level = 0.05/n_tests )
+}
+
+getPowerCurve = function(n1, n2){
+    # for each pair of proportions
+    res = lapply(prop_diff, function(prop){
+        p1 = prop[1]
+        p2 = prop[2]
+
+        # for each cell number
+        res = lapply( seq(10, n_cells_max, by = 3), function(C){
+            res = getPower(n1, n2, p1, p2, C, n_cell_types)
+            data.frame(n1, n2, p1, p2, C, d = res$d, power= res$power, delta=paste0(p1*100, '% to ', p2*100, '%'))
+            })
+        do.call("rbind", res)
+        })
+    do.call("rbind", res)
+}
+
+# for each sample size
+res = lapply(n_samples, function(n){
+    getPowerCurve(n, n) 
+}) %>% 
+  bind_rows
+
+
+ggplot(res, aes(C, power, color=delta)) + 
+  geom_line(size=1.2) + 
+  theme_bw(15) + 
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+  xlab("# of cells") + 
+  ylim(0, 1) + 
+  geom_vline(xintercept=n_cells, color="black", linetype="dashed") + 
+  geom_hline(yintercept=0.8, color="red", linetype="dashed") + 
+  ylab("Power") +
+  facet_wrap(~n1, ncol=4)
+```
+
+# Power for differential expression
+```{r power2}
+n_genes = 10000
+n_tests = n_genes * n_cell_types
+
+getPower = function(n1, n2, d, n_tests, rsq){
+    # pwr.t2n.test(n1=n1, n2=n2, d=d, sig.level = 0.05/n_tests )
+
+    # Compute n_Eff, need to divide by 2 becaues n is the number in each set
+    N_eff = 4 / (1/n1 + 1/n2)
+    pwr.t.test(n=N_eff/2 * rsq, d=d, sig.level = 0.05/n_tests )
+}
+
+getPowerCurve = function(n1, n2, n_tests, rsq){
+    # for each cell number
+    res = lapply( seq(0, 2.5, length.out=1000), function(delta){
+        res = getPower(n1, n2, delta, n_tests, rsq)
+        data.frame(n1, n2, d = res$d, rsq, power= res$power)
+        })
+    do.call("rbind", res)
+}
+
+# for each sample size
+res = lapply(n_samples, function(n){
+    res = lapply( c( .7, .8, .9,1), function(rsq){
+        getPowerCurve(n, n, n_tests, rsq)
+    })
+    do.call("rbind", res)
+})
+res = do.call("rbind", res)
+
+res$rsq_text = with(res, factor(rsq, rev(sort(unique(rsq)))))
+res = res[order(res$rsq, decreasing=FALSE),]
+
+ggplot(res, aes(d, power, color=rsq_text)) + 
+  geom_line(size=1.2) + 
+  theme_bw(15) + 
+  theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+  ylim(0, 1) + 
+  xlab("Cohen's d")  + 
+  scale_color_discrete(bquote(R^2)) + 
+  geom_hline(yintercept=0.8, color="red", linetype="dashed") + 
+  ylab("Power")+
+  facet_wrap(~n1, ncol=4)
+```
+
+```{r read}
+# read topTable
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/topTable.tsv.gz"
+df = read_tsv(file)
+
+
+# Get Colors
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/230816_PsychAD_capstone_F1/230921_PsychAD_color_palette.csv"
+df_colors = read_csv(file) %>%
+        select(category, name, color_hex) %>%
+        filter(category %in% c("class", "subclass", "subtype")) %>%
+        mutate(Dataset = paste0(category, " / ", name)) %>%
+        select(Dataset, color = color_hex) %>%
+        bind_rows(tibble(Dataset = "bulk / bulk", color = "grey"))
+cols = df_colors$color
+names(cols) = df_colors$Dataset
+names(cols) = gsub(".* / ", "", names(cols))
+
+file = "/sc/arion/projects/CommonMind/hoffman/sceqtl/sumStats/assay_order.RDS"
+assay_order = readRDS( file )
+ord = assay_order %>%
+    grep("^subclass", .,value=TRUE) %>%
+    gsub("subclass / ", "", .)
+
+# read dreamlet fit
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/fit.RDS"
+fit = readRDS(file)
+
+df_dim = lapply(assayNames(fit), function(CT){
+
+  nDE = df %>% 
+    filter(adj.P.Val < 0.05, assay == CT) %>%
+    nrow
+
+  meanAbsBeta = df %>% 
+    filter(adj.P.Val < 0.05, assay == CT) %>%
+    summarize(mu = mean(abs(logFC)))  
+
+  resids = assay(fit, CT)$residuals
+  data.frame(assay = CT, 
+          nGenes = nrow(resids), 
+          nIndivs = ncol(resids),
+          nDE = nDE,
+          meanAbsBeta = meanAbsBeta)
+  }) %>%
+  bind_rows
+
+
+fig1 = df_dim %>%
+  ggplot(aes(nGenes, nIndivs, color=assay, size=nDE)) +
+    geom_point() +  
+    theme_classic() +  
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
+    scale_color_manual(values = cols) +
+    xlab("# genes") +
+    ylab("# individuals") +
+    ggtitle("# DE genes") 
+
+fig2 = df_dim %>%
+  ggplot(aes(nGenes, nIndivs, color=assay, size=mu)) +
+    geom_point() +  
+    theme_classic() +  
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
+    scale_color_manual(values = cols) +
+    xlab("# genes") +
+    ylab("# individuals") +
+    ggtitle("Mean abs beta of DE genes") 
+plot_grid(fig1, fig2)
+
+df_dim %>%
+  ggplot(aes(nDE, mu)) +
+    theme_classic() +  
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
+    scale_color_manual(values = cols) +
+    geom_smooth(method="rlm", color="black", linetype="dashed") +
+    geom_point(aes(color=assay), size=2) +
+    scale_x_log10() +
+    scale_y_log10() +
+    xlab("# DE genes [log10 scale]") +
+    ylab("Mean abs beta of DE genes [log10 scale]") 
+
+
+# Effect size of All genes
+df %>%
+  mutate(assay = factor(assay, ord)) %>%
+  ggplot(aes(logFC, assay, color=assay, fill=assay)) +
+    geom_vline(xintercept=0, color="black") +
+    geom_violin() +
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
+    scale_color_manual(values = cols) +
+    scale_fill_manual(values = cols) 
+
+
+
+
+# Effect size of significant genes
+df %>%
+  mutate(assay = factor(assay, ord)) %>%
+  filter(adj.P.Val < 0.05) %>%
+  ggplot(aes(abs(logFC), assay, color=assay)) +
+    geom_boxplot() +
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
+    scale_color_manual(values = cols) +
+    scale_x_continuous(expand=c(0,0), limits=c(0,NA)) 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

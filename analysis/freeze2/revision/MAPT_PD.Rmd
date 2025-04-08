@@ -67,7 +67,7 @@ echo $dataset $AnnoLevel
 ctst_key=${dataset}_${variable}_${SampleLevel}_${AnnoLevel}_PDinteraction
 OUTFILE=/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/${ctst_key}/${ctst_key}
 mkdir -p $OUTFILE
-echo "rmarkdown::render(\"$DIR/MAPT.Rmd\", output_file = \"$OUTFILE\", 
+echo "rmarkdown::render(\"$DIR/MAPT_PD.Rmd\", output_file = \"$OUTFILE\", 
 params=list(dataset = \"$dataset\", variable_type = \"$variable_type\", AnnoLevel = \"$AnnoLevel\", SampleLevel = \"$SampleLevel\", ctst_key = \"$ctst_key\"))" >>  jobs.sh
 done
 done
