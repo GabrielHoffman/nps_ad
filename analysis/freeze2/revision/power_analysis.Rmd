@@ -201,7 +201,7 @@ df_dim = lapply(assayNames(fit), function(CT){
 rm(fit)
 ```
 
-```{r DE.plots, fig.height=4}
+```{r DE.plots, fig.height=4, fig.width=8}
 fig1 = df_dim %>%
   ggplot(aes(nGenes, nIndivs, color=assay, size=nDE)) +
     geom_point() +  
@@ -227,7 +227,9 @@ fig2 = df_dim %>%
     ggtitle("Mean abs beta of DE genes") 
 
 plot_grid(fig1, fig2, labels=LETTERS[1:2])
+```
 
+```{r DE.plots2, fig.height=4}
 df_dim %>%
   ggplot(aes(nDE, mu)) +
     theme_classic() +  
