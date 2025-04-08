@@ -175,14 +175,18 @@ ord = assay_order %>%
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/fit.RDS"
 fit = readRDS(file)
 
+# read topTable
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/topTable.tsv.gz"
+df = read_tsv(file)
+
 df_dim = lapply(assayNames(fit), function(CT){
 
   nDE = df %>% 
-    dplyr::filter(adj.P.Val < 0.05, assay == CT) %>%
+    filter(adj.P.Val < 0.05, assay == CT) %>%
     nrow
 
   meanAbsBeta = df %>% 
-    dplyr::filter(adj.P.Val < 0.05, assay == CT) %>%
+    filter(adj.P.Val < 0.05, assay == CT) %>%
     summarize(mu = mean(abs(logFC)))  
 
   resids = assay(fit, CT)$residuals
@@ -196,11 +200,7 @@ df_dim = lapply(assayNames(fit), function(CT){
 rm(fit)
 ```
 
-```{r topTable, fig.height=7, fig.width=12}
-# read topTable
-file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/topTable.tsv.gz"
-df = read_tsv(file)
-
+```{r DE.plots, fig.height=7, fig.width=12}
 fig1 = df_dim %>%
   ggplot(aes(nGenes, nIndivs, color=assay, size=nDE)) +
     geom_point() +  
