@@ -178,11 +178,11 @@ fit = readRDS(file)
 df_dim = lapply(assayNames(fit), function(CT){
 
   nDE = df %>% 
-    filter(adj.P.Val < 0.05, assay == CT) %>%
+    dplyr::filter(adj.P.Val < 0.05, assay == CT) %>%
     nrow
 
   meanAbsBeta = df %>% 
-    filter(adj.P.Val < 0.05, assay == CT) %>%
+    dplyr::filter(adj.P.Val < 0.05, assay == CT) %>%
     summarize(mu = mean(abs(logFC)))  
 
   resids = assay(fit, CT)$residuals
