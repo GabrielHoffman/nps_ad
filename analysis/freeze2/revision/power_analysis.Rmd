@@ -206,7 +206,9 @@ fig1 = df_dim %>%
   ggplot(aes(nGenes, nIndivs, color=assay, size=nDE)) +
     geom_point() +  
     theme_classic() +  
-    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="right") +
+    guides(color = "none") +
+    scale_size(name = "# DE genes") +
     scale_color_manual(values = cols) +
     xlab("# expressed genes") +
     ylab("# individuals passing filters") +
@@ -217,6 +219,8 @@ fig2 = df_dim %>%
     geom_point() +  
     theme_classic() +  
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="right") +
+    guides(color = "none") +
+    scale_size(name = "mean|logFC|") +
     scale_color_manual(values = cols) +
     xlab("# expressed genes") +
     ylab("# individuals passing filters") +
