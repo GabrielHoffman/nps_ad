@@ -216,7 +216,7 @@ fig2 = df_dim %>%
   ggplot(aes(nGenes, nIndivs, color=assay, size=mu)) +
     geom_point() +  
     theme_classic() +  
-    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="right") +
     scale_color_manual(values = cols) +
     xlab("# expressed genes") +
     ylab("# individuals passing filters") +

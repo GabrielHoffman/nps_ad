@@ -1,0 +1,75 @@
+---
+title: "MA plot for variance partitioning"
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+output: 
+  html_document:
+    toc: true
+    smart: true
+    self_contained: true
+params:
+  dataset: NULL
+  variable_type: NULL
+  ctst_key: NULL
+  AnnoLevel: NULL
+  SampleLevel: NULL
+---
+
+
+<!---
+
+
+# cd /Users/gabrielhoffman/workspace/repos/nps_ad/analysis/freeze2/revision
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision
+
+system("git pull")
+rmarkdown::render("vp.Rmd")
+
+                     
+--->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  package.startup.message = FALSE,
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+```{r pkgs}
+library(tidyverse)
+library(ggplot2)
+library(cowplot)
+library(dreamlet)
+library(MASS)
+```
+
+```{r stackedAssay, eval=FALSE}
+library(dreamlet)
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/231219_PsychAD_capstone_F3/240404_PsychAD_F3_FULL_dx_Channel.pb.rds"
+pb = readRDS(file)
+
+includeAssays = grep("^EN", assayNames(pb), value=TRUE)
+
+pb.stack <- stackAssays(pb, assays=includeAssays)
+
+table(pb.stack$stackedAssay)
+
+form <- ~ (1|stackedAssay) + (1|Channel) + (1|SubID) + (1|Source) + (1|Ethnicity) + scale(Age) + (1|Sex) + scale(PMI) + log(n_genes) + percent_mito + mito_genes + ribo_genes + mito_ribo
+
+bpparam = SnowParam(8)
+
+res.proc <- processAssays(pb.stack, form, BPPARAM=bpparam)
+
+vp <- fitVarPart(res.proc, form, BPPARAM=bpparam)
+
+fig = plotVarPart( sortCols(vp))
+
+ggsave(fig, file="~/www/test.png", height=7, width=7)
