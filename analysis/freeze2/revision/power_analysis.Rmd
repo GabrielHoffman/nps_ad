@@ -20,9 +20,11 @@ params:
 <!---
 
 
-cd /Users/gabrielhoffman/workspace/repos/nps_ad/analysis/freeze2/revision
+# cd /Users/gabrielhoffman/workspace/repos/nps_ad/analysis/freeze2/revision
 
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision
 
+system("git pull")
 rmarkdown::render("power_analysis.Rmd")
 
                      
@@ -159,10 +161,10 @@ df = read_tsv(file)
 # Get Colors
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/230816_PsychAD_capstone_F1/230921_PsychAD_color_palette.csv"
 df_colors = read_csv(file) %>%
-        select(category, name, color_hex) %>%
+        dplyr::select(category, name, color_hex) %>%
         filter(category %in% c("class", "subclass", "subtype")) %>%
         mutate(Dataset = paste0(category, " / ", name)) %>%
-        select(Dataset, color = color_hex) %>%
+       dplyr::select(Dataset, color = color_hex) %>%
         bind_rows(tibble(Dataset = "bulk / bulk", color = "grey"))
 cols = df_colors$color
 names(cols) = df_colors$Dataset
