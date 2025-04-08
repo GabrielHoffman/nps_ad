@@ -48,7 +48,6 @@ library(tidyverse)
 library(ggplot2)
 library(cowplot)
 library(dreamlet)
-library(MASS)
 ```
 
 
@@ -197,7 +196,7 @@ df_dim = lapply(assayNames(fit), function(CT){
 rm(fit)
 ```
 
-```{r topTable}
+```{r topTable, fig.height=7, fig.width=12}
 # read topTable
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/subclass/topTable.tsv.gz"
 df = read_tsv(file)
@@ -229,7 +228,7 @@ df_dim %>%
     theme_classic() +  
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5), legend.position="none") +
     scale_color_manual(values = cols) +
-    geom_smooth(method="rlm", color="black", linetype="dashed") +
+    geom_smooth(method="MASS::rlm", color="black", linetype="dashed") +
     geom_point(aes(color=assay), size=3) +
     scale_x_log10() +
     scale_y_log10() +
