@@ -53,7 +53,7 @@ library(MASS)
 
 
 # Power to identify differences in proportion
-```{r power1}
+```{r power1, fig.height=7, fig.width=12}
 library(pwr)
 n_samples = c(25, 50, 100, 200, 400, 500, 750)
 n_cells = 5000
@@ -107,7 +107,7 @@ ggplot(res, aes(C, power, color=delta)) +
 ```
 
 # Power for differential expression
-```{r power2}
+```{r power2, fig.height=7, fig.width=12}
 n_genes = 10000
 n_tests = n_genes * n_cell_types
 
