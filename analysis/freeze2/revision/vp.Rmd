@@ -45,14 +45,14 @@ knitr::opts_chunk$set(
 ```{r pkgs}
 library(tidyverse)
 library(ggplot2)
+library(ggpointdensity)
 library(cowplot)
 library(dreamlet)
 library(MASS)
+library(scattermore)
 ```
 
 ```{r stackedAssay, eval=FALSE}
-library(dreamlet)
-
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/231219_PsychAD_capstone_F3/240404_PsychAD_F3_FULL_dx_Channel.pb.rds"
 pb = readRDS(file)
 
@@ -73,3 +73,82 @@ vp <- fitVarPart(res.proc, form, BPPARAM=bpparam)
 fig = plotVarPart( sortCols(vp))
 
 ggsave(fig, file="~/www/test.png", height=7, width=7)
+```
+
+
+```{r getvp}
+files = dir("/sc/arion/projects/psychAD/mikaela/VarPartStackedAssayResults/", full.names=TRUE)
+df = lapply(files, function(file){
+  read_csv(file) %>%
+      mutate(Class = gsub("vp_(\\S+).csv", "\\1", basename(file)))
+}) %>%
+  bind_rows
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/class/fit.RDS"
+fit = readRDS(file)
+
+df_map = matrix(c("EN", "EN",
+        "IN", "IN",
+        "Glial", "Astro",
+        "Glial", "OPC",
+        "Glial", "Oligo",
+        "Immune", "Immune",
+        "Vas", "Endo",
+        "Vas", "Mural"), ncol=2, byrow=TRUE) %>%
+  as.data.frame
+colnames(df_map) = c("CellType", "class")
+
+
+df2 = lapply( unique(df_map$CellType), function(CT){
+
+  cellassays = df_map %>% 
+    filter(CellType == CT) %>%
+    pull(class)
+
+  tab = topTable(fit, coef='c02xAD - c02xControl', number=Inf) %>%
+          as.data.frame %>%
+          as_tibble %>%
+          filter(assay %in% cellassays) %>%
+          rename(ID = "gene")
+
+   inner_join( df %>% filter(Class == CT),
+                  tab,
+                  by = "gene") %>%
+    mutate(CellType = CT)
+}) %>%
+  bind_rows
+
+
+fig = df2 %>%
+  rename(stackedAssay = "CellTypes") %>%
+  dplyr::select(AveExpr, gene, SubID, CellTypes, Residuals, CellType) %>%
+  pivot_longer(!AveExpr & !gene & ! CellType) %>%
+  mutate(name = factor(name, c("SubID", "CellTypes", "Residuals"))) %>%
+  ggplot(aes(AveExpr, 100*value )) +
+    # geom_pointdensity(adjust=4, size=.1) +
+    # geom_hex() +
+    geom_scattermore(pointsize=2) +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    geom_smooth(method="rlm", se=FALSE, color="red") +
+    facet_grid(name ~ CellType) +
+    scale_fill_viridis() +
+    scale_y_continuous(limits=c(0,100), expand=c(.05, 0)) +
+    ylab("Variance explained (%)") +
+    xlab("Average expression (log2 CPM)")
+
+ggsave(fig, file="~/www/test.pdf", height=5, width=12)
+ggsave(fig, file="~/www/test.png", height=5, width=12)
+
+
+
+```
+
+
+
+
+
+
+
+
+
