@@ -120,7 +120,7 @@ df2 = lapply( unique(df_map$CellType), function(CT){
   bind_rows
 
 
-fig = df2 %>%
+df2 %>%
   rename(stackedAssay = "CellTypes") %>%
   dplyr::select(AveExpr, gene, SubID, CellTypes, Residuals, CellType) %>%
   pivot_longer(!AveExpr & !gene & ! CellType) %>%
@@ -137,16 +137,16 @@ fig = df2 %>%
     scale_y_continuous(limits=c(0,100), expand=c(.05, 0)) +
     ylab("Variance explained (%)") +
     xlab("Average expression (log2 CPM)")
+```
 
-ggsave(fig, file="~/www/test.pdf", height=5, width=12)
-ggsave(fig, file="~/www/test.png", height=5, width=12)
+
+```{r merged}
+
+
 
 
 
 ```
-
-
-
 
 
 
