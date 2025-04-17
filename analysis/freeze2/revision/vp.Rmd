@@ -50,6 +50,7 @@ library(cowplot)
 library(dreamlet)
 library(MASS)
 library(scattermore)
+library(viridis)
 ```
 
 ```{r stackedAssay, eval=FALSE}
