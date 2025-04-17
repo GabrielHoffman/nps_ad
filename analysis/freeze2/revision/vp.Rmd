@@ -71,9 +71,7 @@ res.proc <- processAssays(pb.stack, form, BPPARAM=bpparam)
 
 vp <- fitVarPart(res.proc, form, BPPARAM=bpparam)
 
-fig = plotVarPart( sortCols(vp))
-
-ggsave(fig, file="~/www/test.png", height=7, width=7)
+plotVarPart( sortCols(vp))
 ```
 
 
@@ -140,12 +138,30 @@ df2 %>%
 ```
 
 
-```{r merged}
+```{r merged, fig.height=9}
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/231219_PsychAD_capstone_F3/240404_PsychAD_F3_FULL_dx_Channel_vp.csv"
+df_vp = read_csv(file) %>%
+        dplyr::select(-assay)
 
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/bulk/fit.RDS"
+fit = readRDS(file)
 
-
-
-
+topTable(fit, coef = "c02xAD - c02xControl", number=Inf) %>%
+  as_tibble %>%
+  dplyr::select(ID, AveExpr) %>%
+  dplyr::rename(gene = ID) %>%
+  inner_join(df_vp, by="gene") %>%  
+  pivot_longer(!AveExpr & !gene) %>%
+    dplyr::filter(name %in% c("BrainDonor", "CellType", "Residuals")) %>%
+  ggplot(aes(AveExpr, 100*value)) +    
+    geom_scattermore(pointsize=2) +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    geom_smooth(method="rlm", se=FALSE, color="red") +
+    facet_wrap(~ name, ncol=1)  +
+    scale_y_continuous(limits=c(0,100), expand=c(.05, 0)) +
+    ylab("Variance explained (%)") +
+    xlab("Average expression (log2 CPM)")
 ```
 
 
