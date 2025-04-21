@@ -75,6 +75,7 @@ plotVarPart( sortCols(vp))
 ```
 
 
+# 5 Cell type
 ```{r getvp}
 files = dir("/sc/arion/projects/psychAD/mikaela/VarPartStackedAssayResults/", full.names=TRUE)
 df = lapply(files, function(file){
@@ -108,7 +109,9 @@ df2 = lapply( unique(df_map$CellType), function(CT){
           as.data.frame %>%
           as_tibble %>%
           filter(assay %in% cellassays) %>%
-          rename(ID = "gene")
+          rename(ID = "gene") %>%          
+          group_by(gene) %>%
+          summarize(AveExpr = log2(sum(2^AveExpr)))
 
    inner_join( df %>% filter(Class == CT),
                   tab,
@@ -165,7 +168,69 @@ topTable(fit, coef = "c02xAD - c02xControl", number=Inf) %>%
 ```
 
 
+# 3 cell types
+```{r 3_cell_types, fig.height=9}
+files = c("/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/231219_PsychAD_capstone_F3/varPartSuperclass/250417_PsychAD_F3_FULL_dx_Channel_vp.EN.csv", "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/231219_PsychAD_capstone_F3/varPartSuperclass/250417_PsychAD_F3_FULL_dx_Channel_vp.IN.csv", "/sc/arion/projects/psychAD/NPS-AD/freeze2_proc/231219_PsychAD_capstone_F3/varPartSuperclass/250417_PsychAD_F3_FULL_dx_Channel_vp.NonNeuron.csv")
+
+df = lapply(files, function(file){
+  read_csv(file) %>%
+      mutate(Class = gsub("^.(\\S+)\\.(\\S+).csv", "\\2", basename(file)))
+}) %>%
+  bind_rows
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/MSSM/MSSM_AD__controls/SubID/class/fit.RDS"
+fit = readRDS(file)
 
 
+df_map = matrix(c("EN", "EN",
+                  "IN", "IN",
+                  "NonNeuron", "Astro",
+                  "NonNeuron", "OPC",
+                  "NonNeuron", "Oligo",
+                  "NonNeuron", "Immune",
+                  "NonNeuron", "Endo",
+                  "NonNeuron", "Mural"), ncol=2, byrow=TRUE) %>%
+  as.data.frame
+colnames(df_map) = c("CellType", "class")
 
 
+df2 = lapply( unique(df_map$CellType), function(CT){
+
+  cellassays = df_map %>% 
+    filter(CellType == CT) %>%
+    pull(class)
+
+  tab = topTable(fit, coef='c02xAD - c02xControl', number=Inf) %>%
+          as.data.frame %>%
+          as_tibble %>%
+          filter(assay %in% cellassays) %>%
+          rename(ID = "gene") %>%
+          group_by(gene) %>%
+          summarize(AveExpr = log2(sum(2^AveExpr)))
+
+   inner_join( df %>% filter(Class == CT),
+                  tab,
+                  by = "gene") %>%
+    mutate(CellTypes = CT) 
+
+}) %>%
+  bind_rows
+
+
+df2 %>%
+  dplyr::select(AveExpr, gene, BrainDonor, CellTypes, Residuals, CellType) %>%
+  pivot_longer(!AveExpr & !gene & ! CellTypes) %>%
+  mutate(name = factor(name, c("BrainDonor", "CellType", "Residuals"))) %>%
+  ggplot(aes(AveExpr, 100*value )) +
+    # geom_pointdensity(adjust=4, size=.1) +
+    # geom_hex() +
+    geom_scattermore(pointsize=2) +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    geom_smooth(method="rlm", se=FALSE, color="red") +
+    facet_grid(name ~ CellTypes) +
+    scale_fill_viridis() +
+    scale_y_continuous(limits=c(0,100), expand=c(.05, 0)) +
+    ylab("Variance explained (%)") +
+    xlab("Average expression (log2 CPM)")
+```    
