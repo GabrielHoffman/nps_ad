@@ -30,7 +30,7 @@ system("git pull")
 rmarkdown::render("Mathys_2023_Cell_Type_NPS.Rmd");
 
 
-# https://hoffmg01.u.hpc.mssm.edu/dreamlet_analysis/Mathys_2023/Mathys_2023_Cell_Type_NPS.html
+# https://hoffmg01.dmz.hpc.mssm.edu/dreamlet_analysis/Mathys_2023/Mathys_2023_Cell_Type_NPS.html
 
 
 --->
@@ -101,7 +101,7 @@ saveRDS(info, file="info_Mathys.RDS")
 ```
 
 
-```{r crumblr}
+```{r crumblr, fig.height=12}
 info = readRDS("info_Mathys.RDS")
 df_cellCounts = readRDS("cellCounts_Mathys.RDS")
 
@@ -138,9 +138,10 @@ res.mathys %>%
     scale_fill_gradient2(low="blue", mid="white", high="red") +
     ylab("") +
     ggtitle("Mathys, et al. 2023")
+```
 
 
-
+```{r plot2, fig.height=6}
 res.mathys %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
@@ -152,8 +153,9 @@ res.mathys %>%
     theme(plot.title = element_text(hjust = 0.5)) +
     ggtitle("Mathys, et al. 2023") +
     geom_vline(xintercept=0, color="grey50", linetype="dashed")
+```
 
-
+```{r plot3, fig.height=6}
 res.mathys %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
