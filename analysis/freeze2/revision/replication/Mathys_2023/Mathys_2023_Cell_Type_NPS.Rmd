@@ -25,6 +25,8 @@ vignette: >
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision/replication/Mathys_2023/
 R
 
+system("git pull")
+
 rmarkdown::render("Mathys_2023_Cell_Type_NPS.Rmd");
 
 
@@ -54,12 +56,13 @@ library(zellkonverter)
 library(DelayedArray)
 library(dreamlet)
 library(cowplot)
+library(ggrepel)
 library(ggplot2)
 library(tidyverse)
 library(crumblr)
 ```
 
-```{r Mathys}
+```{r Mathys, eval=FALSE}
 df_pheno = read_csv("rosmap_neuropsych_1.csv")
 
 # Mathys
@@ -125,15 +128,50 @@ res.mathys = lapply(ctrst, function(variable){
 
 
 res.mathys %>%
-  ggplot(aes(Coef, Cell_Type1, fill=logFC)) +
+  mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
+  # filter(Coef == "c306x") %>%
+  ggplot(aes(Coef, CellType1, fill=logFC)) +
     geom_tile() +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
     coord_equal() +
-    scale_fill_gradient2(low="blue", mid="white", high="red")
+    scale_fill_gradient2(low="blue", mid="white", high="red") +
+    ylab("") +
+    ggtitle("Mathys, et al. 2023")
 
 
 
+res.mathys %>%
+  mutate(se = logFC / t) %>%
+  mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
+  filter(Coef == "c306x") %>%
+  ggplot(aes(logFC, CellType1)) +
+    geom_point() +
+    geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    ggtitle("Mathys, et al. 2023") +
+    geom_vline(xintercept=0, color="grey50", linetype="dashed")
+
+
+res.mathys %>%
+  mutate(se = logFC / t) %>%
+  mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
+  filter(Coef == "c306x") %>%
+  filter(grepl("Exc", CellType1)) %>%
+  filter(grepl("L6|L5", CellType1)) %>%
+  ggplot(aes(logFC, CellType1)) +
+    geom_point() +
+    geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+    ggtitle("Mathys, et al. 2023") +
+    geom_vline(xintercept=0, color="grey50", linetype="dashed")
+```
+
+
+
+```{r stash, eval=FALSE}
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
 df_celltype = read_tsv( file ) %>%
             rename(CellType = PsychAD)
@@ -162,8 +200,23 @@ with(df_join1, cor.test(logFC.x, logFC.y, method="sp"))
 
 
 df_join1 %>%
-  ggplot(aes(logFC.x, logFC.y)) +
-    geom_point()   
+  ggplot(aes(logFC.x, logFC.y, label=CellType1)) +
+    geom_errorbar(aes(
+      ymin = logFC.y - 1.96*se.y,
+      ymax = logFC.y + 1.96*se.y),
+      width=0, color="grey50", alpha=.4) + 
+    geom_errorbar(aes(
+      xmin = logFC.x - 1.96*se.x,
+      xmax = logFC.x + 1.96*se.x),
+      width=0, color="grey50", alpha=.4) + 
+    geom_point() +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    geom_text_repel() +
+    xlab("logFC (PsychAD)") +
+    xlab("logFC (Mathys)")
+
+```
 
 
 
@@ -174,9 +227,7 @@ df_join1 %>%
 
 
 
-
-
-
+# in PsychAD
 
 ```{r psychAD, eval=FALSE}
 df_pheno = read_csv("rosmap_neuropsych_1.csv")
@@ -266,7 +317,7 @@ pb2 = pb[,idx]
 
 
 # keep shared IDs
-ids = intersect(df_pheno$projid, colnames(pb2))
+ids = intersect(df_pheno$individualID, colnames(pb2))
 df_pheno_sub = df_pheno[df_pheno$individualID %in% ids,]
 pb_sub = pb[,colnames(pb) %in% ids,]
 
