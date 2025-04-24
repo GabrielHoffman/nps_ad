@@ -228,8 +228,7 @@ res.pad %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   filter(Coef == "c306x") %>%
-  filter(grepl("Exc", CellType1)) %>%
-  filter(grepl("L6|L5", CellType1)) %>%
+  filter(grepl("EN", CellType1)) %>%
   ggplot(aes(logFC, CellType1)) +
     geom_point() +
     geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
