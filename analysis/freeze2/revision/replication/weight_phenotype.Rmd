@@ -1,0 +1,307 @@
+---
+title: "Single-cell atlas reveals correlates of high cognitive function, dementia, and resilience to Alzheimer's disease pathology"
+subtitle: 'NPS Symptoms: replicate of weight phenotype'
+author: "Developed by [Gabriel Hoffman](http://gabrielhoffman.github.io/)"
+date: "Run on `r Sys.time()`"
+documentclass: article
+output: 
+  html_document:
+    toc: true
+    smart: false
+vignette: >
+  %\VignetteIndexEntry{Single-cell atlas reveals correlates of high cognitive function, dementia, and resilience to Alzheimers disease pathology}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+
+
+
+<!--- 
+
+
+cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision/replication/
+R
+
+system("git pull")
+
+rmarkdown::render("weight_phenotype.Rmd");
+
+
+# https://hoffmg01.dmz.hpc.mssm.edu/dreamlet_analysis/weight_phenotype.html
+
+
+--->
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error = FALSE,
+  tidy = FALSE,
+  dev = c("png", "pdf"),
+  cache = TRUE,
+  cache.lazy = FALSE)
+```
+
+# Load packages
+```{r load.packages, cache=FALSE}
+library(SingleCellExperiment)
+library(zellkonverter)
+library(DelayedArray)
+library(dreamlet)
+library(cowplot)
+library(ggrepel)
+library(ggplot2)
+library(tidyverse)
+library(crumblr)
+```
+
+
+# in PsychAD
+
+```{r psychAD}
+df_pheno = read_csv("Mathys_2023/rosmap_neuropsych_1.csv")
+
+# PsychAD
+#########
+params = list(dataset = "FULL", AnnoLevel = "subclass", SampleLevel="SubID", variable_type="CAT", ctst_key ="AD_strict__AD_resilient__controls" )
+path = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/pseudobulk/")
+pattern = paste0(toupper(params$dataset), "_2024-02.*_PB_", params$SampleLevel, "_", params$AnnoLevel, ".RDS")
+file = dir(path, pattern=pattern, full.names=TRUE)
+
+pb = readRDS( file )
+
+
+# Construct regression contrasts
+
+covariates_base = c("scale(Age)", "as.numeric(Sex)")#, "scale(PMI)", "TechPC1", "TechPC2", "TechPC3")  # "log(n_genes)"
+if( params$SampleLevel == "Channel" ){
+  covariates_base = c(covariates_base, "(1|SubID)")
+}
+
+# Load CONTRASTS and metadata
+# synapse: syn51114763
+load("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/metadata/contrasts_for_dreamlet.Rdata")
+
+# PRS values
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/prs.labels"
+df_prs = read.table(file)$V1
+
+# append to CONTRASTS[["NUM"]]
+# example: CONTRASTS[["NUM"]][['MSSM_Cognitive_and_Tau_Resilience']]
+prs.lst = lapply(df_prs, function(x){
+  list(name = x, contrasts = NA, variable = paste0('scale(', x, ')'), covariates_incl='Brain_bank', covariates_excl = NULL)
+  })
+names(prs.lst) = df_prs
+
+prs.lst = lapply( c("HBCC", "MSSM", "RUSH", "FULL"), function(cohort){
+
+  tmp = prs.lst
+  names(tmp) = paste0(cohort, '_', names(tmp))
+  tmp
+  })
+prs.lst = unlist(prs.lst, recursive=FALSE)
+
+CONTRASTS[["NUM"]] = append(CONTRASTS[["NUM"]], prs.lst)
+
+suffix2 = with(params, gsub(paste0(dataset, "/", dataset, "/"), paste0(dataset, "/"), paste0(toupper(dataset), "/", ctst_key, "/", SampleLevel, "/", AnnoLevel)))
+
+outpath = paste0("/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/", suffix2)
+
+ctr = CONTRASTS[[params$variable_type]][[params$ctst_key]]
+
+# Remove contrasts that fail
+# if( ctr$variable == "c07x"){
+#   ctr$contrasts = ctr$contrasts[!grepl("c07xBD", ctr$contrasts)]
+# }
+
+# make this a random effect
+ctr$covariates_incl = gsub("Brain_bank", "(1|Brain_bank)", ctr$covariates_incl)
+
+
+# combine base covariance with testing variables
+covariates = setdiff(union(covariates_base, ctr$covariates_incl), ctr$covariates_excl)
+
+# user-specified formula
+if( any(is.null(ctr$contrasts)) || any(is.na(ctr$contrasts)) ){
+  form = paste0("~ ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+  form.vp = form
+}else{
+  form = paste0("~ 0 + ", ctr$variable, " + ", paste0(covariates, collapse=" + "))
+  form.vp = paste0("~ (1|", ctr$variable, ") + ", paste0(covariates, collapse=" + "))
+}
+form = as.formula(form)
+form.vp = as.formula(form.vp)
+
+if( params$SampleLevel == "Channel"){
+  # merge subject-level metadata with colData(res.proc)
+  metadata_sub = metadata[metadata$SubID %in% colData(pb)$SubID,]
+  idx = match( colData(pb)$SubID, metadata_sub$SubID)
+}else{  
+  metadata_sub = metadata[metadata$SubID %in% rownames(colData(pb)),]
+  idx = match( rownames(colData(pb)), metadata_sub$SubID)
+}
+
+pb2 = pb[,idx]
+
+# keep shared IDs
+ids = intersect(paste0("R", df_pheno$projid), colnames(pb2))
+df_pheno_sub = df_pheno[paste0("R", df_pheno$projid) %in% ids,]
+pb_sub = pb[,colnames(pb) %in% ids,]
+
+i = match(ids, colnames(pb_sub))
+pb_sub = pb_sub[,i]
+
+i = match(ids, paste0("R", df_pheno_sub$projid))
+df_pheno_sub = df_pheno_sub[i,]
+
+identical(paste0("R", df_pheno_sub$projid), colnames(pb_sub))
+
+
+info = cbind(colData(pb_sub), df_pheno_sub)
+
+saveRDS(cellCounts(pb_sub), file="cellCounts_PsychAD.RDS")
+saveRDS(info, file="info_PsychAD.RDS")
+```
+
+```{r crumblr, fig.height=12}
+info = readRDS("info_Mathys.RDS")
+df_cellCounts = readRDS("cellCounts_Mathys.RDS")
+
+cobj = crumblr(df_cellCounts)
+
+form.base = ~ age + sex + Study + pmi 
+
+ctrst = grep("c30", colnames(info), value=TRUE)
+
+res.mathys = lapply(ctrst, function(variable){
+
+  form = update(form.base, paste(" ~ . + ", variable))
+
+  fit = dream( cobj, form, info)
+  fit = eBayes(fit)
+
+  coef = last(colnames(coef(fit)))
+  topTable(fit, coef=coef, number=Inf) %>%
+    mutate(Coef = coef) %>%
+    rownames_to_column("CellType1")
+}) %>%
+  bind_rows %>%
+  as_tibble
+
+
+res.mathys %>%
+  mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
+  # filter(Coef == "c306x") %>%
+  ggplot(aes(Coef, CellType1, fill=logFC)) +
+    geom_tile() +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    coord_equal() +
+    scale_fill_gradient2(low="blue", mid="white", high="red") +
+    ylab("") +
+    ggtitle("Mathys, et al. 2023")
+```
+
+
+```{r plot2, fig.height=9}
+res.mathys %>%
+  mutate(se = logFC / t) %>%
+  mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
+  filter(Coef == "c306x") %>%
+  ggplot(aes(logFC, CellType1)) +
+    geom_point() +
+    geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    ggtitle("Mathys, et al. 2023") +
+    geom_vline(xintercept=0, color="grey50", linetype="dashed")
+```
+
+```{r plot3, fig.height=4}
+res.mathys %>%
+  mutate(se = logFC / t) %>%
+  mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
+  filter(Coef == "c306x") %>%
+  filter(grepl("Exc", CellType1)) %>%
+  filter(grepl("L6|L5", CellType1)) %>%
+  ggplot(aes(logFC, CellType1)) +
+    geom_point() +
+    geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
+    theme_classic() +
+    theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
+    ggtitle("Mathys, et al. 2023") +
+    geom_vline(xintercept=0, color="grey50", linetype="dashed")
+```
+
+
+
+```{r stash, eval=FALSE}
+file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
+df_celltype = read_tsv( file ) %>%
+            rename(CellType = PsychAD)
+
+file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined_crumblr.tsv.gz"
+res.pad = read_tsv(file) %>%
+          filter(coef == "c91xWeightLoss_PMA - c91xControl")
+
+# MSSM 
+df1 = res.pad %>%
+  filter(AnnoLevel == "subclass")
+
+df_join1 = df1 %>%
+    left_join(df_celltype %>% 
+      filter(annotationLevel == "subclass"), by="CellType" ) %>%
+    rename(CellType1 = Mathys_cell_type) %>%
+    inner_join(res.mathys %>% filter(Coef == "c302xWeightLoss_PMA"), by="CellType1") %>%
+    mutate(se.x = logFC.x / t.x) %>%
+    mutate(se.y = logFC.y / t.y) 
+
+
+with(df_join1, cor.test(logFC.x, logFC.y, method="sp"))
+
+
+
+
+
+df_join1 %>%
+  ggplot(aes(logFC.x, logFC.y, label=CellType1)) +
+    geom_errorbar(aes(
+      ymin = logFC.y - 1.96*se.y,
+      ymax = logFC.y + 1.96*se.y),
+      width=0, color="grey50", alpha=.4) + 
+    geom_errorbar(aes(
+      xmin = logFC.x - 1.96*se.x,
+      xmax = logFC.x + 1.96*se.x),
+      width=0, color="grey50", alpha=.4) + 
+    geom_point() +
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    geom_text_repel() +
+    xlab("logFC (PsychAD)") +
+    xlab("logFC (Mathys)")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
