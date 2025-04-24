@@ -30,7 +30,7 @@ system("git pull")
 rmarkdown::render("weight_phenotype.Rmd");
 
 
-# https://hoffmg01.dmz.hpc.mssm.edu/dreamlet_analysis/weight_phenotype.html
+# https://hoffmg01.dmz.hpc.mssm.edu/revision/replication/weight_phenotype.html
 
 
 --->
@@ -65,7 +65,7 @@ library(crumblr)
 
 # in PsychAD
 
-```{r psychAD}
+```{r psychAD, eval=FALSE}
 df_pheno = read_csv("Mathys_2023/rosmap_neuropsych_1.csv")
 
 # PsychAD
@@ -163,7 +163,6 @@ df_pheno_sub = df_pheno_sub[i,]
 
 identical(paste0("R", df_pheno_sub$projid), colnames(pb_sub))
 
-
 info = cbind(colData(pb_sub), df_pheno_sub)
 
 saveRDS(cellCounts(pb_sub), file="cellCounts_PsychAD.RDS")
@@ -171,16 +170,16 @@ saveRDS(info, file="info_PsychAD.RDS")
 ```
 
 ```{r crumblr, fig.height=12}
-info = readRDS("info_Mathys.RDS")
-df_cellCounts = readRDS("cellCounts_Mathys.RDS")
+info = readRDS("info_PsychAD.RDS")
+df_cellCounts = readRDS("cellCounts_PsychAD.RDS")
 
 cobj = crumblr(df_cellCounts)
 
-form.base = ~ age + sex + Study + pmi 
+form.base = ~ scale(Age) + Sex + scale(PMI)
 
 ctrst = grep("c30", colnames(info), value=TRUE)
 
-res.mathys = lapply(ctrst, function(variable){
+res.pad = lapply(ctrst, function(variable){
 
   form = update(form.base, paste(" ~ . + ", variable))
 
@@ -196,7 +195,7 @@ res.mathys = lapply(ctrst, function(variable){
   as_tibble
 
 
-res.mathys %>%
+res.pad %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   # filter(Coef == "c306x") %>%
   ggplot(aes(Coef, CellType1, fill=logFC)) +
@@ -206,12 +205,12 @@ res.mathys %>%
     coord_equal() +
     scale_fill_gradient2(low="blue", mid="white", high="red") +
     ylab("") +
-    ggtitle("Mathys, et al. 2023")
+    ggtitle("ROSMAP")
 ```
 
 
 ```{r plot2, fig.height=9}
-res.mathys %>%
+res.pad %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   filter(Coef == "c306x") %>%
@@ -220,12 +219,12 @@ res.mathys %>%
     geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5)) +
-    ggtitle("Mathys, et al. 2023") +
+    ggtitle("ROSMAP") +
     geom_vline(xintercept=0, color="grey50", linetype="dashed")
 ```
 
 ```{r plot3, fig.height=4}
-res.mathys %>%
+res.pad %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   filter(Coef == "c306x") %>%
@@ -236,7 +235,7 @@ res.mathys %>%
     geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
-    ggtitle("Mathys, et al. 2023") +
+    ggtitle("ROSMAP") +
     geom_vline(xintercept=0, color="grey50", linetype="dashed")
 ```
 
