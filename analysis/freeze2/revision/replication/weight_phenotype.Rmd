@@ -304,7 +304,8 @@ res %>%
     theme_classic() +
     theme(aspect.ratio=1) +
     geom_vline(xintercept=0, color="grey50", linetype="dashed") +
-    facet_wrap(~Coef)
+    facet_wrap(~Coef) +
+    ggtitle("Meta-analysis")
 
 ```
 
