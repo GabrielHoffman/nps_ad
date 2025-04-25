@@ -63,6 +63,11 @@ library(crumblr)
 
 
 # in PsychAD
+- c301x: TRUE if bmiChange < -2; FALSE otherwise
+- c302x: TRUE if bmiChange < -2; FALSE if bmiChange > +2 ; otherwise NA
+- c303x: TRUE if bmiChange <   0; FALSE; otherwise NA
+- c304x: TRUE if bmiChange < -2; FALSE if bmiChange > +0; NA
+- c305x - c308x: the same as above but with stronger criteria for AD presence (note we are only interested about neuropsychiatric symptoms of those donors who are AD).
 
 ```{r psychAD, eval=FALSE}
 df_pheno = read_csv("Mathys_2023/rosmap_neuropsych_1.csv")
