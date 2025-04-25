@@ -208,7 +208,7 @@ res.rosmap %>%
 ```
 
 
-```{r plot2, fig.height=9}
+```{r plot2, fig.height=6}
 res.rosmap %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
