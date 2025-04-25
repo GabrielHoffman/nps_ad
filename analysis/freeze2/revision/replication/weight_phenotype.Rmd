@@ -239,8 +239,7 @@ res.rosmap %>%
     geom_vline(xintercept=0, color="grey50", linetype="dashed")
 ```
 
-```{r mssm}
-
+```{r mssm, fig.width=10, fig.height=10}
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined_crumblr.tsv.gz"
 res.mssm = read_tsv(file) %>%
           filter(coef == "c91xWeightLoss_PMA - c91xControl") %>%
@@ -291,9 +290,7 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
 })
 
 figList = lapply(resList, function(x) x$fig)
-fig = plot_grid(plotlist = figList)
-fig
-# ggsave(fig, file="~/www/test.pdf", width=10, height=10)
+plot_grid(plotlist = figList)
 
 res = lapply(resList, function(x) x$res) %>%
   bind_rows %>%
@@ -310,12 +307,6 @@ res %>%
     theme(aspect.ratio=1) +
     geom_vline(xintercept=0, color="grey50", linetype="dashed") +
     facet_wrap(~Coef)
-# ggsave(fig, file="~/www/test.pdf", width=10, height=10)
-
-
-
-
-
 
 ```
 
