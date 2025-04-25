@@ -59,6 +59,7 @@ library(cowplot)
 library(ggrepel)
 library(ggplot2)
 library(tidyverse)
+library(metafor)
 library(crumblr)
 ```
 
@@ -179,7 +180,7 @@ form.base = ~ scale(Age) + Sex + scale(PMI)
 
 ctrst = grep("c30", colnames(info), value=TRUE)
 
-res.pad = lapply(ctrst, function(variable){
+res.rosmap = lapply(ctrst, function(variable){
 
   form = update(form.base, paste(" ~ . + ", variable))
 
@@ -195,7 +196,7 @@ res.pad = lapply(ctrst, function(variable){
   as_tibble
 
 
-res.pad %>%
+res.rosmap %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   # filter(Coef == "c306x") %>%
   ggplot(aes(Coef, CellType1, fill=logFC)) +
@@ -210,7 +211,7 @@ res.pad %>%
 
 
 ```{r plot2, fig.height=9}
-res.pad %>%
+res.rosmap %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   filter(Coef == "c306x") %>%
@@ -224,7 +225,7 @@ res.pad %>%
 ```
 
 ```{r plot3, fig.height=4}
-res.pad %>%
+res.rosmap %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   filter(Coef == "c306x") %>%
@@ -238,59 +239,66 @@ res.pad %>%
     geom_vline(xintercept=0, color="grey50", linetype="dashed")
 ```
 
-
-
-```{r stash, eval=FALSE}
-file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
-df_celltype = read_tsv( file ) %>%
-            rename(CellType = PsychAD)
+```{r mssm}
 
 file = "/sc/arion/projects/psychAD/NPS-AD/freeze2_rc/analysis/results/topTable_combined_crumblr.tsv.gz"
-res.pad = read_tsv(file) %>%
-          filter(coef == "c91xWeightLoss_PMA - c91xControl")
+res.mssm = read_tsv(file) %>%
+          filter(coef == "c91xWeightLoss_PMA - c91xControl") %>%
+          filter(AnnoLevel == "subclass")
 
-# MSSM 
-df1 = res.pad %>%
-  filter(AnnoLevel == "subclass")
+resList = lapply( unique(res.rosmap$Coef), function(v){
+  df_merge = res.rosmap %>%
+              filter(Coef == v) %>%
+              rename(CellType = CellType1) %>%
+              inner_join(res.mssm, by="CellType") %>%
+              mutate(se.x = logFC.x / t.x) %>%
+              mutate(se.y = logFC.y / t.y) 
 
-df_join1 = df1 %>%
-    left_join(df_celltype %>% 
-      filter(annotationLevel == "subclass"), by="CellType" ) %>%
-    rename(CellType1 = Mathys_cell_type) %>%
-    inner_join(res.mathys %>% filter(Coef == "c302xWeightLoss_PMA"), by="CellType1") %>%
-    mutate(se.x = logFC.x / t.x) %>%
-    mutate(se.y = logFC.y / t.y) 
+  fig = df_merge %>%
+    ggplot(aes(logFC.x, logFC.y, label = CellType)) +
+      geom_hline(yintercept=0, color="grey50", linetype="dashed") +    
+      geom_vline(xintercept=0, color="grey50", linetype="dashed") +
+      geom_errorbar(aes(
+        ymin = logFC.y - 1.96*se.y,
+        ymax = logFC.y + 1.96*se.y),
+        width=0, color="grey50", alpha=.4) + 
+      geom_errorbar(aes(
+        xmin = logFC.x - 1.96*se.x,
+        xmax = logFC.x + 1.96*se.x),
+        width=0, color="grey50", alpha=.4) + 
+      geom_point() +
+      theme_classic() +
+      theme(aspect.ratio=1) +
+      geom_text_repel() +
+      xlab("logFC (ROSMAP)") +
+      ylab("logFC (MSSM)") +
+      ggtitle(v) + 
+      coord_flip()
 
 
-with(df_join1, cor.test(logFC.x, logFC.y, method="sp"))
+    res = lapply(seq(nrow(df_merge)), function(i){
+      fit = with(df_merge[i,], rma(yi = c(logFC.x, logFC.y), sei = c(se.x, se.y), method="FE"))
+
+      data.frame(CellType = df_merge$CellType[i], estimate = fit$beta, pvalue = fit$pval)
+    }) %>%
+    bind_rows
+
+    list(res = res, fig = fig)
+})
+
+figList = lapply(resList, function(x) x$fig)
+
+fig = plot_grid(plotlist = figList)
 
 
 
 
+ggsave(fig, file="~/www/test.pdf")
 
-df_join1 %>%
-  ggplot(aes(logFC.x, logFC.y, label=CellType1)) +
-    geom_errorbar(aes(
-      ymin = logFC.y - 1.96*se.y,
-      ymax = logFC.y + 1.96*se.y),
-      width=0, color="grey50", alpha=.4) + 
-    geom_errorbar(aes(
-      xmin = logFC.x - 1.96*se.x,
-      xmax = logFC.x + 1.96*se.x),
-      width=0, color="grey50", alpha=.4) + 
-    geom_point() +
-    theme_classic() +
-    theme(aspect.ratio=1) +
-    geom_text_repel() +
-    xlab("logFC (PsychAD)") +
-    xlab("logFC (Mathys)")
+
+
 
 ```
-
-
-
-
-
 
 
 
