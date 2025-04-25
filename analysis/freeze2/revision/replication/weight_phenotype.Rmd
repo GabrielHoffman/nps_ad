@@ -178,7 +178,7 @@ cobj = crumblr(df_cellCounts)
 
 form.base = ~ scale(Age) + Sex + scale(PMI)
 
-ctrst = grep("c30", colnames(info), value=TRUE)
+ctrst = grep("c30\\d", colnames(info), value=TRUE)
 
 res.rosmap = lapply(ctrst, function(variable){
 
@@ -270,16 +270,20 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
       theme_classic() +
       theme(aspect.ratio=1) +
       geom_text_repel() +
+      geom_smooth(method = 'lm', color="red", se=FALSE) +
       xlab("logFC (ROSMAP)") +
       ylab("logFC (MSSM)") +
       ggtitle(v) + 
       coord_flip()
 
-
     res = lapply(seq(nrow(df_merge)), function(i){
-      fit = with(df_merge[i,], rma(yi = c(logFC.x, logFC.y), sei = c(se.x, se.y), method="FE"))
+      fit = with(df_merge[i,], rma(yi = c(logFC.x, logFC.y), sei = c(se.x, se.y), method="FE")) 
 
-      data.frame(CellType = df_merge$CellType[i], estimate = fit$beta, pvalue = fit$pval)
+      data.frame(Coef = v, 
+        CellType = df_merge$CellType[i], 
+        estimate = fit$beta, 
+        se = fit$se,
+        pvalue = fit$pval)
     }) %>%
     bind_rows
 
@@ -287,13 +291,28 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
 })
 
 figList = lapply(resList, function(x) x$fig)
-
 fig = plot_grid(plotlist = figList)
+fig
+# ggsave(fig, file="~/www/test.pdf", width=10, height=10)
+
+res = lapply(resList, function(x) x$res) %>%
+  bind_rows %>%
+  as_tibble
+
+res %>%
+  ggplot(aes(estimate, CellType)) +
+    geom_errorbar(aes(
+      xmin = estimate - 1.96*se,
+      xmax = estimate + 1.96*se),
+      width=0, color="grey50", alpha=.4) + 
+    geom_point() +    
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    geom_vline(xintercept=0, color="grey50", linetype="dashed") +
+    facet_wrap(~Coef)
+# ggsave(fig, file="~/www/test.pdf", width=10, height=10)
 
 
-
-
-ggsave(fig, file="~/www/test.pdf")
 
 
 
