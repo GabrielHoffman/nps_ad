@@ -228,11 +228,16 @@ res.rosmap %>%
 
 
 ```{r plot2, fig.height=6}
-res.rosmap %>%
+df6 = res.rosmap %>%
   mutate(se = logFC / t) %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   filter(Coef == "c306x") %>%
-  ggplot(aes(logFC, CellType1)) +
+  rename(CellType = CellType1)
+
+write.csv(df6, file="res_c306x.csv", row.names=FALSE, quote=FALSE)
+
+df6 %>%
+  ggplot(aes(logFC, CellType)) +
     geom_point() +
     geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
     theme_classic() +
@@ -332,7 +337,7 @@ res %>%
 
 ```{r meta}
 res %>%
-  filter(Coef == "c301xWeightLoss_PMA") %>%
+  filter(Coef == "c307xWeightLoss_PMA") %>%
   ggplot(aes(estimate, CellType)) +
     geom_errorbar(aes(
       xmin = estimate - 1.96*se,
