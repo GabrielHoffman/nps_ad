@@ -215,7 +215,7 @@ res.rosmap %>%
 ```{r plot1, fig.height=12}
 res.rosmap %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
-  filter(Coef == "c307x") %>%
+  filter(Coef == "c306x") %>%
   ggplot(aes(Coef, CellType1, fill=logFC)) +
     geom_tile() +
     theme_classic() +
@@ -223,7 +223,7 @@ res.rosmap %>%
     coord_equal() +
     scale_fill_gradient2(low="blue", mid="white", high="red") +
     ylab("") +
-    ggtitle("ROSMAP")
+    ggtitle("ROSMAP + c306x")
 ```
 
 
