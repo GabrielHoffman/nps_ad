@@ -330,7 +330,7 @@ res %>%
     ggtitle("Meta-analysis")
 ```
 
-```{r plot3, cache=FALSE}
+```{r plot4, cache=FALSE}
 resList[['c306xWeightLoss_PMA']]$fig
 ```
 
