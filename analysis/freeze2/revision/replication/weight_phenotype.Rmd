@@ -212,7 +212,7 @@ res.rosmap %>%
 ```
 
 
-```{r crumblr, fig.height=12}
+```{r plot1, fig.height=12}
 res.rosmap %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   filter(Coef == "c307x") %>%
