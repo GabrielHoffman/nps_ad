@@ -198,10 +198,24 @@ res.rosmap = lapply(ctrst, function(variable){
   bind_rows %>%
   as_tibble
 
-
 res.rosmap %>%
   mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
   # filter(Coef == "c306x") %>%
+  ggplot(aes(Coef, CellType1, fill=logFC)) +
+    geom_tile() +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    coord_equal() +
+    scale_fill_gradient2(low="blue", mid="white", high="red") +
+    ylab("") +
+    ggtitle("ROSMAP")
+```
+
+
+```{r crumblr, fig.height=12}
+res.rosmap %>%
+  mutate(Coef = gsub("WeightLoss_PMA", "", Coef)) %>%
+  filter(Coef == "c307x") %>%
   ggplot(aes(Coef, CellType1, fill=logFC)) +
     geom_tile() +
     theme_classic() +
@@ -223,7 +237,7 @@ res.rosmap %>%
     geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) +
-    ggtitle("ROSMAP") +
+    ggtitle("ROSMAP c306x") +
     geom_vline(xintercept=0, color="grey50", linetype="dashed")
 ```
 
@@ -238,7 +252,7 @@ res.rosmap %>%
     geom_errorbar(aes(xmin = logFC - se, xmax = logFC + se), width=0) +
     theme_classic() +
     theme(aspect.ratio=1, plot.title = element_text(hjust = 0.5)) + 
-    ggtitle("ROSMAP") +
+    ggtitle("ROSMAP c306x") +
     geom_vline(xintercept=0, color="grey50", linetype="dashed")
 ```
 
@@ -256,6 +270,8 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
               mutate(se.x = logFC.x / t.x) %>%
               mutate(se.y = logFC.y / t.y) 
 
+  # with(df_merge, cor.test(logFC.x, logFC.y))
+
   fig = df_merge %>%
     ggplot(aes(logFC.x, logFC.y, label = CellType)) +
       geom_hline(yintercept=0, color="grey50", linetype="dashed") +    
@@ -271,7 +287,7 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
       geom_point() +
       theme_classic() +
       theme(aspect.ratio=1) +
-      geom_text_repel() +
+      geom_text_repel(box.padding=0.5) +
       geom_smooth(method = 'lm', color="red", se=FALSE) +
       xlab("logFC (ROSMAP)") +
       ylab("logFC (MSSM)") +
@@ -291,6 +307,7 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
 
     list(res = res, fig = fig)
 })
+names(resList) = unique(res.rosmap$Coef)
 
 figList = lapply(resList, function(x) x$fig)
 plot_grid(plotlist = figList)
@@ -311,9 +328,11 @@ res %>%
     geom_vline(xintercept=0, color="grey50", linetype="dashed") +
     facet_wrap(~Coef) +
     ggtitle("Meta-analysis")
-
 ```
 
+```{r plot3, cache=FALSE}
+resList[['c306xWeightLoss_PMA']]$fig
+```
 
 
 
