@@ -275,8 +275,6 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
               mutate(se.x = logFC.x / t.x) %>%
               mutate(se.y = logFC.y / t.y) 
 
-  # with(df_merge, cor.test(logFC.x, logFC.y))
-
   fig = df_merge %>%
     ggplot(aes(logFC.x, logFC.y, label = CellType)) +
       geom_hline(yintercept=0, color="grey50", linetype="dashed") +    
@@ -306,7 +304,8 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
         CellType = df_merge$CellType[i], 
         estimate = fit$beta, 
         se = fit$se,
-        pvalue = fit$pval)
+        pvalue = fit$pval,
+        df_merge[i,])
     }) %>%
     bind_rows
 
@@ -356,6 +355,51 @@ resList[['c306xWeightLoss_PMA']]$fig
 ```
 
 
+
+
+```{r heatmap_meta, cache=FALSE, fig.height=10}
+res2 = res %>%
+  filter(Coef == "c306xWeightLoss_PMA") %>%
+  select(Coef, CellType, estimate, se, logFC.x, t.x, logFC.y, t.y )
+
+res3 = res2 %>%
+  select(CellType, estimate, se) %>%
+  mutate(Dataset = "Meta-analysis") %>%
+  bind_rows(res2 %>%
+    select(CellType, t.x, logFC.x) %>%
+    mutate(se = logFC.x / t.x) %>%
+    rename(estimate = logFC.x) %>%
+    select(CellType, estimate, se) %>%
+    mutate(Dataset = "ROSMAP")) %>%
+  bind_rows(res2 %>%
+    select(CellType, t.y, logFC.y) %>%
+    mutate(se = logFC.y / t.y) %>%
+    rename(estimate = logFC.y) %>%
+    select(CellType, estimate, se) %>%
+    mutate(Dataset = "MSSM"))
+
+res3 %>% 
+  mutate(Dataset = factor(Dataset, c("MSSM", "ROSMAP", "Meta-analysis"))) %>%
+  ggplot(aes(Dataset, CellType, fill=estimate)) +
+    geom_tile() +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    coord_equal() +
+    scale_fill_gradient2(low="blue", mid="white", high="red", name="logFC") +
+    ylab("") +
+    ggtitle("c306x")
+
+res3 %>% 
+  mutate(Dataset = factor(Dataset, c("MSSM", "ROSMAP", "Meta-analysis"))) %>%
+  ggplot(aes(Dataset, CellType, fill=estimate / se)) +
+    geom_tile() +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    coord_equal() +
+    scale_fill_gradient2(low="blue", mid="white", high="red", name="t statistic") +
+    ylab("") +
+    ggtitle("c306x")
+```
 
 
 
