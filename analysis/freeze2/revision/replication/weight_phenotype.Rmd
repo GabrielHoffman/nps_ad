@@ -330,6 +330,22 @@ res %>%
     ggtitle("Meta-analysis")
 ```
 
+```{r meta}
+res %>%
+  filter(Coef == "c301xWeightLoss_PMA") %>%
+  ggplot(aes(estimate, CellType)) +
+    geom_errorbar(aes(
+      xmin = estimate - 1.96*se,
+      xmax = estimate + 1.96*se),
+      width=0, color="grey50", alpha=.4) + 
+    geom_point() +    
+    theme_classic() +
+    theme(aspect.ratio=1) +
+    geom_vline(xintercept=0, color="grey50", linetype="dashed") +
+    facet_wrap(~Coef) +
+    ggtitle("Meta-analysis")
+```
+
 ```{r plot4, cache=FALSE}
 resList[['c306xWeightLoss_PMA']]$fig
 ```
