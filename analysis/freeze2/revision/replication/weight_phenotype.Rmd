@@ -337,7 +337,7 @@ res %>%
 
 ```{r meta}
 res %>%
-  filter(Coef == "c307xWeightLoss_PMA") %>%
+  filter(Coef == "c306xWeightLoss_PMA") %>%
   ggplot(aes(estimate, CellType)) +
     geom_errorbar(aes(
       xmin = estimate - 1.96*se,
