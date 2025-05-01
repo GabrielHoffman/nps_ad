@@ -210,7 +210,7 @@ df_join1 %>%
       xmax = logFC.x + 1.96*se.x),
       width=0, color="grey50", alpha=.4) + 
     geom_point() +
-    geom_smooth(method="lm") +
+    geom_smooth(method="lm", color="red") +
     theme_classic() +
     theme(aspect.ratio=1) +
     geom_text_repel() +
