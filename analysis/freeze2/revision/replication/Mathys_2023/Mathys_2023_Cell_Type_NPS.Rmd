@@ -173,7 +173,7 @@ res.mathys %>%
 
 
 
-```{r stash, eval=FALSE}
+```{r stash, eval=TRUE}
 file = "/sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/replication/celltype_mapping.tsv"
 df_celltype = read_tsv( file ) %>%
             rename(CellType = PsychAD)
@@ -316,20 +316,18 @@ if( params$SampleLevel == "Channel"){
 
 pb2 = pb[,idx]
 
-
-
 # keep shared IDs
-ids = intersect(df_pheno$individualID, colnames(pb2))
-df_pheno_sub = df_pheno[df_pheno$individualID %in% ids,]
+ids = intersect(paste0("R", df_pheno$projid), colnames(pb2))
+df_pheno_sub = df_pheno[paste0("R", df_pheno$projid) %in% ids,]
 pb_sub = pb[,colnames(pb) %in% ids,]
 
 i = match(ids, colnames(pb_sub))
 pb_sub = pb_sub[,i]
 
-i = match(ids, df_pheno_sub$individualID)
+i = match(ids, paste0("R", df_pheno_sub$projid))
 df_pheno_sub = df_pheno_sub[i,]
 
-identical(df_pheno_sub$individualID, colnames(pb_sub))
+identical(paste0("R", df_pheno_sub$projid), colnames(pb_sub))
 
 
 info = cbind(colData(pb_sub), df_pheno_sub)
@@ -338,7 +336,10 @@ info = cbind(colData(pb_sub), df_pheno_sub)
 # saveRDS(info, file="info_Mathys.RDS")
 
 
-idx = !(is.na(value) | (value == "NA"))
+
+
+
+
 ```
 
 
