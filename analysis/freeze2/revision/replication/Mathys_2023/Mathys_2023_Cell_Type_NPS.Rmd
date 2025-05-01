@@ -25,9 +25,7 @@ vignette: >
 cd /sc/arion/projects/CommonMind/hoffman/NPS-AD/work/nps_ad/analysis/freeze2/revision/replication/Mathys_2023/
 R
 
-system("git pull")
-
-rmarkdown::render("Mathys_2023_Cell_Type_NPS.Rmd");
+system("git pull"); rmarkdown::render("Mathys_2023_Cell_Type_NPS.Rmd");
 
 
 # https://hoffmg01.dmz.hpc.mssm.edu/dreamlet_analysis/Mathys_2023/Mathys_2023_Cell_Type_NPS.html
@@ -212,11 +210,14 @@ df_join1 %>%
       xmax = logFC.x + 1.96*se.x),
       width=0, color="grey50", alpha=.4) + 
     geom_point() +
+    geom_smooth(method="lm") +
     theme_classic() +
     theme(aspect.ratio=1) +
     geom_text_repel() +
     xlab("logFC (PsychAD)") +
-    xlab("logFC (Mathys)")
+    xlab("logFC (Mathys)") +
+    geom_hline(yintercept=0, color="grey50", linetype="dashed")+
+    geom_vline(xintercept=0, color="grey50", linetype="dashed")
 
 ```
 
