@@ -65,6 +65,9 @@ fig = df %>%
 ggsave(fig, file="plots/LDSC_subclass.pdf", height=7, width=6.3)
 
 
+save
+
+
 
 
 df = read.table(files[1], header=FALSE) %>%
@@ -98,6 +101,22 @@ ggsave(fig, file="plots/LDSC_class.pdf", height=4.5, width=3.5)
 
 
 
+
+df1 = read.table(files[1], header=FALSE) %>%
+		as_tibble 
+df1 = data.frame(Level = "class", df1)
+colnames(df1) = c("Level", "CellType", "Trait", "effect", "se")
+
+
+df2 = read.table(files[2], header=FALSE) %>%
+		as_tibble 
+df2 = data.frame(Level = "subclass", df2)
+colnames(df2) = c("Level", "CellType", "Trait", "effect", "se")
+
+rbind(df1, df2) %>%
+		filter(! Trait %in% c("ALS", "ALZ", "ALZ2", "DRINKING", "DS")) %>%
+		mutate(Trait = fct_recode(Trait, "ALZ" = "ALZ3", "ALS" = "ALS2", BD = "Bipolar", "Height" = "HEIGHT")) %>%
+	write.table("LDSC_results.tsv", sep="\t", quote=FALSE, row.names=FALSE)
 
 # MESC
 #######

@@ -275,6 +275,8 @@ resList = lapply( unique(res.rosmap$Coef), function(v){
               mutate(se.x = logFC.x / t.x) %>%
               mutate(se.y = logFC.y / t.y) 
 
+  with(df_merge, cor.test(logFC.x, logFC.y, method="sp"))
+
   fig = df_merge %>%
     ggplot(aes(logFC.x, logFC.y, label = CellType)) +
       geom_hline(yintercept=0, color="grey50", linetype="dashed") +    
