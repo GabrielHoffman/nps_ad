@@ -120,7 +120,7 @@ def main(argv):
       adata = ad.concat(adatas[:])
 
       # add .var data (i.e. rowData) to new object
-      # adata.var = adatas[1].var
+      adata.var = adatas[1].var
 
       # Write to disk
       print(" Writing to H5AD...")
