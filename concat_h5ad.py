@@ -119,7 +119,7 @@ def main(argv):
       print(" Concatenating data...")
       adata = ad.concat(adatas[:])
 
-      # adata.obs_names_make_unique
+      adata.obs_names_make_unique
 
       # add .var data (i.e. rowData) to new object
       # adata.var = adatas[1].var
