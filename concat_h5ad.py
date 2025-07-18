@@ -113,7 +113,7 @@ def main(argv):
    else:
       # Create anndata array
       print(" Reading files...")
-      adatas = [ad.read(file) for file in h5adfiles] 
+      adatas = [ad.read_h5ad(file) for file in h5adfiles] 
 
       # Concatenate data
       print(" Concatenating data...")
