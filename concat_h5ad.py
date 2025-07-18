@@ -120,6 +120,8 @@ def main(argv):
       adata = ad.concat(adatas[:])
 
       # add .var data (i.e. rowData) to new object
+      adata.obs_names_make_unique
+
       adata.var = adatas[1].var
 
       # Write to disk
