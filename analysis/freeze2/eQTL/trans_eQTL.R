@@ -122,7 +122,7 @@ geneInfo = read_tsv("geneInfo.tsv", show_col_types = FALSE) %>%
 # geneInfo$mapInfo = FALSE
 # geneInfo$mapInfo[geneInfo$EnsID %in% ids] = TRUE
 
-write_tsv(geneInfo, file="geneInfo.tsv.gz")
+# write_tsv(geneInfo, file="geneInfo.tsv.gz")
 
 
 
@@ -178,6 +178,62 @@ df_gene = df2 %>%
 
 
 write_tsv(df_gene, file="export/trans/trans_eQTL_FDR05.tsv.gz")
+
+
+p = df_gene$p.sidak
+p[p == 0] = 1e-10
+fig = qqplotp(p)
+
+ggsave(fig, file="~/www/qqplot.png", height=5, width=5)
+
+# geneInfo$Score > 0.8)
+
+
+
+# Define a Sidak correction function that uses Rmpfr for high precision
+sidak_high_precision <- function(p_values, n, precBits = 1000) {
+  # Convert p-values to Rmpfr numbers with specified precision
+  p_mpfr <- Rmpfr::mpfr(p_values, precBits = precBits)
+  N_mpfr <- as.integer(n)
+
+  # Calculate Sidak adjusted p-values using Rmpfr arithmetic
+  as.numeric(1 - (1 - p_mpfr)^N_mpfr)
+}
+
+# QQ plots
+df_sidak = df %>%
+			select(chrom, gene, z, CellType) %>%
+			group_by(CellType, gene) %>%
+			summarize(z = max(abs(z)), n = n()) %>%
+			collect %>% 
+			mutate(p.value = 2*pnorm(z, lower.tail=FALSE)) %>%
+			# mutate(p.sidak = 1 - (1 - p.value)^n) %>%
+			mutate(p.sidak = sidak_high_precision(p.value, n)) %>%
+			rename(Gene = gene) %>%
+			left_join(geneInfo %>%
+				group_by(Gene) %>%
+				slice(which.min(Score)), 
+				by="Gene") %>%
+			filter(Score > 0.8) 
+
+
+
+figList = lapply( c('IN', 'EN', 'Oligo', 'OPC', 'Astro', 'Immune'), function(CT){
+	p = df_sidak %>%
+			filter(CellType == CT) %>%
+			pull(p.sidak)
+	qqplotp(p, color=cols[CT], pointsize=6) + ggtitle(CT)
+})
+
+fig = cowplot::plot_grid(plotlist=figList)
+ggsave(fig, file="~/www/qqplot.pdf")
+
+
+
+
+
+
+
 
 
 

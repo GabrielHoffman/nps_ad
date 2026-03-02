@@ -174,7 +174,8 @@ df_frac = mclapply(names(files), function(id){
 
 	count = colSums(cellCounts(pb))
 	tibble(Dataset = paste0(id, " / ", names(count)), 
-		Fraction = count / sum(count))
+		Fraction = count / sum(count), 
+		CellCount = count)
 	}, mc.cores=3)
 df_frac = bind_rows(df_frac)
 # saveRDS(df_frac, file="df_frac.RDS")
@@ -326,6 +327,31 @@ df4 = df_QTL %>%
 	left_join(df_reads, by="Dataset") %>%
 	mutate(Level = Level.x) %>%
 	arrange(Level, CellType)  
+
+
+# bivariate analysis
+library(variancePartition)
+# get Rsq value
+f = function(data){
+	fit = lm(nGenes ~ (meanReadCount) + (Fraction), data = data)
+	as.data.frame(t(calcVarPart(fit)))
+}
+
+df_vp = df4 %>%
+	filter(Type != "bulk") %>%
+	group_by(Type) %>%
+	group_modify(~f(.))
+
+fig = df_vp %>%
+	as.data.frame %>%
+	column_to_rownames("Type") %>%
+	plotPercentBars
+
+ggsave("plots/explain_power.pdf")
+
+
+
+
 
 
 plot_eGene_count = function( df4, lvl){
