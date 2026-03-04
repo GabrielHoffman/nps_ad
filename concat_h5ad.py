@@ -6,8 +6,8 @@ from numpy import loadtxt
 import h5py
 import numpy as np
 from scipy import sparse
-from anndata._core.sparse_dataset import SparseDataset
-from anndata.experimental import read_elem, write_elem
+from anndata._core.sparse_dataset import sparse_dataset
+from anndata.io import read_elem, write_elem
 
 # From Donghoon Lee
 def read_everything_but_X(pth) -> ad.AnnData:
@@ -46,7 +46,7 @@ def concat_on_disk(input_pths, output_pth, temp_pth='temp.h5ad'):
         write_elem(target, 'X', dummy_X)
         
         # append
-        mtx = SparseDataset(target['X'])
+        mtx = sparse_dataset(target['X'])
         for p in input_pths:
             with h5py.File(p, 'r') as src:
                 
@@ -63,11 +63,11 @@ def concat_on_disk(input_pths, output_pth, temp_pth='temp.h5ad'):
                     
                     # read from temp_pth
                     with h5py.File(temp_pth, 'r') as tmp:
-                        mtx.append(SparseDataset(tmp['X']))
+                        mtx.append(sparse_dataset(tmp['X']))
                         
                 # ELSE: src is in csr format
                 else:
-                    mtx.append(SparseDataset(src['X']))
+                    mtx.append(sparse_dataset(src['X']))
                     
 def main(argv):
    infile = ''

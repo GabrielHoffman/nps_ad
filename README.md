@@ -35,9 +35,23 @@ Genetic risk variants for common diseases are predominantly located in non-codin
 
 Analysis code [folder](https://github.com/DiseaseNeuroGenomics/nps_ad/tree/master/analysis/freeze2)
 
+ - preprocessing [code](https://github.com/DiseaseNeuroGenomics/nps_ad/blob/master/analysis/freeze2/preprocess/preprocess.Rmd)
+ 
  - analysis of eQTL summary statistics [code](https://github.com/DiseaseNeuroGenomics/nps_ad/tree/master/analysis/freeze2/eQTL)
+ 
+  - coloc analysis [code](https://github.com/DiseaseNeuroGenomics/nps_ad/tree/master/analysis/freeze2/eQTL/coloc)
+
+  - fine mapping [code](https://github.com/DiseaseNeuroGenomics/nps_ad/tree/master/analysis/freeze2/eQTL/finemap)
+ 
+
 - analysis with [dreamlet](https://diseaseneurogenomics.github.io/dreamlet/) [code](https://github.com/DiseaseNeuroGenomics/nps_ad/blob/master/analysis/freeze2/testing/run_dreamlet_contrasts.Rmd)
 - analysis with [crumblr](https://diseaseneurogenomics.github.io/crumblr/) [code](https://github.com/DiseaseNeuroGenomics/nps_ad/blob/master/analysis/freeze2/testing/run_crumblr_contrasts.Rmd)
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
